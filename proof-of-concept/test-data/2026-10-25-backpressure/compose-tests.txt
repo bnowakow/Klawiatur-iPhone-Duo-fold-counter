@@ -1,0 +1,10 @@
+ Container klawiatur-iphone-duo-fold-counter-db-1 Running 
+ Container klawiatur-iphone-duo-fold-counter-db-1 Waiting 
+ Container klawiatur-iphone-duo-fold-counter-db-1 Healthy 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-284e2cf4d8cf Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-284e2cf4d8cf Created 
+.........................................................
+----------------------------------------------------------------------
+Ran 57 tests in 9.677s
+
+OK

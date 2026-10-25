@@ -1,0 +1,14 @@
+{
+  "integration": "passed",
+  "stream": "integration:sessions:2c7f61a9-18a5-4ddc-845b-00e8a70b86a6",
+  "sessions": 2,
+  "folding_folds_per_hour": 2520.0,
+  "checks": [
+    "pending start retained",
+    "database reload",
+    "transaction rollback",
+    "outbox state recovery",
+    "idempotent stale replay",
+    "SQL rates"
+  ]
+}

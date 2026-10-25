@@ -1,0 +1,116 @@
+{"phase": "serial_capture", "sample": {"seconds": 2.026764250999804, "status": "ok"}}
+{"phase": "serial_capture", "sample": {"seconds": 2.086581043000024, "status": "ok"}}
+{"frames": 15, "last_analysis_seconds": 0.6100945000002866}
+{"frames": 30, "last_analysis_seconds": 0.6604807510002502}
+{"frames": 45, "last_analysis_seconds": 0.6052669999999125}
+{"frames": 60, "last_analysis_seconds": 0.6175462510000216}
+{
+  "run_id": "08ebbc2f-bbfc-4f62-9a20-1f239d2b8399",
+  "benchmark_stream": "benchmark:one-second:08ebbc2f-bbfc-4f62-9a20-1f239d2b8399",
+  "source_stream": "https://www.youtube.com/watch?v=vaiHWiExDXg",
+  "started_at": "2026-10-25T20:31:58.615405+00:00",
+  "height": 1080,
+  "target_interval_seconds": 1,
+  "requested_frames": 60,
+  "frames": 60,
+  "accepted_samples": 56,
+  "serial_capture_checks": [
+    {
+      "seconds": 2.026764250999804,
+      "status": "ok"
+    },
+    {
+      "seconds": 2.086581043000024,
+      "status": "ok"
+    }
+  ],
+  "metadata_lookup_seconds": 1.5591866260001552,
+  "wall_seconds": 67.96799769799964,
+  "persistent_pipeline_wall_seconds": 62.295319112000016,
+  "cpu_seconds": 45.543344000000005,
+  "average_cpu_cores_used": 0.6700704087585677,
+  "python_peak_rss_platform_units": 119428,
+  "analysis_mean_seconds": 0.7878468427166733,
+  "analysis_p95_seconds": 1.5535701260000678,
+  "analysis_max_seconds": 3.3292910850000226,
+  "analyses_over_one_second": 6,
+  "arrival_gap_p50_seconds": 0.6718534169999657,
+  "arrival_gap_p95_seconds": 2.7563345839998874,
+  "arrival_gap_max_seconds": 3.3410713759999453,
+  "ffmpeg_exit_code": 0,
+  "ffmpeg_error_bytes": 0,
+  "cadence_analysis": [
+    {
+      "target_interval_seconds": 1,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 1.0,
+      "retained_samples": 56,
+      "reference_samples": 56,
+      "max_gap_seconds": 3.0,
+      "mean_absolute_counter_error": 0.0,
+      "max_absolute_counter_error": 0.0
+    },
+    {
+      "target_interval_seconds": 2,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 1.0,
+      "retained_samples": 29,
+      "reference_samples": 56,
+      "max_gap_seconds": 4.0,
+      "mean_absolute_counter_error": 0.12946428571428573,
+      "max_absolute_counter_error": 0.5
+    },
+    {
+      "target_interval_seconds": 5,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 1.0,
+      "retained_samples": 13,
+      "reference_samples": 56,
+      "max_gap_seconds": 7.0,
+      "mean_absolute_counter_error": 0.22193877550944308,
+      "max_absolute_counter_error": 0.8000000000029104
+    },
+    {
+      "target_interval_seconds": 10,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 1.0,
+      "retained_samples": 7,
+      "reference_samples": 56,
+      "max_gap_seconds": 12.0,
+      "mean_absolute_counter_error": 0.42410714285714285,
+      "max_absolute_counter_error": 1.5
+    },
+    {
+      "target_interval_seconds": 20,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 1.0,
+      "retained_samples": 4,
+      "reference_samples": 56,
+      "max_gap_seconds": 20.0,
+      "mean_absolute_counter_error": 0.6571428571427792,
+      "max_absolute_counter_error": 1.9499999999970896
+    },
+    {
+      "target_interval_seconds": 30,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 1.0,
+      "retained_samples": 3,
+      "reference_samples": 56,
+      "max_gap_seconds": 32.0,
+      "mean_absolute_counter_error": 1.1013907967031369,
+      "max_absolute_counter_error": 3.5625
+    },
+    {
+      "target_interval_seconds": 60,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 1.0,
+      "retained_samples": 2,
+      "reference_samples": 56,
+      "max_gap_seconds": 58.0,
+      "mean_absolute_counter_error": 2.6533251231528214,
+      "max_absolute_counter_error": 5.431034482760879
+    }
+  ],
+  "note": "Persistent HLS pipeline; nominal one-second media positions may arrive in segment bursts. Fixture observations use an isolated benchmark stream. Does not change live polling.",
+  "evidence_path": "/data/benchmarks/one-second-08ebbc2f-bbfc-4f62-9a20-1f239d2b8399"
+}

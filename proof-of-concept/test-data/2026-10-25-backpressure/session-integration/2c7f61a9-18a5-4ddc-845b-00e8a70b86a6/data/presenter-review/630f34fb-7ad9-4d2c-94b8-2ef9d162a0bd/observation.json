@@ -1,0 +1,117 @@
+{
+  "id": "630f34fb-7ad9-4d2c-94b8-2ef9d162a0bd",
+  "stream_url": "integration:sessions:2c7f61a9-18a5-4ddc-845b-00e8a70b86a6",
+  "observed_at": "2026-10-25T19:57:27.403858+00:00",
+  "status": "analyzed",
+  "details": {
+    "polling_interval_seconds": 4.0,
+    "fixture": true,
+    "ocr": {
+      "value": 1084,
+      "digits": []
+    },
+    "counter_validation": {
+      "raw": 1084,
+      "accepted": 1084,
+      "rate": 0.7,
+      "expected_rate": 0.7,
+      "expected_rate_range": [
+        0.35,
+        1.0499999999999998
+      ],
+      "rate_model": "recent_median",
+      "allowed_delta": [
+        5.5,
+        36.49999999999999
+      ],
+      "elapsed_seconds": 30.0,
+      "status": "accepted",
+      "reason": "Monotonic and within pace bounds"
+    },
+    "camera_view": {
+      "view": "presenter_main",
+      "tracking": {
+        "changed_since": 1792958187.403858
+      },
+      "baseline_replaced_for_session": true
+    },
+    "clothing_baseline_observation": null,
+    "presenter_appearance_updates": [
+      {
+        "id": "ecaf20f2-aec2-4c3a-a58b-173776e91d92",
+        "status": "sustained_appearance_review_required",
+        "ended_at": null,
+        "end_reason": null,
+        "stream_url": "integration:sessions:2c7f61a9-18a5-4ddc-845b-00e8a70b86a6",
+        "version_at": "2026-10-25T19:57:27.403858+00:00",
+        "detected_at": "2026-10-25T19:56:27.403858+00:00",
+        "confirmed_at": null,
+        "last_counter": 1084,
+        "last_counter_at": "2026-10-25T19:57:27.403858+00:00",
+        "last_frame_path": "/tmp/tmpq0mm8n75/data/frames/630f34fb-7ad9-4d2c-94b8-2ef9d162a0bd/frame.jpg",
+        "baseline_counter": 1042,
+        "detection_reason": "clothing_appearance_cue",
+        "first_frame_path": "/tmp/tmpq0mm8n75/data/frames/3a1820a9-6799-4859-8c8b-80ae1b34eea0/frame.jpg",
+        "folding_evidence": "accepted_increase_observed",
+        "last_raw_counter": 1084,
+        "first_raw_counter": 1042,
+        "folding_started_at": "2026-10-25T19:56:57.403858+00:00",
+        "baseline_counter_at": "2026-10-25T19:56:27.403858+00:00",
+        "last_observation_id": "630f34fb-7ad9-4d2c-94b8-2ef9d162a0bd",
+        "first_observation_id": "3a1820a9-6799-4859-8c8b-80ae1b34eea0",
+        "folding_start_counter": 1063,
+        "folding_start_observation_id": "8d1a8c70-39cd-4a67-8757-985bc4b09f93"
+      }
+    ],
+    "presenter_attribution_review_required": false,
+    "presenter_session_updates": [
+      {
+        "id": "06faa77b-dc4a-41b5-a288-4e27056630fd",
+        "ended_at": "2026-10-25T19:56:27.403858+00:00",
+        "end_reason": "sustained_clothing_change",
+        "stream_url": "integration:sessions:2c7f61a9-18a5-4ddc-845b-00e8a70b86a6",
+        "version_at": "2026-10-25T19:57:27.403858+00:00",
+        "detected_at": "2026-10-25T19:54:57.403858+00:00",
+        "confirmed_at": "2026-10-25T19:54:57.403858+00:00",
+        "last_counter": 1021,
+        "last_counter_at": "2026-10-25T19:55:57.403858+00:00",
+        "baseline_counter": 1000,
+        "detection_reason": "first_observed",
+        "folding_started_at": "2026-10-25T19:55:57.403858+00:00",
+        "baseline_counter_at": "2026-10-25T19:55:27.403858+00:00",
+        "first_observation_id": "2a5d2239-a988-4ea7-a317-77f6085b059f",
+        "folding_start_counter": 1021,
+        "folding_start_observation_id": "4a55c73e-aad2-47fc-9486-ecf3eb0628bc"
+      },
+      {
+        "id": "c8fc5770-8bfb-400a-a0c5-9f879695ecad",
+        "ended_at": null,
+        "end_reason": null,
+        "stream_url": "integration:sessions:2c7f61a9-18a5-4ddc-845b-00e8a70b86a6",
+        "version_at": "2026-10-25T19:57:27.403858+00:00",
+        "detected_at": "2026-10-25T19:56:27.403858+00:00",
+        "confirmed_at": "2026-10-25T19:57:27.403858+00:00",
+        "last_counter": 1084,
+        "last_counter_at": "2026-10-25T19:57:27.403858+00:00",
+        "baseline_counter": 1042,
+        "detection_reason": "sustained_clothing_change",
+        "folding_started_at": "2026-10-25T19:56:57.403858+00:00",
+        "baseline_counter_at": "2026-10-25T19:56:27.403858+00:00",
+        "first_observation_id": "3a1820a9-6799-4859-8c8b-80ae1b34eea0",
+        "folding_start_counter": 1063,
+        "folding_start_observation_id": "8d1a8c70-39cd-4a67-8757-985bc4b09f93"
+      }
+    ],
+    "presenter_session_id": "c8fc5770-8bfb-400a-a0c5-9f879695ecad",
+    "presenter_candidate_id": null,
+    "presenter_review_path": "/tmp/tmpq0mm8n75/data/presenter-review/630f34fb-7ad9-4d2c-94b8-2ef9d162a0bd"
+  },
+  "frame_path": "/tmp/tmpq0mm8n75/data/frames/630f34fb-7ad9-4d2c-94b8-2ef9d162a0bd/frame.jpg",
+  "raw_counter": 1084,
+  "accepted_counter": 1084,
+  "counter_status": "accepted",
+  "counter_reason": "Monotonic and within pace bounds",
+  "rate": 0.7,
+  "clothing_status": "possible_handover_review_required",
+  "clothing_score": 0
+}

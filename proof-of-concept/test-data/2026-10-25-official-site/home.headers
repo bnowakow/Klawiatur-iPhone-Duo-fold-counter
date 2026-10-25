@@ -1,0 +1,21 @@
+HTTP/2 200 
+date: Sun, 25 Oct 2026 19:58:03 GMT
+content-type: text/html; charset=UTF-8
+vary: Accept-Encoding
+x-powered-by: PHP/8.3.36
+link: <https://ipduotest.pl/wp-json/>; rel="https://api.w.org/"
+link: <https://ipduotest.pl/wp-json/wp/v2/pages/25>; rel="alternate"; title="JSON"; type="application/json"
+link: <https://ipduotest.pl/>; rel=shortlink
+cache-control: public, max-age=604800
+expires: Sun, 01 Nov 2026 19:07:59 GMT
+etag: W/"34-1792955279;gz"
+x-litespeed-cache: hit
+platform: hostinger
+panel: hpanel
+content-security-policy: upgrade-insecure-requests
+server: hcdn
+alt-svc: h3=":443"; ma=86400
+x-hcdn-request-id: 050f8d5b1367beef3bdc40e7abb50f4d-bnk-edge7
+x-hcdn-cache-status: MISS
+x-hcdn-upstream-rt: 0.002
+

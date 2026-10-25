@@ -1,0 +1,99 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: folding
+      POSTGRES_USER: folding
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-54329}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U folding -d folding"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  supervisor:
+    build: .
+    env_file:
+      - ./.env
+    environment:
+      PGHOST: db
+      PGDATABASE: folding
+      PGUSER: folding
+      PGPASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
+      STREAM_URL: ${STREAM_URL:-https://www.youtube.com/watch?v=vaiHWiExDXg}
+      INTERVAL_SECONDS: ${INTERVAL_SECONDS:-4}
+      BACKPRESSURE_MAX_INTERVAL_SECONDS: ${BACKPRESSURE_MAX_INTERVAL_SECONDS:-60}
+      BACKPRESSURE_STABLE_SAMPLES: ${BACKPRESSURE_STABLE_SAMPLES:-12}
+      EXPECTED_RATE_MIN: ${EXPECTED_RATE_MIN:-0.4916666666666667}
+      EXPECTED_RATE_MAX: ${EXPECTED_RATE_MAX:-0.945}
+      MAX_RATE: ${MAX_RATE:-5}
+      RATE_TOLERANCE: ${RATE_TOLERANCE:-0.5}
+      COUNTER_SLACK: ${COUNTER_SLACK:-5}
+      REBASE_AFTER_SECONDS: ${REBASE_AFTER_SECONDS:-600}
+      CLOTHING_ROI: ${CLOTHING_ROI:-0.48,0.51,0.65,0.62}
+      CLOTHING_THRESHOLD: ${CLOTHING_THRESHOLD:-0.45}
+      HANDOVER_CONFIRM_SECONDS: ${HANDOVER_CONFIRM_SECONDS:-60}
+      NIGHT_STOP_START: ${NIGHT_STOP_START:-21:30}
+      NIGHT_STOP_END: ${NIGHT_STOP_END:-06:30}
+      NIGHT_STOP_IDLE_SECONDS: ${NIGHT_STOP_IDLE_SECONDS:-180}
+      TIMEZONE: ${TIMEZONE:-Europe/Warsaw}
+      ACTIVE_START: ${ACTIVE_START:-00:00}
+      ACTIVE_END: ${ACTIVE_END:-00:00}
+      IMAGE_STORAGE_LIMIT_BYTES: ${IMAGE_STORAGE_LIMIT_BYTES:-20000000000}
+    volumes:
+      - ./data:/data
+      - type: bind
+        source: ./.env
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      db:
+        condition: service_healthy
+    init: true
+    stop_grace_period: 100s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  official-data:
+    build: .
+    env_file:
+      - ./.env
+    command: ["python", "official_data.py"]
+    environment:
+      PGHOST: db
+      PGDATABASE: folding
+      PGUSER: folding
+      PGPASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
+      OFFICIAL_DATA_INTERVAL_SECONDS: ${OFFICIAL_DATA_INTERVAL_SECONDS:-300}
+      STREAM_URL: ${STREAM_URL:-https://www.youtube.com/watch?v=vaiHWiExDXg}
+      INTERVAL_SECONDS: ${INTERVAL_SECONDS:-4}
+    volumes:
+      - ./data:/data
+      - type: bind
+        source: ./.env
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      db:
+        condition: service_healthy
+    init: true
+    stop_grace_period: 100s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  postgres_data:

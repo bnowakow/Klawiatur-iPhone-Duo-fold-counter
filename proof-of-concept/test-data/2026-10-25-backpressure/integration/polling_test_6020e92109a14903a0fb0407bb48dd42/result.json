@@ -1,0 +1,23 @@
+{
+  "integration": "passed",
+  "schema": "polling_test_6020e92109a14903a0fb0407bb48dd42",
+  "state": {
+    "effective_interval_seconds": 8.8,
+    "stable_samples": 1,
+    "base_interval_seconds": 4,
+    "maximum_interval_seconds": 60,
+    "cycle_seconds": 1,
+    "previous_interval_seconds": 8.8,
+    "action": "hold",
+    "outcome": "analyzed",
+    "stable_samples_required": 12
+  },
+  "checks": [
+    "schema commit before capture",
+    "schema lock released",
+    "queued outage evidence",
+    "restart recovery",
+    "database events",
+    "observation timing link"
+  ]
+}

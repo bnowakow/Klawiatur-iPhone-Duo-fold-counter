@@ -1,0 +1,1 @@
+{"integration": "passed", "stream": "integration:sessions:6a3111e0-8271-4044-a3b1-98d6f6f1f38c", "sessions": 2, "folding_folds_per_hour": 2520.0, "checks": ["pending start retained", "database reload", "transaction rollback", "outbox state recovery", "idempotent stale replay", "SQL rates"], "evidence_path": "/test-evidence/6a3111e0-8271-4044-a3b1-98d6f6f1f38c"}

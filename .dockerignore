@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.sample
+.venv
+data
+**/__pycache__
+proof-of-concept/*frame.jpg
+proof-of-concept/latest
+proof-of-concept/recognition
+proof-of-concept/handover
+!proof-of-concept/live-frame.jpg
+!proof-of-concept/latest/
+proof-of-concept/latest/*
+!proof-of-concept/latest/live-frame.jpg

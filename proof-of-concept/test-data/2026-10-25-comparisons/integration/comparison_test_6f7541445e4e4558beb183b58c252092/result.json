@@ -1,0 +1,84 @@
+{
+  "integration": "passed",
+  "schema": "comparison_test_6f7541445e4e4558beb183b58c252092",
+  "comparison": {
+    "id": "c1b798c2-b39c-4aeb-adfa-ddfe5e9d49a0",
+    "status": "compared",
+    "official_fpm": 40.0,
+    "recent_fpm": 60.0,
+    "stint_fpm": 60.0,
+    "recent_gap_fpm": 20.0,
+    "stint_gap_fpm": 20.0,
+    "details": {
+      "source_url": "fixture-source",
+      "source_fetched_at": "2026-10-25T20:27:43.852166+00:00",
+      "source_sha256": null,
+      "source_age_seconds": 0.0,
+      "identity_verified": false,
+      "interval_seconds": 10.0,
+      "published": {
+        "fpm": 40.0,
+        "folds": 200.0,
+        "minutes": 5.0,
+        "projection": 2400.0
+      },
+      "detected_at": "2026-10-25T20:22:43.852166+00:00",
+      "folding_started_at": "2026-10-25T20:22:43.852166+00:00",
+      "app": {
+        "recent_fpm": 60.0,
+        "stint_fpm": 60.0,
+        "sample_count": 19,
+        "recent_window_seconds": 180.0,
+        "measured_at": "2026-10-25T20:27:43.852166+00:00",
+        "counter": 1300,
+        "folding_elapsed_seconds": 300.0,
+        "cadence_analysis": [
+          {
+            "target_interval_seconds": 10,
+            "retained_samples": 19,
+            "reference_samples": 19,
+            "max_gap_seconds": 10.0,
+            "mean_absolute_counter_error": 0.0,
+            "max_absolute_counter_error": 0.0
+          },
+          {
+            "target_interval_seconds": 20,
+            "retained_samples": 10,
+            "reference_samples": 19,
+            "max_gap_seconds": 20.0,
+            "mean_absolute_counter_error": 0.0,
+            "max_absolute_counter_error": 0.0
+          },
+          {
+            "target_interval_seconds": 30,
+            "retained_samples": 7,
+            "reference_samples": 19,
+            "max_gap_seconds": 30.0,
+            "mean_absolute_counter_error": 0.0,
+            "max_absolute_counter_error": 0.0
+          },
+          {
+            "target_interval_seconds": 60,
+            "retained_samples": 4,
+            "reference_samples": 19,
+            "max_gap_seconds": 60.0,
+            "mean_absolute_counter_error": 0.0,
+            "max_absolute_counter_error": 0.0
+          }
+        ]
+      },
+      "published_values_hash": "9a36dedad10629a9383c369ca7865cc5ee6be80336251c2ab53ef022643b191f",
+      "published_values_changed": null,
+      "stint_gap_percent": 50.0
+    }
+  },
+  "checks": [
+    "timestamp alignment",
+    "recent and stint windows",
+    "idempotent rerun",
+    "source freshness",
+    "app freshness",
+    "attribution uncertainty",
+    "source failure"
+  ]
+}

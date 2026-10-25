@@ -1,0 +1,20 @@
+{
+  "run_id": "7e7ab4b7-2e5b-409b-ac2c-57bd62ba3f89",
+  "mode": "serial",
+  "source_stream": "https://www.youtube.com/watch?v=vaiHWiExDXg",
+  "benchmark_stream": "benchmark:serial:7e7ab4b7-2e5b-409b-ac2c-57bd62ba3f89",
+  "started_at": "2026-10-25T20:42:50.054647+00:00",
+  "target_interval_seconds": 4,
+  "requested_duration_seconds": 60,
+  "frames": 14,
+  "accepted_samples": 9,
+  "wall_seconds": 65.99522498999977,
+  "cycle_mean_seconds": 4.0016494154286715,
+  "cycle_p95_seconds": 6.335218502999851,
+  "cycle_max_seconds": 6.593519753000692,
+  "cycles_over_target_interval": 8,
+  "actual_start_gap_mean_seconds": 4.569085085461525,
+  "cpu_seconds": 18.628295,
+  "errors": 2,
+  "note": "Full production capture path on isolated benchmark stream; no parallel cycles or nominal timestamp substitution."
+}

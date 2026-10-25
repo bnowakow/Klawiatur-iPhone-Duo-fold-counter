@@ -1,0 +1,4 @@
+klawiatur-iphone-duo-fold-counter-official-data-run-516d8a438ee5 CPU=89.33% MEM=397.9MiB / 7.651GiB
+klawiatur-iphone-duo-fold-counter-official-data-1 CPU=0.00% MEM=28.93MiB / 7.651GiB
+klawiatur-iphone-duo-fold-counter-supervisor-1 CPU=0.42% MEM=42.43MiB / 7.651GiB
+klawiatur-iphone-duo-fold-counter-db-1 CPU=0.53% MEM=38.48MiB / 7.651GiB

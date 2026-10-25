@@ -1,0 +1,16 @@
+{
+  "source_url": "https://docs.google.com/spreadsheets/u/0/d/1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM/htmlview/sheet?headers=true&gid=0",
+  "source_run_id": "646c5bd2-bd83-46ad-aae3-d260deea9b15",
+  "source_sha256": "4fd629479eb162012daec8ccc75ac14429b609edba72218530cd24694357536f",
+  "fetched_at": "2026-10-25T20:17:21.136092+00:00",
+  "completed_rows": 27,
+  "folds_per_minute": [
+    "29.5",
+    "56.7"
+  ],
+  "folds_per_second": [
+    "0.4916666666666666666666666667",
+    "0.945"
+  ],
+  "rule": "Completed dated rows with cumulative and individual counters and a positive published rate; exclude blanks, note rows and future slots."
+}

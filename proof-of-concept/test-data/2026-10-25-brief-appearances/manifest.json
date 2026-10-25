@@ -1,0 +1,27 @@
+[
+  {
+    "file": "white-before.jpg",
+    "observation_id": "73bb7c27-8ce0-46d0-ad24-2017a6e1930b",
+    "sha256": "df608d947d579be233cf7f9cdb9daa665a9b390126906da2187ff8d5744d6d1c"
+  },
+  {
+    "file": "olive-candidate.jpg",
+    "observation_id": "52f6052b-d9b9-48c3-9a82-7bd8f23e44d5",
+    "sha256": "326bf3926a411a3a76a02eca018364065a73c7a67d3b828b43c70d7edb3472f1"
+  },
+  {
+    "file": "unknown-transition.jpg",
+    "observation_id": "27b7b07b-5da7-418a-9310-9391a8f20d24",
+    "sha256": "0e101f304b26b6d350445b9a8cf5dfb36145e0b8d693c2b69d9ed56c6f7ebecd"
+  },
+  {
+    "file": "gray-after.jpg",
+    "observation_id": "35c4139a-3586-4697-8069-f396daf3ccb6",
+    "sha256": "9e5bcbdf3aff6e1a1b902d81e697106792f14a05f55430182644eb24573b86b8"
+  },
+  {
+    "file": "gray-later.jpg",
+    "observation_id": "8de93788-43ba-4526-9e1c-a86f69ab2d24",
+    "sha256": "e515b73501408819d4f70e2a0f527d165bb59605139bc465ccd521daacd30f9d"
+  }
+]

@@ -1,0 +1,116 @@
+{
+  "id": "fdce54ac-2fdd-4b00-99eb-64d5518f9a4a",
+  "stream_url": "integration:sessions:6a3111e0-8271-4044-a3b1-98d6f6f1f38c",
+  "observed_at": "2026-10-25T19:22:40.981802+00:00",
+  "status": "analyzed",
+  "details": {
+    "fixture": true,
+    "ocr": {
+      "value": 1084,
+      "digits": []
+    },
+    "counter_validation": {
+      "raw": 1084,
+      "accepted": 1084,
+      "rate": 0.7,
+      "expected_rate": 0.7,
+      "expected_rate_range": [
+        0.35,
+        1.0499999999999998
+      ],
+      "rate_model": "recent_median",
+      "allowed_delta": [
+        5.5,
+        36.49999999999999
+      ],
+      "elapsed_seconds": 30.0,
+      "status": "accepted",
+      "reason": "Monotonic and within pace bounds"
+    },
+    "camera_view": {
+      "view": "presenter_main",
+      "tracking": {
+        "changed_since": 1792956100.981802
+      },
+      "baseline_replaced_for_session": true
+    },
+    "clothing_baseline_observation": null,
+    "presenter_appearance_updates": [
+      {
+        "id": "dba648f5-7611-456d-9b5f-7438d256c125",
+        "status": "sustained_appearance_review_required",
+        "ended_at": null,
+        "end_reason": null,
+        "stream_url": "integration:sessions:6a3111e0-8271-4044-a3b1-98d6f6f1f38c",
+        "version_at": "2026-10-25T19:22:40.981802+00:00",
+        "detected_at": "2026-10-25T19:21:40.981802+00:00",
+        "confirmed_at": null,
+        "last_counter": 1084,
+        "last_counter_at": "2026-10-25T19:22:40.981802+00:00",
+        "last_frame_path": "/tmp/tmpr6ptjht5/data/frames/fdce54ac-2fdd-4b00-99eb-64d5518f9a4a/frame.jpg",
+        "baseline_counter": 1042,
+        "detection_reason": "clothing_appearance_cue",
+        "first_frame_path": "/tmp/tmpr6ptjht5/data/frames/2fd29d01-4861-42d1-a0da-f20447e9a68f/frame.jpg",
+        "folding_evidence": "accepted_increase_observed",
+        "last_raw_counter": 1084,
+        "first_raw_counter": 1042,
+        "folding_started_at": "2026-10-25T19:22:10.981802+00:00",
+        "baseline_counter_at": "2026-10-25T19:21:40.981802+00:00",
+        "last_observation_id": "fdce54ac-2fdd-4b00-99eb-64d5518f9a4a",
+        "first_observation_id": "2fd29d01-4861-42d1-a0da-f20447e9a68f",
+        "folding_start_counter": 1063,
+        "folding_start_observation_id": "7500d968-f3cc-469e-9515-0c6fd123e787"
+      }
+    ],
+    "presenter_attribution_review_required": false,
+    "presenter_session_updates": [
+      {
+        "id": "46420f76-9ecf-41b0-82c4-c2765801b067",
+        "ended_at": "2026-10-25T19:21:40.981802+00:00",
+        "end_reason": "sustained_clothing_change",
+        "stream_url": "integration:sessions:6a3111e0-8271-4044-a3b1-98d6f6f1f38c",
+        "version_at": "2026-10-25T19:22:40.981802+00:00",
+        "detected_at": "2026-10-25T19:20:10.981802+00:00",
+        "confirmed_at": "2026-10-25T19:20:10.981802+00:00",
+        "last_counter": 1021,
+        "last_counter_at": "2026-10-25T19:21:10.981802+00:00",
+        "baseline_counter": 1000,
+        "detection_reason": "first_observed",
+        "folding_started_at": "2026-10-25T19:21:10.981802+00:00",
+        "baseline_counter_at": "2026-10-25T19:20:40.981802+00:00",
+        "first_observation_id": "bfe1f08a-b697-483a-be35-cb0c75f94314",
+        "folding_start_counter": 1021,
+        "folding_start_observation_id": "547173fc-ee2b-4174-a081-1f51d4b54b44"
+      },
+      {
+        "id": "bd40140e-9376-4da4-8e4d-90bf45f6402a",
+        "ended_at": null,
+        "end_reason": null,
+        "stream_url": "integration:sessions:6a3111e0-8271-4044-a3b1-98d6f6f1f38c",
+        "version_at": "2026-10-25T19:22:40.981802+00:00",
+        "detected_at": "2026-10-25T19:21:40.981802+00:00",
+        "confirmed_at": "2026-10-25T19:22:40.981802+00:00",
+        "last_counter": 1084,
+        "last_counter_at": "2026-10-25T19:22:40.981802+00:00",
+        "baseline_counter": 1042,
+        "detection_reason": "sustained_clothing_change",
+        "folding_started_at": "2026-10-25T19:22:10.981802+00:00",
+        "baseline_counter_at": "2026-10-25T19:21:40.981802+00:00",
+        "first_observation_id": "2fd29d01-4861-42d1-a0da-f20447e9a68f",
+        "folding_start_counter": 1063,
+        "folding_start_observation_id": "7500d968-f3cc-469e-9515-0c6fd123e787"
+      }
+    ],
+    "presenter_session_id": "bd40140e-9376-4da4-8e4d-90bf45f6402a",
+    "presenter_candidate_id": null,
+    "presenter_review_path": "/tmp/tmpr6ptjht5/data/presenter-review/fdce54ac-2fdd-4b00-99eb-64d5518f9a4a"
+  },
+  "frame_path": "/tmp/tmpr6ptjht5/data/frames/fdce54ac-2fdd-4b00-99eb-64d5518f9a4a/frame.jpg",
+  "raw_counter": 1084,
+  "accepted_counter": 1084,
+  "counter_status": "accepted",
+  "counter_reason": "Monotonic and within pace bounds",
+  "rate": 0.7,
+  "clothing_status": "possible_handover_review_required",
+  "clothing_score": 0
+}

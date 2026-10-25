@@ -1,0 +1,1900 @@
+{
+  "headers": [
+    "Data / Start Testera",
+    "Wynik na koniec",
+    "Wynik indywidualny",
+    "Czas składania (min)",
+    "Złożenia na minutę"
+  ],
+  "rows": [
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "2026-10-24 14:28:00",
+      "500",
+      "500",
+      "12,00",
+      "41,7"
+    ],
+    [
+      "2026-10-24 14:40:00",
+      "668",
+      "168",
+      "5,00",
+      "33,6"
+    ],
+    [
+      "2026-10-24 14:45:00",
+      "1111",
+      "443",
+      "15,00",
+      "29,5"
+    ],
+    [
+      "2026-10-24 15:00:00",
+      "3671",
+      "2560",
+      "60,00",
+      "42,7"
+    ],
+    [
+      "2026-10-24 16:00:00",
+      "5849",
+      "2178",
+      "60,00",
+      "36,3"
+    ],
+    [
+      "2026-10-24 17:00:00",
+      "8520",
+      "2671",
+      "60,00",
+      "44,5"
+    ],
+    [
+      "2026-10-24 18:00:00",
+      "11304",
+      "2784",
+      "60,00",
+      "46,4"
+    ],
+    [
+      "2026-10-24 19:00:00",
+      "14001",
+      "2697",
+      "60,00",
+      "44,9"
+    ],
+    [
+      "2026-10-24 20:00:00",
+      "16883",
+      "2882",
+      "60,00",
+      "48,0"
+    ],
+    [
+      "2026-10-24 21:00:00",
+      "18848",
+      "1965",
+      "60,00",
+      "32,8"
+    ],
+    [
+      "",
+      "",
+      "ZAMKNIĘCIE DNIA - 18848 RAZY",
+      "",
+      ""
+    ],
+    [
+      "2026-10-25 06:00:00",
+      "21794",
+      "2946",
+      "60,00",
+      "49,1"
+    ],
+    [
+      "2026-10-25 07:00:00",
+      "22915",
+      "1121",
+      "30,00",
+      "37,4"
+    ],
+    [
+      "2026-10-25 07:30:00",
+      "24268",
+      "1353",
+      "30,00",
+      "45,1"
+    ],
+    [
+      "2026-10-25 08:00:00",
+      "27480",
+      "3212",
+      "60,00",
+      "53,5"
+    ],
+    [
+      "2026-10-25 09:00:00",
+      "30344",
+      "2864",
+      "60,00",
+      "47,7"
+    ],
+    [
+      "2026-10-25 10:00:00",
+      "33472",
+      "3128",
+      "60,00",
+      "52,1"
+    ],
+    [
+      "2026-10-25 11:00:00",
+      "36500",
+      "3028",
+      "60,00",
+      "50,5"
+    ],
+    [
+      "2026-10-25 12:00:00",
+      "39092",
+      "2592",
+      "60,00",
+      "43,2"
+    ],
+    [
+      "2026-10-25 13:00:00",
+      "41430",
+      "2338",
+      "60,00",
+      "39,0"
+    ],
+    [
+      "2026-10-25 14:00:00",
+      "45000",
+      "3570",
+      "63,00",
+      "56,7"
+    ],
+    [
+      "2026-10-25 15:03:00",
+      "47863",
+      "2811",
+      "57,00",
+      "49,3"
+    ],
+    [
+      "2026-10-25 16:00:00",
+      "50473",
+      "2610",
+      "68,00",
+      "38,4"
+    ],
+    [
+      "",
+      "",
+      "TEST ZABRUDZENIA KURZ",
+      "",
+      ""
+    ],
+    [
+      "2026-10-25 17:08:00",
+      "53306",
+      "2823",
+      "52,00",
+      "54,3"
+    ],
+    [
+      "2026-10-25 18:00:00",
+      "56100",
+      "2794",
+      "60,00",
+      "46,6"
+    ],
+    [
+      "2026-10-25 19:00:00",
+      "58341",
+      "2241",
+      "60,00",
+      "37,3"
+    ],
+    [
+      "2026-10-25 20:00:00",
+      "60578",
+      "2237",
+      "60,00",
+      "37,3"
+    ],
+    [
+      "2026-10-25 21:00:00",
+      "",
+      "",
+      "60,00",
+      "0,0"
+    ],
+    [
+      "2026-10-25 22:00:00",
+      "",
+      "",
+      "60,00",
+      "0,0"
+    ],
+    [
+      "",
+      "",
+      "ZAMKNIĘCIE DNIA",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ],
+  "cells": [
+    [
+      {
+        "text": "Data / Start Testera",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "Wynik na koniec",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "Wynik indywidualny",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "Czas składania (min)",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "Złożenia na minutę",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 14:28:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "500",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "500",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "12,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "41,7",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 14:40:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "668",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "168",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "5,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "33,6",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 14:45:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "1111",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "443",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "15,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "29,5",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 15:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "3671",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2560",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "42,7",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 16:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "5849",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2178",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "36,3",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 17:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "8520",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2671",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "44,5",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 18:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "11304",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2784",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "46,4",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 19:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "14001",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2697",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "44,9",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 20:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "16883",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2882",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "48,0",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-24 21:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "18848",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "1965",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "32,8",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "ZAMKNIĘCIE DNIA - 18848 RAZY",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 06:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "21794",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2946",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "49,1",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 07:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "22915",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "1121",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "30,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "37,4",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 07:30:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "24268",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "1353",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "30,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "45,1",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 08:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "27480",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "3212",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "53,5",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 09:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "30344",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2864",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "47,7",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 10:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "33472",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "3128",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "52,1",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 11:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "36500",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "3028",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "50,5",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 12:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "39092",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2592",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "43,2",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 13:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "41430",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2338",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "39,0",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 14:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "45000",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "3570",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "63,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "56,7",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 15:03:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "47863",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2811",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "57,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "49,3",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 16:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "50473",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2610",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "68,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "38,4",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "TEST ZABRUDZENIA KURZ",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 17:08:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "53306",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2823",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "52,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "54,3",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 18:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "56100",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2794",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "46,6",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 19:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "58341",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2241",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "37,3",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 20:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60578",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2237",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "37,3",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 21:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "0,0",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2026-10-25 22:00:00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "60,00",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "0,0",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "ZAMKNIĘCIE DNIA",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ]
+  ],
+  "row_count": 42,
+  "nonempty_row_count": 31
+}

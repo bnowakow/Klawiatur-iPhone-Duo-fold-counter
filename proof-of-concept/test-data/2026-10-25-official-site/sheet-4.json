@@ -1,0 +1,80 @@
+{
+  "headers": [
+    "Wynik bieżącego zawodnika",
+    "Minuta pomiaru",
+    "Szacunek na koniec",
+    "Złożenia na minutę"
+  ],
+  "rows": [
+    [
+      "2237",
+      "57",
+      "2355",
+      "39"
+    ]
+  ],
+  "cells": [
+    [
+      {
+        "text": "Wynik bieżącego zawodnika",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "Minuta pomiaru",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "Szacunek na koniec",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "Złożenia na minutę",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ],
+    [
+      {
+        "text": "2237",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "57",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "2355",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      },
+      {
+        "text": "39",
+        "links": [],
+        "images": [],
+        "colspan": 1,
+        "rowspan": 1
+      }
+    ]
+  ],
+  "row_count": 1,
+  "nonempty_row_count": 1
+}

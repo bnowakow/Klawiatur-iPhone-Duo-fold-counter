@@ -1,0 +1,3 @@
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-e4f137e25875 Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-e4f137e25875 Created 
+{"integration": "passed", "stream": "integration:sessions:58bcb6d0-de5c-49a8-999f-895550557f13", "sessions": 2, "folding_folds_per_hour": 2520.0, "checks": ["pending start retained", "database reload", "transaction rollback", "outbox state recovery", "idempotent stale replay", "SQL rates"], "evidence_path": "/data/test-evidence/frame-retention/58bcb6d0-de5c-49a8-999f-895550557f13"}

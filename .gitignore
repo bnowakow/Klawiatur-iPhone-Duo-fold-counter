@@ -1,0 +1,20 @@
+# Host configuration; mounted read-only into application containers.
+.env
+.env.*
+!.env.sample
+.venv/
+__pycache__/
+*.pyc
+/data/
+.DS_Store
+
+# Generated analysis and runtime state
+/proof-of-concept/recognition/
+/proof-of-concept/handover/
+/proof-of-concept/latest/recognition/
+/proof-of-concept/latest/capture.json
+/proof-of-concept/camera-check/annotated.jpg
+/proof-of-concept/camera-check/clothing.png
+/proof-of-concept/camera-check/result.json
+
+# Reference frames, camera profiles, and test-data/ archives remain versioned.

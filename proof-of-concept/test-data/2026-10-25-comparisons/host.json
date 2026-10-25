@@ -1,0 +1,7 @@
+{
+  "host_model": "MacBookPro18,2",
+  "logical_cpu_count": 10,
+  "host_memory_bytes": 68719476736,
+  "docker_memory_limit_note": "docker stats reported about 7.651 GiB",
+  "benchmark_note": "Regular supervisor and website collector remained running."
+}

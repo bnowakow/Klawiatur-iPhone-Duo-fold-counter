@@ -1,0 +1,25 @@
+{
+  "last_observation": 1792956231.830572,
+  "changed_since": null,
+  "sustained_seconds": 0,
+  "status": "no_clothing_change_detected",
+  "config": {
+    "baseline": "/Users/sup/code/Klawiatur-iPhone-Duo-fold-counter/proof-of-concept/live-frame.jpg",
+    "baseline_modified": 1792955755809787800,
+    "roi": [
+      0.48,
+      0.51,
+      0.65,
+      0.62
+    ],
+    "threshold": 0.45,
+    "confirm_seconds": 60
+  },
+  "source": {
+    "path": "/Users/sup/code/Klawiatur-iPhone-Duo-fold-counter/proof-of-concept/latest/live-frame.jpg",
+    "modified": 1792956062855889320
+  },
+  "score": 0.001,
+  "captured_at": "2026-10-25T19:23:51.830572+00:00",
+  "note": "Clothing-change cue only; does not establish identity or presence."
+}

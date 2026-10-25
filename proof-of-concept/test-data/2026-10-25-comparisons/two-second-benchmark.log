@@ -1,0 +1,100 @@
+{"frames": 15, "last_analysis_seconds": 1.4042112510001061}
+{"frames": 30, "last_analysis_seconds": 1.129984001000139}
+{
+  "run_id": "b132d8fb-fee4-4d3a-9837-9ea2bc908fd6",
+  "benchmark_stream": "benchmark:interval-2s:b132d8fb-fee4-4d3a-9837-9ea2bc908fd6",
+  "source_stream": "https://www.youtube.com/watch?v=vaiHWiExDXg",
+  "started_at": "2026-10-25T20:34:28.625727+00:00",
+  "height": 1080,
+  "target_interval_seconds": 2,
+  "requested_frames": 30,
+  "frames": 30,
+  "accepted_samples": 28,
+  "serial_capture_checks": [],
+  "metadata_lookup_seconds": 1.2849964170000021,
+  "wall_seconds": 61.58222340300017,
+  "persistent_pipeline_wall_seconds": 60.29723769400016,
+  "cpu_seconds": 25.254235,
+  "average_cpu_cores_used": 0.4100896915451361,
+  "python_peak_rss_platform_units": 118368,
+  "analysis_mean_seconds": 0.9132232837000477,
+  "analysis_p95_seconds": 2.8329547100001946,
+  "analysis_max_seconds": 4.064026835000277,
+  "analyses_over_one_second": 5,
+  "analyses_over_target_interval": 2,
+  "arrival_gap_p50_seconds": 0.7733348750002733,
+  "arrival_gap_p95_seconds": 4.382790544000272,
+  "arrival_gap_max_seconds": 5.094161127999996,
+  "ffmpeg_exit_code": 0,
+  "ffmpeg_error_bytes": 0,
+  "cadence_analysis": [
+    {
+      "target_interval_seconds": 1,
+      "status": "finer_reference_required",
+      "reference_median_gap_seconds": 2.0,
+      "reference_samples": 28
+    },
+    {
+      "target_interval_seconds": 2,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 2.0,
+      "retained_samples": 28,
+      "reference_samples": 28,
+      "max_gap_seconds": 4.0,
+      "mean_absolute_counter_error": 0.0,
+      "max_absolute_counter_error": 0.0
+    },
+    {
+      "target_interval_seconds": 5,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 2.0,
+      "retained_samples": 12,
+      "reference_samples": 28,
+      "max_gap_seconds": 6.0,
+      "mean_absolute_counter_error": 0.27976190476199136,
+      "max_absolute_counter_error": 0.6666666666642413
+    },
+    {
+      "target_interval_seconds": 10,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 2.0,
+      "retained_samples": 7,
+      "reference_samples": 28,
+      "max_gap_seconds": 12.0,
+      "mean_absolute_counter_error": 0.35714285714285715,
+      "max_absolute_counter_error": 1.0
+    },
+    {
+      "target_interval_seconds": 20,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 2.0,
+      "retained_samples": 4,
+      "reference_samples": 28,
+      "max_gap_seconds": 20.0,
+      "mean_absolute_counter_error": 0.3482142857142857,
+      "max_absolute_counter_error": 1.0
+    },
+    {
+      "target_interval_seconds": 30,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 2.0,
+      "retained_samples": 3,
+      "reference_samples": 28,
+      "max_gap_seconds": 30.0,
+      "mean_absolute_counter_error": 0.33553113553067043,
+      "max_absolute_counter_error": 1.0666666666656965
+    },
+    {
+      "target_interval_seconds": 60,
+      "status": "evaluated",
+      "reference_median_gap_seconds": 2.0,
+      "retained_samples": 2,
+      "reference_samples": 28,
+      "max_gap_seconds": 56.0,
+      "mean_absolute_counter_error": 0.3265306122448237,
+      "max_absolute_counter_error": 1.142857142855064
+    }
+  ],
+  "note": "Persistent HLS pipeline; nominal media positions may arrive in segment bursts. Fixture observations use an isolated benchmark stream. Does not change live polling.",
+  "evidence_path": "/data/benchmarks/interval-2s-b132d8fb-fee4-4d3a-9837-9ea2bc908fd6"
+}

@@ -1,0 +1,28 @@
+{
+  "description": "Preserved camera-angle test evidence; keep original files unchanged.",
+  "sha256": {
+    "camera-check/annotated.jpg": "1e5cd44b403afbc84fd6cd687252a23c67de0a3046ba52fa9c6860189baae068",
+    "camera-check/clothing.png": "14477ca9b0401f6f6cef7dce50168be2647cb199c9be54aea45240a6d13ad62f",
+    "camera-check/live-frame.jpg": "ce5ea011df35f483be0f7dafc16e7e694f5ef467cc0e45ba0922b219a8d24967",
+    "camera-check/result.json": "c1a835381aab80796b1519c66f0e274eb515f723289644cac93edbc0a0a80139",
+    "camera-check/second-frame.jpg": "bca929b7694979384bdf5bcbfeba7293e1bfda5ec960283e9a500dca6803d61f",
+    "camera-profiles/layouts.json": "61b6a42f4c0a400623ff66ec5846fae43e160048826a71f05d33588ddfcbf228",
+    "handover/baseline-clothing.png": "87b9812386f621990fa90005d91d1d955bbe04a53ff2423a4e355ad4c75495d0",
+    "handover/comparison.png": "b29d8e16aba15473eaad5a2a0f9612dbebcb963f4d52edf7b0b299012b2e3b81",
+    "handover/current-clothing.png": "4eda5883e80b655b3a67dffe0bfcacb29ec9ea7beee4823abdfef5c821a591c1",
+    "handover/result.json": "9e30dbcf4928c9dd79f468f1dbaa020fc9373684fc1bfa5f4cf55e73b026759f",
+    "handover/state.json": "9e30dbcf4928c9dd79f468f1dbaa020fc9373684fc1bfa5f4cf55e73b026759f",
+    "latest/capture.json": "c17a08baecb1ce3601682456670513d50f5a2b9594cad0905f60a241bfa4d00a",
+    "latest/live-frame.jpg": "e2baa6f8ff7777cd61e9d31166924d860838ace6e4e6f1b126d9b0c0b31e50ec",
+    "latest/recognition/annotated-frame.jpg": "1b65baf0a05d077c33f5d8f3fbccd59475f74af9f6d43a07994710100b90dd93",
+    "latest/recognition/counter-crop.png": "3cc7099ececb628c2d1cdc8769f6f4112ec21bb98a0f4c8741a88fb7c4e64012",
+    "latest/recognition/red-mask.png": "3914ac2b4020220909cfafadc9ef06d873cb39931df1b7603b85e4863e66aa33",
+    "latest/recognition/result.json": "997178910a214f01268fc133578c521793305b13942f12e1d6d01b759ca8fef3",
+    "live-frame.jpg": "15a546a821402c188f208416cf3ff0cd74f6de1ffb8208aecc7c60c7359b3ed9",
+    "recognition/annotated-frame.jpg": "8227bb9683f0de9d5ce4e940cf121bb9591e9f65cb4e24623e71a66e0a251431",
+    "recognition/counter-crop.png": "21aa3af21f2adc9c37b4a1cf83bb4d2d2d4f099d3761ac23a2da2d797d567c64",
+    "recognition/red-mask.png": "82f01f1ea9122192eca98872eb6634cd61bb8c82dd58268c813a192d5a959117",
+    "recognition/result.json": "16fefc8669ffb72c46b0b4f4fe555efb0fc548563bd313b27caf666e0757582c",
+    "user-previous-angle.jpeg": "e2baa6f8ff7777cd61e9d31166924d860838ace6e4e6f1b126d9b0c0b31e50ec"
+  }
+}

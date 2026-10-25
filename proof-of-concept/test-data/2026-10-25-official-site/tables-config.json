@@ -1,0 +1,622 @@
+[
+  {
+    "id": 4,
+    "title": "Arkusz kalkulacyjny bez tytu\u0142u",
+    "description": "",
+    "settings": {
+      "general_settings": {
+        "disable_copy_content": false,
+        "open_links_new_tab": false,
+        "allow_exporting_data": false,
+        "allow_fullscreen": false
+      },
+      "export_options": [
+        {
+          "id": "excel",
+          "enabled": false
+        },
+        {
+          "id": "csv",
+          "enabled": true
+        },
+        {
+          "id": "tsv",
+          "enabled": true
+        },
+        {
+          "id": "json",
+          "enabled": true
+        },
+        {
+          "id": "html",
+          "enabled": true
+        },
+        {
+          "id": "markdown",
+          "enabled": true
+        },
+        {
+          "id": "pdf",
+          "enabled": false
+        },
+        {
+          "id": "print",
+          "enabled": true
+        },
+        {
+          "id": "copy",
+          "enabled": true
+        }
+      ],
+      "refresh_settings": {
+        "refresh_mode": "no_refresh",
+        "auto_refresh_interval": 10,
+        "auto_refresh_unit": "minutes",
+        "show_refresh_button": false,
+        "auto_refresh_mode": "no_refresh"
+      },
+      "cache_settings": {
+        "enable_cache": false,
+        "store_cache_duration": 10,
+        "cache_unit": "minutes"
+      },
+      "style_settings": {
+        "header_bg": "#FFFFFF",
+        "header_color": "#000000",
+        "body_bg": "#ffffff",
+        "body_color": "#000000",
+        "header_font_family": "inherit",
+        "header_font_size": "14px",
+        "bold_header": true,
+        "body_font_family": "inherit",
+        "body_font_size": "14px",
+        "show_row_lines": true,
+        "show_column_lines": false,
+        "show_table_outline": true,
+        "line_color": "#e5e7eb",
+        "show_row_numbers": false,
+        "cell_padding": "12px",
+        "text_wrap": true,
+        "column_max_width": "auto",
+        "text_truncate": false,
+        "truncate_length": 50,
+        "smart_links": true,
+        "responsive_column_wrapping": false,
+        "responsive_visible_columns": 3
+      },
+      "labels": {
+        "search": "Search data",
+        "no_results": "No results found",
+        "no_data_search": "No data matches your search for \"%s\"",
+        "clear_search": "Clear search",
+        "refresh_data": "Refresh data",
+        "fullscreen": "Fullscreen",
+        "exit_fullscreen": "Exit fullscreen",
+        "export_data": "Export data",
+        "export_as": "Export as",
+        "choose_format": "Choose your preferred format",
+        "excel": "Excel",
+        "csv": "CSV",
+        "tsv": "TSV",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "pdf": "PDF",
+        "print": "Print",
+        "copy": "Copy to Clipboard",
+        "copied": "Copied",
+        "showing_entries": "Showing %s to %s of %s entries",
+        "per_page": "Per page",
+        "rows": "%s rows",
+        "page_of": "%s of %s",
+        "go_to_page": "Go to page",
+        "page_n": "Page %s"
+      },
+      "digit_translations": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "selected_language": "en-US",
+      "display_settings": {
+        "searching": false,
+        "regex_search": false,
+        "pagination": true,
+        "sorting": false,
+        "show_table_title": false,
+        "show_table_description": false,
+        "has_row_offset": false,
+        "row_offset": 0,
+        "has_column_offset": false,
+        "column_offset": 0,
+        "limit_rows": false,
+        "max_rows": 100,
+        "limit_columns": false,
+        "max_columns": 100,
+        "limit_range": false,
+        "range": "",
+        "page_limit": 10,
+        "show_header": false,
+        "show_footer": false,
+        "hide_columns_mobile": [],
+        "hide_columns_tablet": []
+      },
+      "sheet_url": "https://docs.google.com/spreadsheets/d/1fK3Qn5pPK0sEZGayoWihVKLhizaGhnYR4iplJ7MCd_s",
+      "sheet_id": "1fK3Qn5pPK0sEZGayoWihVKLhizaGhnYR4iplJ7MCd_s",
+      "selected_sheet": 225705126
+    },
+    "created_at": "2026-10-25 10:28:27",
+    "updated_at": "2026-10-25 10:28:27"
+  },
+  {
+    "id": 3,
+    "title": "Top 5",
+    "description": "",
+    "settings": {
+      "general_settings": {
+        "disable_copy_content": false,
+        "open_links_new_tab": false,
+        "allow_exporting_data": false,
+        "allow_fullscreen": false
+      },
+      "export_options": [
+        {
+          "id": "excel",
+          "enabled": false
+        },
+        {
+          "id": "csv",
+          "enabled": true
+        },
+        {
+          "id": "tsv",
+          "enabled": true
+        },
+        {
+          "id": "json",
+          "enabled": true
+        },
+        {
+          "id": "html",
+          "enabled": true
+        },
+        {
+          "id": "markdown",
+          "enabled": true
+        },
+        {
+          "id": "pdf",
+          "enabled": false
+        },
+        {
+          "id": "print",
+          "enabled": true
+        },
+        {
+          "id": "copy",
+          "enabled": true
+        }
+      ],
+      "refresh_settings": {
+        "refresh_mode": "no_refresh",
+        "auto_refresh_interval": 10,
+        "auto_refresh_unit": "minutes",
+        "show_refresh_button": false,
+        "auto_refresh_mode": "no_refresh"
+      },
+      "cache_settings": {
+        "enable_cache": false,
+        "store_cache_duration": 10,
+        "cache_unit": "minutes"
+      },
+      "style_settings": {
+        "header_bg": "#FFFFFF",
+        "header_color": "#000000",
+        "body_bg": "#ffffff",
+        "body_color": "#000000",
+        "header_font_family": "inherit",
+        "header_font_size": "14px",
+        "bold_header": true,
+        "body_font_family": "inherit",
+        "body_font_size": "14px",
+        "show_row_lines": true,
+        "show_column_lines": false,
+        "show_table_outline": true,
+        "line_color": "#e5e7eb",
+        "show_row_numbers": false,
+        "cell_padding": "12px",
+        "text_wrap": true,
+        "column_max_width": "auto",
+        "text_truncate": false,
+        "truncate_length": 50,
+        "smart_links": true,
+        "responsive_column_wrapping": false,
+        "responsive_visible_columns": 3
+      },
+      "labels": {
+        "search": "Search data",
+        "no_results": "No results found",
+        "no_data_search": "No data matches your search for \"%s\"",
+        "clear_search": "Clear search",
+        "refresh_data": "Refresh data",
+        "fullscreen": "Fullscreen",
+        "exit_fullscreen": "Exit fullscreen",
+        "export_data": "Export data",
+        "export_as": "Export as",
+        "choose_format": "Choose your preferred format",
+        "excel": "Excel",
+        "csv": "CSV",
+        "tsv": "TSV",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "pdf": "PDF",
+        "print": "Print",
+        "copy": "Copy to Clipboard",
+        "copied": "Copied",
+        "showing_entries": "Showing %s to %s of %s entries",
+        "per_page": "Per page",
+        "rows": "%s rows",
+        "page_of": "%s of %s",
+        "go_to_page": "Go to page",
+        "page_n": "Page %s"
+      },
+      "digit_translations": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "selected_language": "en-US",
+      "display_settings": {
+        "searching": false,
+        "regex_search": false,
+        "pagination": true,
+        "sorting": false,
+        "show_table_title": false,
+        "show_table_description": false,
+        "has_row_offset": false,
+        "row_offset": 0,
+        "has_column_offset": false,
+        "column_offset": 0,
+        "limit_rows": false,
+        "max_rows": 100,
+        "limit_columns": false,
+        "max_columns": 100,
+        "limit_range": false,
+        "range": "",
+        "page_limit": 10,
+        "show_header": false,
+        "show_footer": false,
+        "hide_columns_mobile": [],
+        "hide_columns_tablet": []
+      },
+      "sheet_url": "https://docs.google.com/spreadsheets/d/1Gxr4FOcSXjy24hKpS0UbTiVeAKCNrlvZy6PVE7OjW2M",
+      "sheet_id": "1Gxr4FOcSXjy24hKpS0UbTiVeAKCNrlvZy6PVE7OjW2M",
+      "selected_sheet": 950352229
+    },
+    "created_at": "2026-10-25 10:23:08",
+    "updated_at": "2026-10-25 10:23:08"
+  },
+  {
+    "id": 2,
+    "title": "Duo Test liderzy_share",
+    "description": "",
+    "settings": {
+      "general_settings": {
+        "disable_copy_content": false,
+        "open_links_new_tab": false,
+        "allow_exporting_data": false,
+        "allow_fullscreen": false
+      },
+      "export_options": [
+        {
+          "id": "excel",
+          "enabled": false
+        },
+        {
+          "id": "csv",
+          "enabled": true
+        },
+        {
+          "id": "tsv",
+          "enabled": true
+        },
+        {
+          "id": "json",
+          "enabled": true
+        },
+        {
+          "id": "html",
+          "enabled": true
+        },
+        {
+          "id": "markdown",
+          "enabled": true
+        },
+        {
+          "id": "pdf",
+          "enabled": false
+        },
+        {
+          "id": "print",
+          "enabled": true
+        },
+        {
+          "id": "copy",
+          "enabled": true
+        }
+      ],
+      "refresh_settings": {
+        "refresh_mode": "no_refresh",
+        "auto_refresh_interval": 10,
+        "auto_refresh_unit": "minutes",
+        "show_refresh_button": false,
+        "auto_refresh_mode": "no_refresh"
+      },
+      "cache_settings": {
+        "enable_cache": false,
+        "store_cache_duration": 10,
+        "cache_unit": "minutes"
+      },
+      "style_settings": {
+        "header_bg": "#FFFFFF",
+        "header_color": "#000000",
+        "body_bg": "#ffffff",
+        "body_color": "#000000",
+        "header_font_family": "inherit",
+        "header_font_size": "14px",
+        "bold_header": true,
+        "body_font_family": "inherit",
+        "body_font_size": "14px",
+        "show_row_lines": true,
+        "show_column_lines": false,
+        "show_table_outline": true,
+        "line_color": "#e5e7eb",
+        "show_row_numbers": false,
+        "cell_padding": "12px",
+        "text_wrap": true,
+        "column_max_width": "auto",
+        "text_truncate": false,
+        "truncate_length": 50,
+        "smart_links": true,
+        "responsive_column_wrapping": false,
+        "responsive_visible_columns": 3
+      },
+      "labels": {
+        "search": "Search data",
+        "no_results": "No results found",
+        "no_data_search": "No data matches your search for \"%s\"",
+        "clear_search": "Clear search",
+        "refresh_data": "Refresh data",
+        "fullscreen": "Fullscreen",
+        "exit_fullscreen": "Exit fullscreen",
+        "export_data": "Export data",
+        "export_as": "Export as",
+        "choose_format": "Choose your preferred format",
+        "excel": "Excel",
+        "csv": "CSV",
+        "tsv": "TSV",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "pdf": "PDF",
+        "print": "Print",
+        "copy": "Copy to Clipboard",
+        "copied": "Copied",
+        "showing_entries": "Showing %s to %s of %s entries",
+        "per_page": "Per page",
+        "rows": "%s rows",
+        "page_of": "%s of %s",
+        "go_to_page": "Go to page",
+        "page_n": "Page %s"
+      },
+      "digit_translations": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "selected_language": "en-US",
+      "display_settings": {
+        "searching": false,
+        "regex_search": false,
+        "pagination": true,
+        "sorting": false,
+        "show_table_title": false,
+        "show_table_description": false,
+        "has_row_offset": false,
+        "row_offset": 0,
+        "has_column_offset": false,
+        "column_offset": 0,
+        "limit_rows": false,
+        "max_rows": 100,
+        "limit_columns": false,
+        "max_columns": 100,
+        "limit_range": false,
+        "range": "",
+        "page_limit": 500,
+        "show_header": false,
+        "show_footer": false,
+        "hide_columns_mobile": [],
+        "hide_columns_tablet": []
+      },
+      "sheet_url": "https://docs.google.com/spreadsheets/d/1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM",
+      "sheet_id": "1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM",
+      "selected_sheet": 0
+    },
+    "created_at": "2026-10-25 10:08:34",
+    "updated_at": "2026-10-25 10:08:34"
+  },
+  {
+    "id": 1,
+    "title": "Harmonogram",
+    "description": "",
+    "settings": {
+      "general_settings": {
+        "disable_copy_content": false,
+        "open_links_new_tab": false,
+        "allow_exporting_data": false,
+        "allow_fullscreen": false
+      },
+      "export_options": [
+        {
+          "id": "excel",
+          "enabled": false
+        },
+        {
+          "id": "csv",
+          "enabled": true
+        },
+        {
+          "id": "tsv",
+          "enabled": true
+        },
+        {
+          "id": "json",
+          "enabled": true
+        },
+        {
+          "id": "html",
+          "enabled": true
+        },
+        {
+          "id": "markdown",
+          "enabled": true
+        },
+        {
+          "id": "pdf",
+          "enabled": false
+        },
+        {
+          "id": "print",
+          "enabled": true
+        },
+        {
+          "id": "copy",
+          "enabled": true
+        }
+      ],
+      "refresh_settings": {
+        "refresh_mode": "no_refresh",
+        "auto_refresh_interval": 10,
+        "auto_refresh_unit": "minutes",
+        "show_refresh_button": false,
+        "auto_refresh_mode": "no_refresh"
+      },
+      "cache_settings": {
+        "enable_cache": false,
+        "store_cache_duration": 10,
+        "cache_unit": "minutes"
+      },
+      "style_settings": {
+        "header_bg": "#FFFFFF",
+        "header_color": "#000000",
+        "body_bg": "#ffffff",
+        "body_color": "#000000",
+        "header_font_family": "inherit",
+        "header_font_size": "14px",
+        "bold_header": true,
+        "body_font_family": "inherit",
+        "body_font_size": "14px",
+        "show_row_lines": true,
+        "show_column_lines": false,
+        "show_table_outline": true,
+        "line_color": "#e5e7eb",
+        "show_row_numbers": false,
+        "cell_padding": "12px",
+        "text_wrap": true,
+        "column_max_width": "auto",
+        "text_truncate": false,
+        "truncate_length": 50,
+        "smart_links": true,
+        "responsive_column_wrapping": false,
+        "responsive_visible_columns": 3
+      },
+      "labels": {
+        "search": "Search data",
+        "no_results": "No results found",
+        "no_data_search": "No data matches your search for \"%s\"",
+        "clear_search": "Clear search",
+        "refresh_data": "Refresh data",
+        "fullscreen": "Fullscreen",
+        "exit_fullscreen": "Exit fullscreen",
+        "export_data": "Export data",
+        "export_as": "Export as",
+        "choose_format": "Choose your preferred format",
+        "excel": "Excel",
+        "csv": "CSV",
+        "tsv": "TSV",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "pdf": "PDF",
+        "print": "Print",
+        "copy": "Copy to Clipboard",
+        "copied": "Copied",
+        "showing_entries": "Showing %s to %s of %s entries",
+        "per_page": "Per page",
+        "rows": "%s rows",
+        "page_of": "%s of %s",
+        "go_to_page": "Go to page",
+        "page_n": "Page %s"
+      },
+      "digit_translations": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "selected_language": "en-US",
+      "display_settings": {
+        "searching": false,
+        "regex_search": false,
+        "pagination": true,
+        "sorting": false,
+        "show_table_title": false,
+        "show_table_description": false,
+        "has_row_offset": false,
+        "row_offset": 0,
+        "has_column_offset": false,
+        "column_offset": 0,
+        "limit_rows": false,
+        "max_rows": 100,
+        "limit_columns": false,
+        "max_columns": 100,
+        "limit_range": false,
+        "range": "",
+        "page_limit": 500,
+        "show_header": false,
+        "show_footer": false,
+        "hide_columns_mobile": [],
+        "hide_columns_tablet": []
+      },
+      "sheet_url": "https://docs.google.com/spreadsheets/d/1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM",
+      "sheet_id": "1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM",
+      "selected_sheet": 0
+    },
+    "created_at": "2026-10-25 09:10:29",
+    "updated_at": "2026-10-25 10:05:48"
+  }
+]

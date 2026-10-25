@@ -1,0 +1,12 @@
+{
+  "integration": "passed",
+  "schema": "official_test_23efb41d19da4a4d888fe591f0594bb5",
+  "run_id": "8cd185d3-97c1-4006-ace7-11249e68fa7f",
+  "resources": 5,
+  "checks": [
+    "complete sheets",
+    "raw bytes in PostgreSQL",
+    "outage retention",
+    "idempotent replay"
+  ]
+}

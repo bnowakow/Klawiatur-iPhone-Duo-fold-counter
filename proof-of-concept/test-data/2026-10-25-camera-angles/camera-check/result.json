@@ -1,0 +1,65 @@
+[
+  {
+    "raw_counter": 59062,
+    "clothing_status": "baseline_created",
+    "clothing_score": 0,
+    "camera_view": {
+      "view": "presenter_main",
+      "background_distances": {
+        "presenter_main": 0.0,
+        "presenter_inset": 0.29
+      },
+      "clothing_roi": [
+        0.48,
+        0.51,
+        0.65,
+        0.62
+      ],
+      "baseline_observation": "b5d92f0d-2920-4f96-8179-ceabf38d7982"
+    }
+  },
+  {
+    "raw_counter": 5995,
+    "clothing_status": "baseline_created",
+    "clothing_score": 0,
+    "camera_view": {
+      "view": "presenter_inset",
+      "background_distances": {
+        "presenter_inset": 0.0,
+        "presenter_main": 0.29
+      },
+      "clothing_roi": [
+        0.818,
+        0.833,
+        0.862,
+        0.876
+      ],
+      "baseline_observation": "103b3d84-965a-4cdc-ad63-943af3eef02a"
+    }
+  },
+  {
+    "raw_counter": 60000,
+    "clothing_status": "no_clothing_change_detected",
+    "clothing_score": 0.0,
+    "camera_view": {
+      "view": "presenter_inset",
+      "background_distances": {
+        "presenter_inset": 0.0158,
+        "presenter_main": 0.2886
+      },
+      "clothing_roi": [
+        0.818,
+        0.833,
+        0.862,
+        0.876
+      ],
+      "tracking": {
+        "last_observation": 1792957430.901496,
+        "changed_since": null,
+        "sustained_seconds": 0,
+        "status": "no_clothing_change_detected"
+      },
+      "baseline_observation": "103b3d84-965a-4cdc-ad63-943af3eef02a"
+    }
+  }
+]

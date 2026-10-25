@@ -1,0 +1,7 @@
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-35e76f919c03 Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-35e76f919c03 Created 
+........................................................................................
+----------------------------------------------------------------------
+Ran 88 tests in 14.974s
+
+OK

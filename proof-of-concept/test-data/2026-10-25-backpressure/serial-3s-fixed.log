@@ -1,0 +1,41 @@
+{"frames": 1, "cycle_seconds": 2.989557710000554}
+{"frames": 2, "cycle_seconds": 1.9309677929995814}
+{"frames": 3, "cycle_seconds": 2.704160584999954}
+{"frames": 4, "cycle_seconds": 2.8547638770005506}
+{"frames": 5, "cycle_seconds": 1.974836958999731}
+{"frames": 6, "cycle_seconds": 2.6340602090003813}
+{"frames": 7, "cycle_seconds": 2.8674680020003507}
+{"frames": 8, "cycle_seconds": 1.8615886679999676}
+{"frames": 9, "cycle_seconds": 3.154898167999818}
+{"frames": 10, "cycle_seconds": 1.9384739590004756}
+{"frames": 11, "cycle_seconds": 2.504969751000317}
+{"frames": 12, "cycle_seconds": 2.679114626000228}
+{"frames": 13, "cycle_seconds": 2.0377866680000807}
+{"frames": 14, "cycle_seconds": 2.729143792999821}
+{"frames": 15, "cycle_seconds": 2.1855823760006388}
+{"frames": 16, "cycle_seconds": 2.707807917999162}
+{"frames": 17, "cycle_seconds": 2.8585830020001595}
+{"frames": 18, "cycle_seconds": 2.443803251000645}
+{"frames": 19, "cycle_seconds": 2.9200420020006277}
+{"frames": 20, "cycle_seconds": 2.487449834000472}
+{
+  "run_id": "6cc9b614-e86d-4f80-aeb6-a4d35b630269",
+  "mode": "serial",
+  "source_stream": "https://www.youtube.com/watch?v=vaiHWiExDXg",
+  "benchmark_stream": "benchmark:serial:6cc9b614-e86d-4f80-aeb6-a4d35b630269",
+  "started_at": "2026-10-25T20:48:28.138833+00:00",
+  "target_interval_seconds": 3,
+  "requested_duration_seconds": 60,
+  "frames": 20,
+  "accepted_samples": 11,
+  "wall_seconds": 60.00008702800005,
+  "cycle_mean_seconds": 2.523252957550176,
+  "cycle_p95_seconds": 2.989557710000554,
+  "cycle_max_seconds": 3.154898167999818,
+  "cycles_over_target_interval": 1,
+  "actual_start_gap_mean_seconds": 3.0144166198421147,
+  "cpu_seconds": 23.10673,
+  "errors": 0,
+  "note": "Full production capture path on isolated benchmark stream; no parallel cycles or nominal timestamp substitution.",
+  "evidence_path": "/data/benchmarks/serial-interval-3s-6cc9b614-e86d-4f80-aeb6-a4d35b630269"
+}
