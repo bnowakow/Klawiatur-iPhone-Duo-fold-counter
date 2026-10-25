@@ -85,7 +85,7 @@ stints; they have no participant names and do not override OCR validation.
 our current stint and recent pace. The website collector saves a comparison
 after each refresh. PostgreSQL `tester_comparisons` retains source and stint
 IDs, both time windows, gaps, freshness/attribution status, and offline
-1/2/5/10/20/30/60-second frame-interval diagnostics. The configured baseline is four seconds, with adaptive backpressure.
+1/2/3/4/5/10/20/30/60-second frame-interval diagnostics. The configured baseline is four seconds, with adaptive backpressure.
 See [comparison commands and interpretation](docs/comparisons.md).
 
 ## Counter validation
@@ -126,7 +126,7 @@ it cannot prove every accepted OCR result is correct.
 
 ## Possible handovers
 
-Only colour histograms of a clothing-only crop are compared; there is no face
+Only colour and brightness histograms of a clothing-only crop are compared; there is no face
 recognition, biometric matching, or identity verification. The detector matches background patches against two calibrated broadcast layouts:
 presenter as the main view, or overhead as the main view with the presenter in
 the bottom-right inset. It selects a separate clothing-only crop and baseline
@@ -142,7 +142,7 @@ provisional scene check, not a general person or pose detector.
 
 A distance of at least 0.45 sustained for 60 seconds produces
 `possible_handover_review_required`. At an uninterrupted four-second cadence this needs 16
-changed samples spanning 60 seconds; backpressure can lengthen that cadence. Gaps longer than 2.5 polling intervals
+changed samples spanning 60 seconds; backpressure can lengthen that cadence. Gaps longer than `max(2.5 * effective polling interval, 25)` seconds
 reset pending evidence. An hour passing never implies a handover. Similar
 clothing can conceal a handover; lighting or an empty chair
 can trigger one. Unconfirmed candidates never replace a baseline. A sustained cue creates a
@@ -161,7 +161,8 @@ docker compose start supervisor
 
 Counter state, clothing baseline histograms, pending evidence and timestamps
 are stored in PostgreSQL and survive supervisor restarts. Configuration changes
-to clothing comparison reset its per-view baselines on the next observation.
+to clothing profiles, crop, threshold or confirmation duration reset its per-view
+baselines on the next observation. Changing only the polling interval preserves them.
 The first run after upgrading from the fixed crop also creates fresh baselines.
 
 ## Presenter start times and folds per hour
@@ -232,7 +233,8 @@ Their statuses distinguish pending, interrupted, brief, and sustained cues.
 increase within that appearance is observed; missing or rejected OCR does not
 prove that no folding happened. These cues do not establish identity or create
 a confirmed folding stint. Start, last, and closing observations are retained,
-with images in `data/presenter-review/` outside normal image retention.
+with images in `data/presenter-review/` outside ordinary capture pruning but
+subject to the global 20 GB image cap.
 The clothing detector also compares 16-bin brightness histograms (review
 threshold 0.60) to distinguish light gray from white fabric. Lighting changes
 can trigger this cue; the same persistence and camera continuity rules apply.
@@ -355,6 +357,21 @@ docker compose run --rm -v "$PWD/proof-of-concept:/fixtures:ro" supervisor \
   python break_scene_integration_check.py
 ```
 
+The real break on 2026-10-25 was confirmed at 22:15:15 Warsaw time. Its stint
+stop estimate is 22:00:57, the last counter observation attributed to that stint
+(63,330); the final visible counter is 63,333. The later decoder-recovery time
+was initially used as the stop estimate and was corrected with an explicit
+`night_break_endpoint_refined` audit observation. The original confirmation
+time and original observation snapshots remain unchanged.
+
+For a similarly affected legacy endpoint, `refine_break_endpoint.py --session
+UUID` previews a correction using that session's own last attributed counter
+observation. `--apply` writes the correction transactionally, updates the
+closed-state timestamp and appends an audit observation. It only accepts a
+verified break-sign endpoint with a supporting real counter observation.
+It does not identify a presenter, reassign transition folds, or claim an exact
+physical stop time.
+
 ## Database and evidence
 
 PostgreSQL is available locally at `localhost:54329`, database/user `folding`,
@@ -385,7 +402,10 @@ the original broadcast timestamp; YouTube delivery includes some latency.
 Full frames, counter overlays and clothing crops live in
 `data/frames/<observation-id>/` on the host (`/data/frames/…` inside Docker).
 Unknown camera views are additionally copied with their observation metadata to
-`data/camera-review/<observation-id>/`, which retention cleanup never removes.
+`data/camera-review/<observation-id>/`, outside ordinary capture pruning.
+All images under `data/`, including review archives and website image blobs,
+are subject to the global 20 GB image cap; numeric and metadata history remains.
+See [frame retention](docs/frame-retention.md) for anomaly windows and quota eviction.
 Keep this archive for calibrating future angles. Preserved test datasets and
 checksums live in `proof-of-concept/test-data/`; see its README for the procedure
 to add angles while retaining all previous regression evidence. Database
@@ -436,7 +456,7 @@ The original integration check checks actual inserts, model reloads, spike rejec
 after a simulated database outage. Test rows use an `integration:` stream key.
 
 Tests cover million-scale and variable-length OCR, steady pace, spikes,
-decreases, slow readings, pauses, long gaps, clothing persistence at 30-second
+decreases, slow readings, pauses, long gaps, clothing persistence at multiple
 intervals, camera layout switches, unknown scenes, presenter start times,
 stint transitions, and active-hour windows. Real handover accuracy still requires
 human verification against an actual presenter change.
@@ -445,3 +465,5 @@ Implementation references: [Psycopg parameter binding](https://www.psycopg.org/p
 and [Compose database readiness](https://docs.docker.com/compose/how-tos/startup-order/).
 
 Captured images follow [anomaly-window retention](docs/frame-retention.md); database history remains.
+
+Licensed under the GNU General Public License v3.0; see [LICENSE](LICENSE).

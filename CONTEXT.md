@@ -1,5 +1,17 @@
 # Project context for future work
 
+Verified real break outcome (2026-10-25): final display 63,333; prior stint
+`1ce68ce5-5e1c-47b0-bb47-e1a07ad098dc` is closed with estimated stop
+22:00:57.733 Warsaw and confirmation 22:15:15.440. Its attributed counter remains
+63,330. A decoder-recovery timestamp initially gave a later stop estimate;
+`refine_break_endpoint.py` corrected it using source observation
+`4771be03-dab0-47fc-9062-d4fa2e3d3cc4`, preserving the confirmation and original
+history and appending audit observation `a33950da-31d9-43fa-b850-3847a9fc3c13`.
+This is a sampled endpoint estimate requiring review, not exact identity or
+physical stop-time verification. Runtime guards now reject a saved last-increase
+timestamp later than the stint's last attributed counter observation. The
+real-frame/PostgreSQL integration check covers the audited correction tool too.
+
 Latest break-scene fix (2026-10-25): the real overnight camera view initially
 failed OCR and layout matching, so no real stop was logged by the first night
 inactivity implementation. `camera_views.detect_break_scene` now matches a
@@ -38,8 +50,8 @@ operating commands and the implementation for exact current behavior.
 Monitor the public livestream:
 <https://www.youtube.com/watch?v=vaiHWiExDXg>.
 
-- Capture a fresh frame on a configurable schedule; the initial interval is
-  **10 seconds** (changed from 30 seconds).
+- Capture a fresh frame on a configurable schedule; the current minimum target
+  is **4 seconds**, with adaptive backpressure (earlier targets were 30 and 10 seconds).
 - Read the physical folding counter, including values above **1,000,000**.
 - Flag likely false reads using monotonicity and a relatively steady pace.
 - Flag possible presenter handovers for human verification. Presenters are
@@ -56,9 +68,11 @@ not recognize people or compare biometric identity. A possible handover is a
 review request, not proof that the person changed. An hour passing is not
 evidence of a change.
 
-## Snapshot of verified behavior
+## Historical snapshot (20:47, before later additions)
 
-At inspection, both Compose services were running, and PostgreSQL was healthy.
+At that inspection, the original two Compose services were running, and PostgreSQL was healthy.
+The current Compose file has three services; these rows and deployment observations
+are historical evidence, not the current deployment or validation status.
 Recent real-stream rows were:
 
 | Warsaw time, 2026-10-25 | Raw / accepted counter | Counter status | Layout | Clothing status |
@@ -73,7 +87,7 @@ Synthetic tests cover 999,999 → 1,000,000, narrow 1 digits, 1,000,001,
 1,234,567, 1,999,999, and 10,000,000. This is limited validation, not an
 accuracy guarantee for all future footage.
 
-The last completed validation run passed **17 unit tests** in Docker and the
+At that stage, validation passed **17 unit tests** in Docker and the
 PostgreSQL integration check. That check produced five isolated observations
 and verified inserts, state reloads, spike rejection, and database-outage replay.
 There has not yet been a manually verified real presenter-handover evaluation.
@@ -96,7 +110,15 @@ not require a container rebuild.
 
 | File / directory | Responsibility |
 | --- | --- |
-| `supervisor.py` | Configuration, polling, capture, pace validation, orchestration, SQL schema, transactions, outage queue, retention |
+| `supervisor.py` | Configuration, capture, pace validation, orchestration, SQL schema, transactions and observation outage queue |
+| `polling.py` | Adaptive scheduling, restart state and timing-event replay |
+| `frame_retention.py` | Anomaly windows, SQLite ledger and global image quota |
+| `presenter_sessions.py` | Stints, appearances, night endpoints and SQL rate views |
+| `official_data.py` | Published-site archive and queued imports |
+| `compare_current_tester.py` | Source-aligned pace comparisons and cadence diagnostics |
+| `benchmark_frame_intervals.py` | Isolated persistent-decoder and full-path cadence benchmarks |
+| `refine_break_endpoint.py` | Preview/apply an audited correction of a verified break endpoint |
+| `Makefile`, `utilities/` | Docker upgrade, comparison output and Codex commit helpers |
 | `proof-of-concept/read_counter.py` | Find red digit groups and decode seven-segment patterns |
 | `proof-of-concept/detect_handover.py` | Clothing histograms and sustained-change state machine; also a standalone comparison CLI |
 | `proof-of-concept/camera_views.py` | Select calibrated layouts and keep clothing baselines separate by layout |
@@ -110,9 +132,10 @@ not require a container rebuild.
 
 ## One polling cycle
 
-1. Connect to PostgreSQL and acquire a transaction advisory lock keyed by the
-   stream URL. A competing supervisor skips the cycle.
-2. Ensure the SQL schema exists, replay queued observations idempotently, and
+1. Connect to PostgreSQL. On first use of a connection configuration in the
+   process, ensure the SQL schema in a separate committed transaction.
+2. Acquire a transaction advisory lock keyed by stream URL; a competing
+   supervisor skips the cycle. Replay queued observations idempotently and
    load the stream's state from PostgreSQL.
 3. Check the configured active-hour window. Inactive checks are logged without
    capture or analysis.
@@ -124,10 +147,13 @@ not require a container rebuild.
 6. Run counter OCR and pace validation. Independently select a camera layout
    and update its clothing-change evidence.
 7. Insert the observation and update model state in the same transaction.
-8. Remove expired ordinary frame folders and wait for the next scheduled slot.
+8. Prune ordinary frames outside anomaly windows and the ten-capture buffer,
+   then enforce the global image cap. Record the adaptive scheduling decision
+   and wait for the next cycle. Prior timing-event replay is included in the
+   measured work budget.
 
 Polling starts immediately and uses a monotonic clock. Work is serial; slow
-captures skip missed slots rather than overlap. Metadata resolution has a
+cycles increase the next target interval rather than overlap or build a backlog. Metadata resolution has a
 50-second process timeout and frame extraction a 40-second timeout, so an
 attempt can exceed the configured polling interval.
 
@@ -166,6 +192,7 @@ upper = min(MAX_RATE * dt + COUNTER_SLACK, high_rate * dt + COUNTER_SLACK)
 | `accepted_rebased` | Two plausible samples establish an initial or post-gap anchor; rate history resets |
 | `accepted` | Nondecreasing value within the pace envelope |
 | `accepted_paused` | Unchanged counter; pause or stalled video is possible; zero rates do not train the median |
+| `accepted_break_boundary` | Three matching calibrated break-scene reads confirm a small final increment within slack; no pace training or presenter attribution |
 | `suspect_slow` | Positive increase below the lower pace bound; anchor stays unchanged |
 | `rejected` | Decrease, implausible increase, or non-increasing timestamp; anchor stays unchanged |
 | `unreadable` | Unknown digits or no usable counter value; anchor stays unchanged |
@@ -175,15 +202,17 @@ After 600 seconds since the accepted anchor, two plausible samples can rebase
 the pace model. The old anchor still blocks decreases and increases above the
 absolute maximum pace across the full gap. An actual physical counter reset
 needs an intentional manual state correction; it is not silently accepted.
-Initial/rebase confirmation uses the absolute maximum pace, not the full
-learned pace envelope, so those readings are explicitly less certain.
+Initial/rebase confirmation uses the configured initial rate range plus slack
+and the absolute maximum; it does not reuse the previous learned median.
+Rebased readings remain explicitly less certain than uninterrupted checks.
 
 Always retain raw readings and reasons. Do not train on rejected readings or
 replace suspicious readings with fabricated extrapolated values.
 
 ## Layouts and possible handovers
 
-Two calibrated layouts currently exist:
+Two presenter layouts are calibrated, plus a separate `night_break` scene
+profile that bypasses clothing/stint creation (see the night-stop notes above):
 
 - `presenter_main`: presenter is the main image; clothing ROI defaults to
   normalized `[0.48, 0.51, 0.65, 0.62]`.
@@ -197,14 +226,15 @@ by at least 0.025. These are calibrated thresholds, not general scene detection.
 Each layout keeps a separate clothing baseline and pending-change history.
 The crop's HSV histogram ignores hue for low-saturation fabric; total variation
 distance ranges from 0 to 1. Distance at least 0.45 sustained for 60 seconds
-flags `possible_handover_review_required`. At 30-second sampling, three changed
-samples span the required minute. The permitted gap is
-`max(2.5 * INTERVAL_SECONDS, 25)` seconds.
+flags `possible_handover_review_required`. At an uninterrupted four-second
+cadence, 16 changed samples span the required minute. The permitted gap is
+`max(2.5 * effective polling interval, 25)` seconds.
 
 Switching layouts resets pending continuity and never compares clothing from
 different layouts. Returning to a layout reuses its baseline but starts fresh
 persistence evidence. A first visit creates a baseline. Profile/configuration
-changes and a manual reset clear the per-view baselines.
+changes and a manual reset clear the per-view baselines; changing only the
+polling interval preserves baselines.
 
 Unknown or ambiguous layouts return `camera_view_unknown_review_required`,
 without a clothing score or baseline update, and reset pending continuity.
@@ -232,7 +262,9 @@ Copy `.env.sample` to `.env` to override Compose defaults. Current defaults:
 | Setting | Default / unit |
 | --- | --- |
 | `STREAM_URL` | YouTube URL above |
-| `INTERVAL_SECONDS` | 10 seconds |
+| `INTERVAL_SECONDS` | 4 seconds, minimum target |
+| `BACKPRESSURE_MAX_INTERVAL_SECONDS` | 60 seconds |
+| `BACKPRESSURE_STABLE_SAMPLES` | 12 consecutive light cycles |
 | `EXPECTED_RATE_MIN` | 0.4916666666666667 folds/second (29.5/min) |
 | `EXPECTED_RATE_MAX` | 0.945 folds/second (56.7/min) |
 | `MAX_RATE` | 5 folds/second |
@@ -242,6 +274,10 @@ Copy `.env.sample` to `.env` to override Compose defaults. Current defaults:
 | `CLOTHING_ROI` | `0.48,0.51,0.65,0.62`, normalized left/top/right/bottom |
 | `CLOTHING_THRESHOLD` | 0.45 histogram distance |
 | `HANDOVER_CONFIRM_SECONDS` | 60 seconds |
+| `NIGHT_STOP_START`, `NIGHT_STOP_END` | `21:30`, `06:30` in `TIMEZONE` |
+| `NIGHT_STOP_IDLE_SECONDS` | 180 seconds |
+| `IMAGE_STORAGE_LIMIT_BYTES` | 20000000000 (20 GB decimal) |
+| `OFFICIAL_DATA_INTERVAL_SECONDS` | 300 seconds after each collector run |
 | `TIMEZONE` | `Europe/Warsaw` |
 | `ACTIVE_START`, `ACTIVE_END` | Both `00:00`; equal values mean all day |
 | `POSTGRES_PORT` | 54329 on host localhost |
@@ -270,7 +306,8 @@ boxes/segment occupancies, pace verdict, layout selection and its distances,
 clothing ROI/tracking, and baseline observation ID where available.
 
 `monitor_state` has one row per stream URL. Its JSONB state contains
-`counter`, `clothing`, `presenters`, `last_observed_at`, and `last_frame_hash`. Clothing state contains the
+`counter`, `clothing`, `presenters`, `appearances`, `break_counter_confirmation`
+when present, `last_observed_at`, and `last_frame_hash`. Clothing state contains the
 configuration signature, per-layout `views`, and `last_view`. Database history
 and state survive application restarts in the named `postgres_data` volume.
 
@@ -285,8 +322,10 @@ independent streams.
 
 Image paths in PostgreSQL are container paths such as `/data/frames/<id>/frame.jpg`;
 the corresponding host path is `data/frames/<id>/frame.jpg`. Images and database
-records have separate retention. Ordinary images are deleted outside anomaly windows and a ten-frame lookbehind buffer;
-database rows, `camera-review/`, and `proof-of-concept/test-data/` do not.
+records have separate retention. Ordinary images are deleted outside anomaly
+windows and a ten-frame lookbehind buffer. Review archives bypass ordinary
+pruning, but all images under `data/` remain subject to the global 20 GB cap.
+Database history and repository regression fixtures are outside that image quota.
 Back up the database volume and the persistent evidence separately.
 
 ## Resume and verify
@@ -351,8 +390,8 @@ Adding `-v` deletes the database volume; it is not a routine restart command.
    reset handling if the user requests them. None is currently implemented as
    a product workflow. No external notification service is configured.
 6. Add versioned schema migrations and deployment/version tracking before
-   evolving persistent database/state formats. Current schema setup only uses
-   `CREATE ... IF NOT EXISTS`; it does not migrate existing columns.
+   evolving persistent database/state formats. Current schema setup creates missing tables/indexes and replaces SQL views;
+   it does not migrate existing table columns.
 
 Keep these constraints visible when continuing the project. Do not report an
 appearance cue as confirmed identity, an accepted counter as guaranteed OCR,
@@ -394,8 +433,9 @@ Compose service `official-data` starts immediately and then waits
 `official_data_resources`, `official_data_blobs`; views: `official_data_latest`
 and `official_data_latest_success`. Exact response bytes, parsed cells, source
 configuration, timestamps and errors are retained. Local content-addressed
-blobs and pending/imported manifests live under `data/official/`, outside
-retention. Database failure queues files and replay is idempotent.
+blobs and pending/imported manifests live under `data/official/`. Ordinary
+frame pruning excludes them; the global image cap can evict local image blobs.
+Original response bytes already imported into PostgreSQL remain stored. Database failure queues files and replay is idempotent.
 
 See `docs/official-data.md` for verified source links, field meanings, source
 inconsistencies, freshness checks and SQL. Initial fixtures and regression
@@ -413,7 +453,8 @@ Keep arrival/appearance evidence separate from accepted counter increases.
 clothing cues even without folding. Interrupted/cleared cues hold attribution
 to the previous stint until sustained confirmation or manual baseline reset.
 `no_accepted_increase_observed` is not proof of zero folds. Images and event
-metadata are archived in `data/presenter-review/` outside rolling retention.
+metadata are archived in `data/presenter-review/` outside ordinary capture
+pruning, with images still subject to the global 20 GB cap.
 Fine 16-bin luminance comparisons at distance >= 0.60 supplement coarse colour
 cues for gray versus white fabric, with the same continuity requirements.
 Original real transition frames and hashes are preserved in
@@ -422,7 +463,8 @@ interrupt continuity and must not be interpreted as confirmed identity changes.
 
 ## Faster polling and recent pace
 
-Captures now target 10 seconds. Slow captures skip slots without overlapping.
+Captures now target a four-second minimum with adaptive backpressure. Slow
+cycles increase the target without overlapping captures.
 Handover confirmation remains 60 seconds; changing only the interval preserves
 clothing baselines. `presenter_recent_pace` separates a rolling three-minute
 accepted-counter pace from the recorded stint average and exposes actual
@@ -468,7 +510,7 @@ pace and source score/minutes, and suppresses numeric gaps for stale data or
 uncertain attribution. Identity remains unverified. Unchanged source values
 are flagged; source fetch time is not measurement time.
 
-Offline thinning of saved recent samples evaluates target 1/2/5/10/20/30/60-second
+Offline thinning of saved recent samples evaluates target 1/2/3/4/5/10/20/30/60-second
 intervals through interpolation error, sample counts and actual gaps. It does
 not measure missed handovers or establish OCR accuracy and does not change
 frame cadence. See `docs/comparisons.md` for SQL, limitations and integration
@@ -489,7 +531,8 @@ intervals in separate 60-second runs, with 6/2/0 cycles over each deadline.
 Mean analysis+DB times 0.79/0.91/1.04 s; p95 1.55/2.83/1.54 s; max
 3.33/4.06/3.64 s. Legacy capture alone took 2.03 and 2.09 s. Five seconds is a
 practical tested next candidate, not a long-term reliability guarantee. The
-regular app remains at 10 seconds. Results/frames live in data/benchmarks/,
+regular app was still at 10 seconds during those initial tests; the later
+four-second baseline decision below supersedes that setting. Results/frames live in data/benchmarks/,
 PostgreSQL frame_interval_benchmarks, and the copied reports/checksums under
 proof-of-concept/test-data/2026-10-25-comparisons/. No test went below 1 s.
 
