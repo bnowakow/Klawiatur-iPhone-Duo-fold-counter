@@ -10,6 +10,25 @@ import youtube_auth as auth
 
 
 class AuthTests(unittest.TestCase):
+    def test_google_flow_uses_pkce_and_exact_callback(self):
+        from google_auth_oauthlib.flow import Flow
+        from urllib.parse import parse_qs, urlsplit
+        config = {'web': {'client_id': 'fixture-client', 'client_secret': 'fixture-secret',
+                  'project_id': 'p', 'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+                  'token_uri': 'https://oauth2.googleapis.com/token', 'redirect_uris': [auth.REDIRECT_URI]}}
+        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {'YOUTUBE_AUTH_DIR': folder}):
+            (Path(folder)/'client.json').write_text(json.dumps(config))
+            flow = Flow.from_client_config(auth.client_config('p'), scopes=[auth.SCOPE],
+                                          redirect_uri=auth.REDIRECT_URI, autogenerate_code_verifier=True)
+            url, state = flow.authorization_url(access_type='offline', prompt='consent')
+            query = parse_qs(urlsplit(url).query)
+            self.assertTrue(state)
+            self.assertEqual(query['code_challenge_method'], ['S256'])
+            self.assertEqual(query['redirect_uri'], [auth.REDIRECT_URI])
+            self.assertEqual(query['access_type'], ['offline'])
+            with self.assertRaises(ValueError):
+                auth.client_config('another-project')
+
     def test_callback_rejects_wrong_state_host_duplicate_code_and_denial(self):
         self.assertEqual(auth.callback_code('/oauth/callback?state=expected&code=private', 'localhost:8765', 'expected'), 'private')
         for path, host in [('/oauth/callback?state=wrong&code=c', 'localhost:8765'),

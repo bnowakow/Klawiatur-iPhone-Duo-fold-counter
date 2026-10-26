@@ -98,7 +98,8 @@ anonymous stints; they do not establish that two stints belong to the same perso
 
 The local LLaVA-Phi3 model answers one structured JSON request covering all six
 appearance categories. The input fits within 384 pixels on the longest side.
-The model unloads after each descriptor. The previous smaller model returned
+The model unloads after each descriptor. The saved main-camera fixture took about two minutes on this laptop with the two-CPU
+limit. The previous smaller model returned
 empty answers for several appearance questions, so it is replaced for v2.
 Incomplete or malformed responses retry rather than fabricating attributes.
 
@@ -121,3 +122,8 @@ SELECT session_id, description, description_language, appearance,
 FROM presenter_clothing_descriptions
 ORDER BY observed_at DESC;
 ```
+
+Schema setup checks whether descriptor migrations are already applied before
+issuing ALTER TABLE, avoiding startup waits behind a long descriptor transaction.
+This is covered by an integration check holding an inference row lock with a
+200 ms lock timeout on concurrent schema setup.

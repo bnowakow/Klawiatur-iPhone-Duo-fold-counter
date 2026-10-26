@@ -27,12 +27,32 @@ CREATE TABLE IF NOT EXISTS presenter_clothing_descriptions (
  generated_at timestamptz, attempts integer NOT NULL DEFAULT 0,
  retry_at timestamptz NOT NULL DEFAULT now(), last_error text, response jsonb
 );
-ALTER TABLE presenter_clothing_descriptions
- ADD COLUMN IF NOT EXISTS description_language text NOT NULL DEFAULT 'en';
-ALTER TABLE presenter_clothing_descriptions ALTER COLUMN description_language SET DEFAULT 'pl';
-ALTER TABLE presenter_clothing_descriptions ADD COLUMN IF NOT EXISTS input_version integer NOT NULL DEFAULT 1;
-ALTER TABLE presenter_clothing_descriptions ALTER COLUMN input_version SET DEFAULT 2;
-ALTER TABLE presenter_clothing_descriptions ADD COLUMN IF NOT EXISTS appearance jsonb;
+DO $migration$
+BEGIN
+ IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema()
+                AND table_name='presenter_clothing_descriptions' AND column_name='description_language') THEN
+  ALTER TABLE presenter_clothing_descriptions ADD COLUMN description_language text NOT NULL DEFAULT 'en';
+ END IF;
+ IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema()
+            AND table_name='presenter_clothing_descriptions' AND column_name='description_language'
+            AND column_default IS DISTINCT FROM $expected$'pl'::text$expected$) THEN
+  ALTER TABLE presenter_clothing_descriptions ALTER COLUMN description_language SET DEFAULT 'pl';
+ END IF;
+ IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema()
+                AND table_name='presenter_clothing_descriptions' AND column_name='input_version') THEN
+  ALTER TABLE presenter_clothing_descriptions ADD COLUMN input_version integer NOT NULL DEFAULT 1;
+ END IF;
+ IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema()
+            AND table_name='presenter_clothing_descriptions' AND column_name='input_version'
+            AND column_default IS DISTINCT FROM '2') THEN
+  ALTER TABLE presenter_clothing_descriptions ALTER COLUMN input_version SET DEFAULT 2;
+ END IF;
+ IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema()
+                AND table_name='presenter_clothing_descriptions' AND column_name='appearance') THEN
+  ALTER TABLE presenter_clothing_descriptions ADD COLUMN appearance jsonb;
+ END IF;
+END
+$migration$;
 CREATE TABLE IF NOT EXISTS presenter_description_revisions (
  id bigserial PRIMARY KEY, session_id uuid NOT NULL REFERENCES presenter_sessions(id),
  archived_at timestamptz NOT NULL DEFAULT now(), snapshot jsonb NOT NULL, image bytea NOT NULL

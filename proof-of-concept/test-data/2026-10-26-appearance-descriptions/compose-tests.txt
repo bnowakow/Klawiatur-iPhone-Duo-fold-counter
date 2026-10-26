@@ -1,0 +1,16 @@
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-d83705bbfdd5 Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-d83705bbfdd5 Created 
+........................................................................................................./usr/local/lib/python3.12/unittest/mock.py:2159: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmps95iolmm/frames/5974c0d9-e824-4eb1-9e51-d15f731e701e/frame.jpg' mode='rb' closefd=True>
+  these_magics = these_magics - set(type(self).__dict__)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+......./usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmps95iolmm/frames/c976a32b-5187-4523-ba9c-aa61d6fd3682/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..../usr/local/lib/python3.12/site-packages/urllib3/exceptions.py:261: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmps95iolmm/frames/1bf71b7c-e160-419d-b0a4-6959db951030/frame.jpg'>
+  class IncompleteRead(HTTPError, httplib_IncompleteRead):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..............
+----------------------------------------------------------------------
+Ran 130 tests in 25.149s
+
+OK

@@ -1,6 +1,9 @@
 # Plan: Google OAuth and YouTube live-chat posting
 
-Status: proposed, 2026-10-26. This document does not enable posting.
+Status: OAuth, manual delivery and command extension interfaces implemented on
+2026-10-26; real account authorization and real posting await credentials and user
+chosen content. Incoming-message reading, bot cooldowns and scheduling remain future
+work. See [current setup](../youtube-setup.md). This plan does not enable posting.
 
 ## Outcome and scope
 

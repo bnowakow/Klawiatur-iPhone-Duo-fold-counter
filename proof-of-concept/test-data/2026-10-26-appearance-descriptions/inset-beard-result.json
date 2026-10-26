@@ -1,0 +1,50 @@
+{
+  "model": "llava-phi3:3.8b",
+  "description": "Ubiór: szara koszula. Włosy: brązowe. Nakrycie głowy: niewidoczne w kadrze. Okulary: niewidoczne. Zarost: broda. Dodatki: zegarek.",
+  "response": {
+    "raw_answers": {
+      "clothing": "gray shirt",
+      "hair": "brown",
+      "headwear": "none",
+      "glasses": "none",
+      "facial_hair": "beard",
+      "accessories": "watch"
+    },
+    "appearance": {
+      "hair": {
+        "state": "visible",
+        "color": "brązowe"
+      },
+      "headwear": {
+        "state": "not_visible"
+      },
+      "glasses": {
+        "state": "not_visible"
+      },
+      "facial_hair": {
+        "state": "visible",
+        "items": [
+          "broda"
+        ]
+      },
+      "accessories": {
+        "state": "visible",
+        "items": [
+          "zegarek"
+        ]
+      },
+      "clothing": {
+        "description": "Szara koszula."
+      }
+    },
+    "inference": {
+      "total_duration": 116571520510,
+      "eval_count": 60,
+      "done_reason": "stop"
+    },
+    "description_language": "pl",
+    "localization_version": 2,
+    "descriptor_version": 2
+  },
+  "seconds": 116.58
+}

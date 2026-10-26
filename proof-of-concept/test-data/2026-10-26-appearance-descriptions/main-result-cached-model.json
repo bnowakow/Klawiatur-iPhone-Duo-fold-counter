@@ -1,0 +1,66 @@
+{
+  "description": "Ubiór: biała koszula. Włosy: nie można ocenić. Nakrycie głowy: nie można ocenić. Okulary: nie można ocenić. Zarost: nie można ocenić. Dodatki: zegarek.",
+  "response": {
+    "raw_answers": {
+      "clothing": "The person is wearing a white shirt and glasses.",
+      "hair": "",
+      "headwear": "",
+      "glasses": "",
+      "facial_hair": "urn",
+      "accessories": "The person is wearing glasses and a watch."
+    },
+    "appearance": {
+      "hair": {
+        "state": "unknown"
+      },
+      "headwear": {
+        "state": "unknown"
+      },
+      "glasses": {
+        "state": "unknown"
+      },
+      "facial_hair": {
+        "state": "unknown"
+      },
+      "accessories": {
+        "state": "visible",
+        "items": [
+          "zegarek"
+        ]
+      },
+      "clothing": {
+        "description": "Biała koszula."
+      }
+    },
+    "inference": {
+      "clothing": {
+        "total_duration": 23780803345,
+        "eval_count": 12
+      },
+      "hair": {
+        "total_duration": 599041167,
+        "eval_count": 1
+      },
+      "headwear": {
+        "total_duration": 694608834,
+        "eval_count": 1
+      },
+      "glasses": {
+        "total_duration": 597364500,
+        "eval_count": 1
+      },
+      "facial_hair": {
+        "total_duration": 562084500,
+        "eval_count": 2
+      },
+      "accessories": {
+        "total_duration": 1504862626,
+        "eval_count": 11
+      }
+    },
+    "description_language": "pl",
+    "localization_version": 2,
+    "descriptor_version": 2
+  },
+  "seconds": 27.76
+}

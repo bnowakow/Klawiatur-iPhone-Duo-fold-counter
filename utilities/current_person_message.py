@@ -50,13 +50,18 @@ def current_measurements(conn, stream, now=None):
     return row[2], row[3]
 
 
-def main():
+def generate_current_message(stream=None):
+    """Shared, read-only entry point for clipboard, chat delivery and future bots."""
     import psycopg
-    stream = os.getenv('STREAM_URL', 'https://www.youtube.com/watch?v=vaiHWiExDXg')
+    stream = stream or os.getenv('STREAM_URL', 'https://www.youtube.com/watch?v=vaiHWiExDXg')
+    with psycopg.connect(os.getenv('DATABASE_URL', ''), connect_timeout=10) as conn:
+        conn.execute('SET TRANSACTION READ ONLY')
+        return message_for_pace(*current_measurements(conn, stream))
+
+
+def main():
     try:
-        with psycopg.connect(os.getenv('DATABASE_URL', ''), connect_timeout=10) as conn:
-            conn.execute('SET TRANSACTION READ ONLY')
-            message = message_for_pace(*current_measurements(conn, stream))
+        message = generate_current_message()
     except PaceUnavailable as exc:
         print(str(exc), file=sys.stderr)
         return 2

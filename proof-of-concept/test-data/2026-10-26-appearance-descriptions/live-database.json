@@ -1,0 +1,42 @@
+[
+  {
+    "session_id": "2b6c053f-47be-4abb-a165-c4b0dafe031c",
+    "description": "Ubiór: czarna koszulka. Włosy: nie można ocenić. Nakrycie głowy: czarna czapka z daszkiem. Okulary: niewidoczne. Zarost: broda. Dodatki: czerwony zegarek.",
+    "language": "pl",
+    "status": "completed",
+    "appearance": {
+      "hair": {
+        "state": "unknown"
+      },
+      "glasses": {
+        "state": "not_visible"
+      },
+      "clothing": {
+        "description": "Czarna koszulka."
+      },
+      "headwear": {
+        "type": "czapka z daszkiem",
+        "color": "czarna",
+        "state": "visible"
+      },
+      "accessories": {
+        "items": [
+          "czerwony zegarek"
+        ],
+        "state": "visible"
+      },
+      "facial_hair": {
+        "items": [
+          "broda"
+        ],
+        "state": "visible"
+      }
+    },
+    "model": "llava-phi3:3.8b",
+    "input_version": 2,
+    "prompt_version": 2,
+    "observed_at": "2026-10-26 05:11:52.068190+00:00",
+    "generated_at": "2026-10-26 05:42:42.789938+00:00",
+    "preserved_revisions": 1
+  }
+]

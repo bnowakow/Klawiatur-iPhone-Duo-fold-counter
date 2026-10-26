@@ -599,10 +599,41 @@ project budgets in `youtube_quota_projects` and conservative attempted-request
 accounting in `youtube_api_requests`; `youtube_daily_usage` is the daily summary.
 Pacific midnight defines the quota day. Failed/uncertain requests remain counted.
 Authenticated API calls must use `tracked_request()` for local budget enforcement;
-video-frame extraction is separate. No OAuth browser flow, credentials or automatic
-posting are configured. See [setup, limitations and verification](docs/youtube-live-chat.md).
+video-frame extraction is separate. OAuth/manual delivery are implemented below;
+credentials and automatic posting are not configured. See
+[setup, limitations and verification](docs/youtube-live-chat.md).
 `youtube_quota_integration_check.py` uses isolated projects and makes no Google calls.
 
 Detailed appearance descriptors v2: head-and-upper-body crops, one local structured visual request covering six appearance categories, Polish text and structured `appearance` JSONB (hair, headwear, glasses, facial hair, accessories and clothing). No sex/gender inference. Original inputs/descriptions are archived in `presenter_description_revisions` on portrait upgrades; historical refresh uses the original frame only.
 
 Detailed descriptors use local `llava-phi3:3.8b` (about 2.9 GB weights), with two CPUs and 6 GB memory maximum for the vision container.
+
+### OAuth/manual chat implementation (2026-10-26)
+
+`youtube_auth.py` implements five-minute local browser authorization with Google
+Web client JSON, state/PKCE, serialized refresh, private atomic credential files,
+and disconnect/revoke. The optional one-shot `youtube-chat` Compose service mounts
+ignored `secrets/youtube/`; only connect publishes loopback port 8765. Exact callback:
+`http://localhost:8765/oauth/callback`. Use `make youtube-auth` after Cloud setup.
+`youtube_chat.py` previews/sends explicit file contents, verifies channel/chat,
+records `youtube_chat_deliveries`, links attempts through
+`youtube_api_requests.delivery_id`, and reconciles interrupted sends without retry.
+`YOUTUBE_CHAT_ENABLED` defaults false. `youtube_commands.py` is an empty handler
+registry for future incoming-message commands; it neither reads nor posts live chat.
+The old feature plan's OAuth/manual phases are implemented; incoming command reader,
+cooldowns and schedules remain future work. No real account/post was used in tests.
+See [setup and command extension guide](docs/youtube-setup.md).
+
+The shared `generate_current_message(stream)` in `utilities/current_person_message.py`
+now serves clipboard output and YouTube `preview-current` / `send-current` commands.
+`make youtube-preview-current` and `make youtube-send-current` expose those commands;
+current-data delivery uses source kind `current_person_message`. The generator
+keeps freshness/attribution checks; YouTube refuses messages above 200 characters.
+
+First real manual current-person chat post verified on 2026-10-26 using the
+connected channel Bartek Dobrowolski-Nowakowski, video `vaiHWiExDXg`.
+Delivery `ecc60c61-e206-4396-8300-8e7d2434697d` was sent with a unique request key;
+YouTube returned message ID `LCC.EhwKGkNLSEl4WlQtMXBjREZSMktMUWtkeXJzRjl3`.
+The message reported 2014 folds, 44.68 folds/minute and 2681 folds/hour projection.
+Only that one-shot container enabled sending; `.env` remains disabled. This confirms
+manual OAuth posting, not incoming-command reading or scheduled operation.

@@ -39,3 +39,11 @@ youtube-disconnect:
 
 youtube-deliveries:
 	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py deliveries
+
+.PHONY: youtube-preview-current youtube-send-current
+youtube-preview-current:
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py preview-current
+
+# Same live-data generator as docker-message; sending still requires explicit opt-in.
+youtube-send-current:
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py send-current --request-key $(call youtube-quote,$(REQUEST_KEY)) --expected-channel $(call youtube-quote,$(CHANNEL_ID)) --expected-chat $(call youtube-quote,$(CHAT_ID))

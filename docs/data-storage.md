@@ -94,3 +94,22 @@ site caching, unknown layouts and attribution review remain explicit limits.
 All image files under `data/` share the 20 GB cap documented in
 [frame retention](frame-retention.md#global-image-limit). Above it, an ERROR is
 logged and the oldest image files are deleted; database and metadata are retained.
+
+## YouTube OAuth and live-chat delivery
+
+`youtube_api_policies` retains dated quota/limit snapshots;
+`youtube_quota_projects` holds configured local project budgets;
+`youtube_api_requests` records conservative attempted-request costs and outcomes;
+`youtube_daily_usage` summarizes each Pacific quota day. Nullable
+`youtube_api_requests.delivery_id` links POST attempts to
+`youtube_chat_deliveries`, which retains request keys, exact public message text,
+posting channel/video/chat, source kind/source ID, status and returned message ID.
+Delivery and quota history have no automatic expiry. Unknown delivery outcomes
+are preserved and never automatically resent. Integration fixtures use isolated
+`integration:chat:` / `integration:youtube:` projects.
+
+OAuth client JSON and refresh credentials are private files in ignored
+`secrets/youtube/`, mounted only into the optional chat service. They are outside
+PostgreSQL and image retention. Protect any credential backups separately; database
+or log backups must not acquire tokens. No incoming live-chat archive or bot reader
+exists yet. See [Google setup, delivery and command extension](youtube-setup.md).

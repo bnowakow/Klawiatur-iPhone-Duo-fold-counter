@@ -45,7 +45,7 @@ class StructuredRequestTests(unittest.TestCase):
         from unittest.mock import patch
         import clothing_descriptions as clothing
         answers={'clothing':'A black T-shirt.','hair':'A man has short brown hair.',
-                 'headwear':'none visible','glasses':'black glasses','facial_hair':'short beard',
+                 'headwear':'none visible','glasses':'black','facial_hair':'short beard',
                  'accessories':'black watch'}
         body=json.dumps({'done':True,'done_reason':'stop','response':json.dumps(answers)}).encode()
         with patch('clothing_descriptions.urlopen') as request:
@@ -54,6 +54,7 @@ class StructuredRequestTests(unittest.TestCase):
             payload=json.loads(request.call_args.args[0].data)
         self.assertIn('brązowe',text)
         self.assertIn('krótka broda',text)
+        self.assertIn('Okulary: czarne okulary.',text)
         self.assertNotIn('man',metadata['raw_answers']['hair'])
         self.assertFalse(payload['format']['additionalProperties'])
         self.assertNotIn('sex',payload['format']['properties'])

@@ -1,10 +1,12 @@
 # YouTube live chat and quota accounting
 
-The application can publish live-chat messages as a user's YouTube channel using
-Google OAuth and the YouTube Data API. The quota ledger and authenticated HTTP
-transport are implemented in `youtube_quota.py`. The browser authorization flow,
-refresh-token storage, chat discovery and automatic posting are not implemented.
-No Google account is connected and no messages have been sent by this feature.
+The application implements local Google OAuth, private refresh-token storage,
+channel identification, live-chat discovery and explicit manual posting. The quota
+ledger and HTTP transport are in `youtube_quota.py`; `youtube_auth.py` handles
+credentials and `youtube_chat.py` handles delivery. See the
+[Google Cloud setup and commands](youtube-setup.md).
+No Google account has been connected or real messages sent during implementation.
+Scheduled posting and an incoming-message reader are not implemented.
 
 ## Published policies
 
@@ -79,7 +81,7 @@ stored cost but needs a separate streaming transport before use.
 
 1. Create/select a Google Cloud project and enable YouTube Data API v3.
 2. Configure its OAuth consent screen; add your account as a test user if Testing.
-3. Create an OAuth client and implement a browser consent flow with a registered
+3. Create an OAuth client and use the implemented browser consent flow with a registered
    local callback, state validation and offline access. The posting endpoint
    accepts the `https://www.googleapis.com/auth/youtube.force-ssl` scope.
 4. Persist refresh credentials privately in an ignored persistent location, with
@@ -109,4 +111,5 @@ The integration check uses isolated `integration:youtube:` projects in the real
 PostgreSQL database, retains its records and writes JSON evidence under
 `data/test-evidence/youtube-quota/<run-id>/`. It sends zero Google requests.
 
-The next implementation is described in the [OAuth and live-chat feature plan](plans/youtube-live-chat.md).
+The original design and remaining automation work are described in the
+[OAuth and live-chat feature plan](plans/youtube-live-chat.md).

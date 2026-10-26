@@ -60,6 +60,8 @@ def main():
             with psycopg.connect() as replay:
                 replay.execute("SET LOCAL lock_timeout='200ms'")
                 clothing.save_job(replay,obs)
+                supervisor._READY_SCHEMAS.clear()
+                supervisor.ensure_schema(replay)
         with psycopg.connect() as conn:
             conn.execute('UPDATE presenter_clothing_descriptions SET input_version=1')
             clothing.save_job(conn,obs)
@@ -84,7 +86,7 @@ def main():
             'completed description retained on replay','no repeated inference',
             'Polish conversion and language marker','original description preserved','idempotent language migration',
             'portrait upgrade archives original','stale crop replay cannot downgrade',
-            'replay does not block on inference row','structured appearance persisted'], 'result':result}
+            'replay does not block on inference row','schema setup skips already-applied ALTERs during inference','structured appearance persisted'], 'result':result}
         root = Path('/data/test-evidence/clothing-descriptions')/schema
         root.mkdir(parents=True,exist_ok=True)
         (root/'result.json').write_text(json.dumps(report,indent=2)+'\n')

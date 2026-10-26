@@ -163,9 +163,15 @@ def recover():
     return {'reconciled': len(rows)}
 
 
+def current_message(stream):
+    from utilities.current_person_message import generate_current_message
+    return validate_message(generate_current_message(stream))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('connect','disconnect','status','preview','send','deliveries','recover'))
+    parser.add_argument('command', choices=('connect','disconnect','status','preview','send',
+                                          'preview-current','send-current','deliveries','recover'))
     parser.add_argument('--message-file', type=Path)
     parser.add_argument('--request-key')
     parser.add_argument('--expected-channel')
@@ -196,13 +202,18 @@ def main():
                         result = {'connected': False, 'authorization_required': str(error)}
                     result['quota'] = quota.report(project)
                 else:
-                    if not args.message_file:
-                        raise ValueError('--message-file is required')
-                    text = validate_message(args.message_file.read_text().rstrip('\r\n'))
-                    if args.command == 'preview':
+                    if args.command.endswith('-current'):
+                        text = current_message(stream)
+                    else:
+                        if not args.message_file:
+                            raise ValueError('--message-file is required')
+                        text = validate_message(args.message_file.read_text().rstrip('\r\n'))
+                    if args.command in ('preview','preview-current'):
                         result = {'target': context(project, stream), 'message_text': text, 'characters': len(text), 'publishes': False}
                     else:
-                        result = send(project, stream, text, args.request_key, args.expected_channel, args.expected_chat)
+                        result = send(project, stream, text, args.request_key, args.expected_channel, args.expected_chat,
+                                      source_kind='current_person_message' if args.command=='send-current' else 'manual')
+                        result['message_text'] = text
             print(json.dumps(result, indent=2, default=str, ensure_ascii=False))
     except Exception as error:
         # Print only safe errors we construct, never provider exceptions with secrets.

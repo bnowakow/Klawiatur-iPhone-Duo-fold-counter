@@ -83,7 +83,7 @@ def headwear(text):
 def glasses(text):
     if unclear(text): return dict(UNKNOWN)
     if absent(text): return {'state':'not_visible'}
-    if re.search(r'\byes\b|glasses|spectacles',text,re.I):
+    if re.search(r'\byes\b|glasses|spectacles',text,re.I) or color(text):
         result={'state':'visible','type':'okulary przeciwsłoneczne' if 'sunglasses' in text.lower() else 'okulary'}
         tone=color(text)
         if tone: result['color']=tone
@@ -142,6 +142,7 @@ def summarize(answers):
         if value['state']=='unknown': detail='nie można ocenić'
         elif value['state']=='not_visible': detail='niewidoczne' if key in {'hair','glasses','accessories'} else 'niewidoczny w kadrze' if key=='facial_hair' else 'niewidoczne w kadrze'
         elif 'items' in value: detail=', '.join(value['items'])
+        elif key in {'headwear','glasses'}: detail=' '.join(value[k] for k in ('color','type') if value.get(k))
         else: detail=', '.join(value[k] for k in ('color','length','style','type') if value.get(k))
         text.append(label+': '+detail+'.')
     return ' '.join(text),features

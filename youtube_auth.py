@@ -134,7 +134,12 @@ def authorize(project_id):
             self.send_header('Referrer-Policy', 'no-referrer')
             self.end_headers()
             self.wfile.write(message.encode())
-    with HTTPServer(('0.0.0.0', 8765), Callback) as server:
+    class CallbackServer(HTTPServer):
+        def get_request(self):
+            connection, address = super().get_request()
+            connection.settimeout(5)
+            return connection, address
+    with CallbackServer(('0.0.0.0', 8765), Callback) as server:
         server.timeout = 1
         print('Open this URL in your browser:\n'+url, flush=True)
         deadline = time.monotonic()+300

@@ -8,6 +8,14 @@ import youtube_chat as chat
 
 
 class ChatTests(unittest.TestCase):
+    def test_current_message_reuses_clipboard_generator_and_enforces_chat_limit(self):
+        with patch('utilities.current_person_message.generate_current_message', return_value='Shared message') as generate:
+            self.assertEqual(chat.current_message('stream'), 'Shared message')
+            generate.assert_called_once_with('stream')
+        with patch('utilities.current_person_message.generate_current_message', return_value='x'*201):
+            with self.assertRaises(ValueError):
+                chat.current_message('stream')
+
     def test_validation_and_video_target(self):
         self.assertEqual(chat.video_id('https://www.youtube.com/watch?v=vaiHWiExDXg'), 'vaiHWiExDXg')
         self.assertEqual(chat.video_id('https://youtu.be/vaiHWiExDXg'), 'vaiHWiExDXg')
