@@ -153,7 +153,7 @@ person has already started. It never reads the successor's current statistics
 for the previous person's summary.
 
 `youtube_stint_notification_settings` stores the per-stream enable switch, first
-activation time and maximum closure age (default one hour). Historical stints
+activation time and maximum closure age (at most 120 seconds). Historical stints
 ending before activation, open stints and manual baseline resets are excluded.
 The system's existing inferred closure is the trigger; night stop confirmation
 can therefore delay the message after the estimated stop time. Invalid/missing
@@ -228,3 +228,48 @@ cooldown, a matching Polish cooldown disclaimer, and the standard command usage,
 deduplication and delivery ledger. `!pomoc` automatically includes it. The full
 source URL remains in the cache; the 165-character public reply cites the source
 domain to leave room for the required facts and cooldown disclaimer.
+
+## YouTube account-wide posting pause
+
+A provider `rateLimitExceeded` is different from an individual command's cooldown.
+`youtube_account_posting_state` persists the authorized channel's `not_before`,
+consecutive rejections and last error/success times. The pause covers all commands,
+manual posts and automatic stint summaries across projects using that channel.
+Command events received during it are marked throttled with `account_backoff`
+before invoking a send; no warning/reply is posted. Summaries observed during a pause are recorded as terminal `rejected` with
+`account_backoff`; they are never held for later delivery. Messages exceeding
+their freshness deadline are also terminal and never replayed later.
+The transport also checks the pause before reserving POST quota or opening HTTP.
+
+The default app policy waits approximately 10, 20, 40 and then 60 minutes after
+consecutive provider rejections, with positive jitter and any longer Retry-After.
+These are conservative local retry times, not a guaranteed Google unblock time.
+`youtube_posting_policies` records that policy, and
+`youtube_posting_backoff_events` audits each provider rejection and chosen delay.
+The worker restores missing account state from already recorded POST history on
+startup, preserving the original error times; restart does not reset the pause.
+No automatic probe or backlog resend occurs when the timer expires.
+
+The existing API request and delivery records already stored the error reason.
+New failures additionally retain sanitized provider messages/domain/Retry-After
+in `youtube_api_error_details` and emit an ERROR-level
+`youtube_posting_rate_limited` log with request ID, channel, HTTP status and
+`not_before`. Historical raw response text cannot be reconstructed if it was not
+saved. Startup logs `posting_cooldown_active` when a pause is in effect.
+`make youtube-bot-stats` includes `posting_backoff` and whether it is currently active.
+
+Incident details, retained diagnostics and freshness semantics: [posting rate limits](youtube-rate-limits.md).
+
+Follow Compose errors and active posting cooldown notices with:
+
+```sh
+make docker-logs-errors
+```
+
+This follows all services, including the YouTube profile, and applies a
+line-buffered grep filter. It retains full timestamped error lines and
+`posting_cooldown_active` notices, including `not_before`: the earliest permitted
+posting attempt as an ISO timestamp with an explicit timezone offset. Ordinary
+successful replies with `error_reason: null` are excluded. The deadline is the
+app's local pause, not a guarantee YouTube will accept the next post. Press Ctrl+C
+to stop following. No Docker rebuild is required for this Make target.

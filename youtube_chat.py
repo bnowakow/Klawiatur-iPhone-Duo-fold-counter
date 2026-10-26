@@ -115,6 +115,7 @@ def send(project, stream, text, request_key, expected_channel, expected_chat,
     if os.getenv('YOUTUBE_CHAT_ENABLED', 'false').lower() != 'true':
         raise ValueError('Sending is disabled; set YOUTUBE_CHAT_ENABLED=true explicitly')
     now=datetime.now(timezone.utc)
+    if expires_at is not None and expires_at.tzinfo is None:raise ValueError('Message expiry must include timezone')
     deadline=min(expires_at,now+timedelta(seconds=120)) if expires_at is not None else now+timedelta(seconds=120)
     if deadline.tzinfo is None:raise ValueError('Message expiry must include timezone')
     def reject_unsent(reason):

@@ -8,6 +8,15 @@ import frame_retention as retention
 
 
 class FrameRetentionTests(unittest.TestCase):
+    def test_stint_start_first_increase_and_finish_protect_review_frames(self):
+        for session in [{'first_observation_id': 'frame'},
+                        {'folding_start_observation_id': 'frame'},
+                        {'ended_at': '2026-10-26T06:59:32+00:00'}]:
+            obs = {'id': 'frame', 'details': {'presenter_session_updates': [session]}}
+            self.assertIn('presenter_video_boundary', retention.reasons(obs))
+        self.assertNotIn('presenter_video_boundary', retention.reasons(
+            {'id': 'later', 'details': {'presenter_session_updates': [{'first_observation_id': 'frame'}]}}))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

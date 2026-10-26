@@ -25,6 +25,7 @@ from camera_views import observe, detect_break_scene
 import polling
 import frame_retention
 import clothing_descriptions
+import presenter_video_events
 from presenter_sessions import SCHEMA as SESSION_SCHEMA, advance_sessions, advance_appearances, save_sessions
 
 
@@ -41,7 +42,7 @@ CREATE TABLE IF NOT EXISTS monitor_state (
  stream_url text PRIMARY KEY, updated_at timestamptz NOT NULL DEFAULT now(),
  state jsonb NOT NULL
 );
-""" + SESSION_SCHEMA + polling.SCHEMA + clothing_descriptions.SCHEMA
+""" + SESSION_SCHEMA + polling.SCHEMA + clothing_descriptions.SCHEMA + presenter_video_events.SCHEMA
 
 
 def number(name, default, minimum=0):
@@ -187,7 +188,8 @@ def capture(url, destination):
              "-rw_timeout", "20000000", "-live_start_index", "-1", "-i", selected["url"],
              "-frames:v", "1", "-q:v", "2", "-update", "1", "-y", str(destination)],
             capture_output=True, timeout=40, check=True)
-        return {"title": info.get("title"), "height": selected["height"]}
+        return {"title": info.get("title"), "height": selected["height"],
+                "video_timing": presenter_video_events.capture_metadata(info)}
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
         # Signed media URLs and command lines should not leak into logs.
         raise RuntimeError(f"Stream capture failed: {type(exc).__name__}") from None
@@ -328,6 +330,7 @@ def insert(conn, obs):
                  + ",".join(["%s"]*13) + ") ON CONFLICT (id) DO NOTHING",
                  tuple(obs.get(c) for c in columns) + (Jsonb(clothing_descriptions.public_details(obs)),))
     save_sessions(conn, obs)
+    presenter_video_events.save(conn, obs)
     clothing_descriptions.save_job(conn, obs)
 
 

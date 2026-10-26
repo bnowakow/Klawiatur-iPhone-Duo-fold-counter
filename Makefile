@@ -1,5 +1,10 @@
 .PHONY: docker-upgrade docker-compare docker-message codex-commit
 
+.PHONY: docker-logs-errors
+# Preserve full error/cooldown lines, including not_before (next permitted POST).
+docker-logs-errors:
+	@bash -o pipefail -c 'docker compose --profile youtube logs -f --no-color --timestamps 2>&1 | grep --line-buffered -Ei '\''rateLimitExceeded|youtube_posting_rate_limited|posting_cooldown_active|worker_backoff|(^|[^[:alnum:]_])(error|fatal|exception|traceback)([^[:alnum:]_]|$$)|"status":[[:space:]]*"(failed|rejected|unknown)"|"error_reason":[[:space:]]*"[^"]+"'\'''
+
 # Rebuild code, reload .env, and replace application containers.
 docker-upgrade:
 	docker compose --profile youtube build supervisor ipduotest-pl clothing-descriptions youtube-chat youtube-bot
@@ -15,6 +20,11 @@ docker-compare:
 # Generate a Polish pace/projection message and copy it to the host clipboard.
 docker-message:
 	@bash utilities/docker-message.sh
+
+.PHONY: docker-video-events
+# JSON review bookmarks for detected appearances, folding starts and finishes.
+docker-video-events:
+	@docker compose exec -T supervisor python presenter_video_events.py
 
 # Stage changes, generate a commit message with Codex, commit, then offer to push.
 codex-commit:

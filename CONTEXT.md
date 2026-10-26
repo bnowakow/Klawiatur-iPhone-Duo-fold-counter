@@ -715,3 +715,14 @@ The user clarified that ipduotest-pl is unofficial. Use `ipduotest-pl` for this
 source, collector service and archive path, and `ipduotest_pl` for Python/SQL
 identifiers. Never describe its values as official or authoritative. Existing
 archives and database rows migrate in place; see `docs/ipduotest-pl.md`.
+
+Provider rateLimitExceeded is now governed by a durable account-wide posting pause
+in `youtube_account_posting_state`, separate from per-command caps. The shared
+transport blocks POST reservations during this pause; command handling records
+account_backoff before send, and automatic summaries are recorded as rejected rather than waiting for later delivery.
+Startup restores missing pause state from prior successful/rejected POST history.
+Default app waits progress roughly 10/20/40/60 minutes with positive jitter and
+honor longer Retry-After; these are not guaranteed Google unblock times. New
+provider errors are sanitized in youtube_api_error_details and emit ERROR
+`youtube_posting_rate_limited` with the retry time. Stats include active posting
+backoff. No automatic resend/probe is introduced and stale requests are discarded.

@@ -42,6 +42,11 @@ capture remains enabled all day because these times are approximate.
 
 ## Data collection scope
 
+Presenter appearance, first folding evidence and finish bookmarks are retained
+with estimated video offsets, review links and human-review fields. Run
+`make docker-video-events`; see [video timestamp evidence](docs/video-events.md)
+for timing limits and training-label review.
+
 For now, the goal is storing the inputs for an independent application in
 PostgreSQL. Counter history, presenter starts and endpoints, brief appearances,
 attribution uncertainty, and ipduotest-pl’s published reference data are

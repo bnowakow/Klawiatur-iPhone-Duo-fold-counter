@@ -59,6 +59,19 @@ def paused(conn, channel_id, now=None):
     return row[0] if row else None
 
 
+def restore_history(conn, channel_id):
+    """Initialize missing account state from durable requests, without sending."""
+    conn.execute('SELECT pg_advisory_xact_lock(hashtext(%s))',('youtube-account:'+channel_id,))
+    if conn.execute('SELECT 1 FROM youtube_account_posting_state WHERE channel_id=%s',(channel_id,)).fetchone():
+        return 0
+    rows=conn.execute("SELECT id,status,error_reason,COALESCE(completed_at,requested_at) FROM youtube_api_requests "
+                      "WHERE account_channel_id=%s AND method='liveChatMessages.insert' "
+                      "AND (status='succeeded' OR error_reason='rateLimitExceeded') ORDER BY requested_at,id",(channel_id,)).fetchall()
+    for request_id,status,reason,observed in rows:
+        record_result(conn,request_id,'liveChatMessages.insert',channel_id,status,reason,now=observed)
+    return len(rows)
+
+
 def retry_seconds(value, now=None):
     if not value:return None
     now=now or datetime.now(timezone.utc)

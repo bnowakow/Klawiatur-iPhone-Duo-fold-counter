@@ -59,12 +59,28 @@ def main():
         # Simulate restart after a notification claim with no certain delivery.
         conn.execute("UPDATE youtube_stint_notifications SET status='processing',created_at=now()-interval '10 minutes' WHERE session_id=%s",(normal,))
     notifications.recover()
+    # A summary observed during a pause is terminal even if the pause ends soon.
+    paused_session=session()
+    with quota.connect() as conn:
+        conn.execute('INSERT INTO youtube_bot_state(stream_url,project_id,channel_id,chat_id,enabled_at) '
+                     'VALUES (%s,%s,%s,%s,%s)',(stream,'fixture-project',stream,'fixture-chat',now))
+        conn.execute('INSERT INTO youtube_account_posting_state(channel_id,not_before) VALUES (%s,%s)',
+                     (stream,now+timedelta(seconds=30)))
+    with patch.object(notifications.chat,'context',side_effect=AssertionError('No discovery during pause')):
+        blocked=notifications.process_finished('fixture-project',stream)
+        assert blocked[0]['status']=='rejected',blocked
+    with quota.connect() as conn:
+        assert conn.execute('SELECT error_reason FROM youtube_stint_notifications WHERE session_id=%s',
+                            (paused_session,)).fetchone()[0]=='account_backoff'
+        conn.execute("UPDATE youtube_account_posting_state SET not_before=now()-interval '1 second' WHERE channel_id=%s",(stream,))
+    with patch.object(notifications.chat,'send',side_effect=AssertionError('Old summary must not replay')):
+        assert notifications.process_finished('fixture-project',stream)==[]
     with quota.connect() as conn:
         assert conn.execute('SELECT status FROM youtube_stint_notifications WHERE session_id=%s',(normal,)).fetchone()[0]=='unknown'
         conn.execute('UPDATE youtube_stint_notification_settings SET enabled=false WHERE stream_url=%s',(stream,))
     session()
     assert notifications.process_finished('fixture-project',stream)==[]
-    result={'passed':True,'run_id':run,'real_google_requests':0,'checks':['completed stint final data','handover and night closure','historical and active stints ignored','manual reset ignored','expired and unavailable data recorded','concurrent and repeated claims deduplicated','unknown outcomes never resent','persisted enable switch']}
+    result={'passed':True,'run_id':run,'real_google_requests':0,'checks':['completed stint final data','handover and night closure','historical and active stints ignored','manual reset ignored','expired and unavailable data recorded','concurrent and repeated claims deduplicated','unknown outcomes never resent','paused summaries retained and never replayed','persisted enable switch']}
     folder=Path(os.getenv('DATA_DIR','data'))/'test-evidence'/'youtube-stint-notifications'/run
     folder.mkdir(parents=True,exist_ok=True)
     (folder/'result.json').write_text(json.dumps(result,indent=2)+'\n')

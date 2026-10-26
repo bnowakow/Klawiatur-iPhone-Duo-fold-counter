@@ -206,6 +206,10 @@ def process_message(project, stream, target, enabled_at, item, now=None):
     if not 0 <= (now-published).total_seconds() <= config[4]:
         return complete('stale', 'message_too_old_or_future')
     with quota.connect() as conn:
+        until=quota.rate_limits.paused(conn,target['channel']['id'],now)
+    if until:
+        return complete('throttled','account_backoff')
+    with quota.connect() as conn:
         cooldown = conn.execute('SELECT available_at FROM youtube_bot_cooldowns WHERE chat_id=%s AND command=%s', (chat_id,command)).fetchone()
     if cooldown and now < cooldown[0]:
         return complete('throttled')
@@ -276,6 +280,9 @@ def statistics(stream=None):
         usage = conn.execute('SELECT * FROM youtube_bot_command_usage WHERE (%s::text IS NULL OR stream_url=%s) ORDER BY command,stream_url',params).fetchall()
         daily = conn.execute('SELECT * FROM youtube_bot_command_daily_usage WHERE (%s::text IS NULL OR stream_url=%s) ORDER BY usage_day DESC LIMIT 100',params).fetchall()
         states = conn.execute('SELECT * FROM youtube_bot_state WHERE (%s::text IS NULL OR stream_url=%s) ORDER BY stream_url',params).fetchall()
+        posting_backoff = conn.execute('SELECT p.*,p.not_before>now() AS active FROM youtube_account_posting_state p '
+                                       'WHERE (%s::text IS NULL OR EXISTS (SELECT 1 FROM youtube_bot_state s '
+                                       'WHERE s.stream_url=%s AND s.channel_id=p.channel_id))',params).fetchall()
         cooldowns = conn.execute('SELECT c.* FROM youtube_bot_cooldowns c WHERE (%s::text IS NULL OR EXISTS '
                                 '(SELECT 1 FROM youtube_bot_command_events e WHERE e.chat_id=c.chat_id AND e.command=c.command AND e.stream_url=%s)) '
                                 'ORDER BY available_at DESC LIMIT 100',params).fetchall()
@@ -285,6 +292,7 @@ def statistics(stream=None):
             notifications = conn.execute('SELECT * FROM youtube_stint_notifications WHERE (%s::text IS NULL OR stream_url=%s) '
                                          'ORDER BY created_at DESC LIMIT 20',params).fetchall()
     return {'commands':commands,'cached_content':cached_content,'usage':usage,'daily_usage':daily,'workers':states,'cooldowns':cooldowns,
+            'posting_backoff':posting_backoff,
             'stint_notification_settings':settings,'stint_notifications':notifications}
 
 
@@ -302,6 +310,15 @@ def run():
         owns = leader.execute('SELECT pg_try_advisory_lock(hashtext(%s))', ('youtube-bot-worker:'+stream,)).fetchone()[0]
         if not owns:
             raise ValueError('Another bot already owns this stream')
+        with auth.locked():
+            channel_id=auth.stored().get('channel',{}).get('id')
+        if channel_id:
+            with quota.connect() as conn:
+                restored=quota.rate_limits.restore_history(conn,channel_id)
+                until=quota.rate_limits.paused(conn,channel_id)
+            if until:
+                print(json.dumps({'event':'posting_cooldown_active','channel_id':channel_id,
+                                  'not_before':until.isoformat(),'restored_history_rows':restored}),flush=True)
         from youtube_stint_notifications import start as start_notifications
         notification_thread = start_notifications(project,stream,stop)
         backoff = 5

@@ -21,6 +21,10 @@ def reasons(obs):
         result.append('presenter_attribution_review_required')
     if details.get('presenter_appearance_updates'):
         result.append('presenter_appearance_event')
+    if any(session.get('first_observation_id') == obs.get('id') or
+           session.get('folding_start_observation_id') == obs.get('id') or
+           session.get('ended_at') for session in details.get('presenter_session_updates', [])):
+        result.append('presenter_video_boundary')
     if obs.get('status') in {'duplicate_frame', 'error', 'database_unavailable'}:
         result.append(obs['status'])
     if details.get('error') or details.get('database_error'):

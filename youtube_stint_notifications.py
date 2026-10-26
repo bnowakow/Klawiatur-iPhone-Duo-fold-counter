@@ -42,6 +42,10 @@ def finished_message(pace, folds, disclaimer):
 
 def process_finished(project, stream, now=None):
     now = now or datetime.now(timezone.utc)
+    # Record suppressed summaries now; never defer them until the pause expires.
+    with quota.connect() as conn:
+        channel=conn.execute('SELECT channel_id FROM youtube_bot_state WHERE stream_url=%s',(stream,)).fetchone()
+        posting_paused = bool(channel and quota.rate_limits.paused(conn,channel[0],now))
     with quota.connect() as conn:
         policy = conn.execute('SELECT enabled_at,max_age_seconds FROM youtube_stint_notification_settings '
                               'WHERE stream_url=%s AND enabled', (stream,)).fetchone()
@@ -62,6 +66,8 @@ def process_finished(project, stream, now=None):
         status, text, error = 'processing', None, None
         if not 0 <= (now-confirmed).total_seconds() <= min(policy[1],120):
             status, error = 'expired', 'closure_notification_too_old_or_future'
+        elif posting_paused:
+            status, error = 'rejected', 'account_backoff'
         else:
             try:
                 text = finished_message(pace,folds,disclaimer)
