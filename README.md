@@ -133,6 +133,11 @@ the bottom-right inset. It selects a separate clothing-only crop and baseline
 for each layout. `CLOTHING_ROI` controls the presenter-main crop; the inset crop
 is calibrated in `proof-of-concept/camera-profiles/layouts.json`.
 
+The shifted main-camera framing introduced on 26 October is calibrated separately
+as `presenter_main_morning`, with its own background reference and clothing crop.
+Original morning transition frames and counter labels are preserved under
+`proof-of-concept/test-data/2026-10-26-morning-resumption/`.
+
 Switching views resets pending evidence and never compares clothing across
 layouts. A new view creates its own baseline, so a handover during a switch
 may be missed. Unrecognized or ambiguous views produce
@@ -326,7 +331,10 @@ folding stint. This avoids promoting an empty-chair colour change into a
 nonfolding presenter stint while the night-stop evidence accumulates.
 
 The closed stint stays closed while the counter is stationary. Once an
-accepted increase and known camera layout are observed, a new anonymous stint
+increase is seen outside the break scene, two plausible readings re-establish
+the pace anchor using the initial range, even if stationary overnight samples
+kept the old anchor fresh. Decreases and absolute-maximum jumps remain rejected.
+Once an accepted increase and known camera layout are observed, a new anonymous stint
 starts with reason `activity_resumed_after_night_pause`, and clothing baselines
 are refreshed. Unresolved appearance review from the closed stint is cleared
 for the new stint; any pending appearance record is retained with its resolution.
@@ -470,3 +478,5 @@ and [Compose database readiness](https://docs.docker.com/compose/how-tos/startup
 Captured images follow [anomaly-window retention](docs/frame-retention.md); database history remains.
 
 Licensed under the GNU General Public License v3.0; see [LICENSE](LICENSE).
+
+Each confirmed folding stint receives a short clothing description (visible colors and garment types) from a local background vision worker, stored in PostgreSQL. See [clothing descriptions](docs/clothing-descriptions.md).

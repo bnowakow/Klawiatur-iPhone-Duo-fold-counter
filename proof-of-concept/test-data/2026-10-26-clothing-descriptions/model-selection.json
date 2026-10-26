@@ -1,0 +1,24 @@
+{
+  "initial_model": "moondream:1.8b",
+  "checks": [
+    {
+      "prompt": "full clothing-only prompt",
+      "response": "",
+      "done": true,
+      "outcome": "rejected empty response",
+      "seconds": 24.01
+    },
+    {
+      "prompt": "What clothing is the person wearing? Describe the colors and garment types.",
+      "response": "The person is wearing a white shirt and a black watch.",
+      "outcome": "nonempty but includes accessory outside requested garment scope",
+      "seconds": 22.86
+    },
+    {
+      "fixture": "gray-after",
+      "outcome": "initial validation script supplied presenter_main for an inset-camera frame; model described the hands/accessories in that wrong crop. Retested using automatic select_view, as production does."
+    }
+  ],
+  "selected_model": "moondream:1.8b",
+  "note": "A short visual question produces valid descriptions. Qwen3-VL was also downloaded/tested but its image encoding was too slow under the 2-CPU budget and the validation was cancelled. The final input size is 384px; saved fixture results are retained separately."
+}

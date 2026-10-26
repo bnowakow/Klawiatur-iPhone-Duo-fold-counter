@@ -1,0 +1,38 @@
+[
+  {
+    "file": "break.jpg",
+    "observation_id": "f01792d9-0df9-4b40-b176-7b11c08c9191",
+    "expected_counter": 63333,
+    "sha256": "844a4a7bf90b6363e853f5b48f894eb82ac5189b02f94702514e5cb4c6d9495a"
+  },
+  {
+    "file": "empty-main.jpg",
+    "observation_id": "bd9a0404-63f9-4a33-b836-612d435afa5b",
+    "expected_counter": 63333,
+    "sha256": "a328c4507eac3dff06ca96197411662aede12cede972c993e46e762e49f42965"
+  },
+  {
+    "file": "empty-main-later.jpg",
+    "observation_id": "7b49ddff-6e04-480a-b49f-9791747c4d5e",
+    "expected_counter": 63333,
+    "sha256": "32ccf636b1de29d997cbb64fa88f46cbe49e9e837fe88a9ff10562433e412695"
+  },
+  {
+    "file": "folding-main.jpg",
+    "observation_id": "81ff60d0-bf67-45b4-8ec9-8c657136739f",
+    "expected_counter": 63349,
+    "sha256": "b3e25845c253135f01c78f9de91897144d3080ac0bb286c34ba53bc7d20606e8"
+  },
+  {
+    "file": "folding-inset.jpg",
+    "observation_id": "3eddbb00-e335-4646-86a5-ef2bac6e5bba",
+    "expected_counter": 63393,
+    "sha256": "037eb3266d9b4205a6d1b8723c360f1c7e6741d0d1dc9f1f0c58661ea9af6960"
+  },
+  {
+    "file": "folding-inset-later.jpg",
+    "observation_id": "d8bbf657-d504-41fe-9470-e3c47a80fb04",
+    "expected_counter": 63599,
+    "sha256": "5fc02c8fd6dccf05d35c063c5e674670a653025ab7f935bf6c57491fe4dd0fe5"
+  }
+]

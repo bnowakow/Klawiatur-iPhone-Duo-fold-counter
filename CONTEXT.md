@@ -1,5 +1,17 @@
 # Project context for future work
 
+## Morning camera and counter recovery (2026-10-26)
+
+The morning main view shifted; `presenter_main_morning` adds a separate static
+background reference and clothing-only crop, while preserving old layout profiles.
+Original empty-chair/main/inset captures and expected counters are preserved in
+`proof-of-concept/test-data/2026-10-26-morning-resumption/`. Fragmented last digits
+need stronger segment joining; relaxed red bounds avoid clipping pale LED cores.
+Closed-night resumption now requires two plausible positive readings to refresh
+the pace anchor even if overnight pause samples kept the old anchor recent.
+This prevents early morning activity from staying `suspect_slow` against an
+overnight interval. Absolute bounds and decreasing-counter checks remain active.
+
 ## Morning resumption readiness (2026-10-26)
 
 The live overnight state retained `appearances.attribution_review_required=true`.
@@ -575,3 +587,5 @@ docs/backpressure.md and proof-of-concept/test-data/2026-10-25-backpressure/.
 Captured-frame retention is specified in `docs/frame-retention.md`: keep anomalies plus ten captures before/after, persist protection in `data/frame-retention.sqlite3`, and delete other ordinary captures.
 
 `IMAGE_STORAGE_LIMIT_BYTES=20000000000`: after each supervisor cycle, log ERROR on excess image bytes under `data/`, then delete oldest image files only until within the limit. The cap overrides anomaly protection; DB/metadata and repository regression fixtures are excluded. Events are saved in the retention ledger.
+
+Clothing descriptions: `clothing_descriptions.py` queues a torso crop once per confirmed stint after folding starts; a separate Compose worker uses local Ollama/Moondream and persists the caption, source image, model and retry details in `presenter_clothing_descriptions`. See `docs/clothing-descriptions.md`. `vision_models` is a separate persistent model volume.

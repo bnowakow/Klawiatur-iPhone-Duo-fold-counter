@@ -108,7 +108,7 @@ def pace_bounds(elapsed, rates, cfg):
             "elapsed_seconds": elapsed}
 
 
-def validate_counter(value, ts, state, cfg, break_confirmed=False):
+def validate_counter(value, ts, state, cfg, break_confirmed=False, resuming_after_pause=False):
     """Return verdict and next state; rejected samples never move the anchor."""
     result = {"raw": value, "accepted": None, "rate": None}
     state = json.loads(json.dumps(state))
@@ -130,7 +130,7 @@ def validate_counter(value, ts, state, cfg, break_confirmed=False):
             return dict(result, accepted=value, status="accepted_break_boundary",
                         reason="Repeated calibrated break-scene reading confirms a small final increment; attribution requires review",
                         rate=delta/elapsed), state
-    if anchor is None or ts-anchor["time"] > cfg["rebase"]:
+    if anchor is None or ts-anchor["time"] > cfg["rebase"] or resuming_after_pause:
         pending = state.get("pending")
         if pending and 0 < ts-pending["time"] <= cfg["rebase"]:
             dt = ts-pending["time"]
@@ -243,8 +243,12 @@ def analyze(cfg, state, obs, fixture=None, reset_clothing=False):
         state.pop("break_counter_confirmation", None)
         confirmation = {}
     obs["details"]["break_counter_confirmation"] = confirmation
+    closed = state.get("presenters", {}).get("night_closed")
+    resuming = bool(closed and not is_break and raw["value"] is not None
+                    and raw["value"] > closed["counter"])
     verdict, counter_state = validate_counter(raw["value"], now.timestamp(), state.get("counter", {}), cfg,
-                                             break_confirmed=confirmation.get("samples",0)>=3)
+                                             break_confirmed=confirmation.get("samples",0)>=3,
+                                             resuming_after_pause=resuming)
     state["counter"] = counter_state
     obs["details"]["counter_validation"] = verdict
     obs.update(raw_counter=verdict["raw"], accepted_counter=verdict["accepted"],
@@ -299,7 +303,8 @@ def analyze(cfg, state, obs, fixture=None, reset_clothing=False):
             Image.open(path), {}, now.timestamp(), obs["id"], cfg["roi"],
             cfg["clothing_threshold"], cfg["confirm"], cfg.get("effective_interval",cfg["interval"]), reset=True)
         obs["details"]["camera_view"]["baseline_replaced_for_session"] = True
-    clothing_descriptions.prepare(Image.open(path), obs, sessions)
+    with Image.open(path) as clothing_image:
+        clothing_descriptions.prepare(clothing_image, obs, sessions)
     state["last_observed_at"] = obs["observed_at"]
     if status == "camera_view_unknown_review_required":
         # Preserve new-angle evidence outside the rolling frame retention tree.
@@ -321,7 +326,7 @@ def insert(conn, obs):
                "counter_status", "counter_reason", "rate", "clothing_status", "clothing_score", "frame_path")
     conn.execute("INSERT INTO observations (" + ",".join(columns) + ",details) VALUES ("
                  + ",".join(["%s"]*13) + ") ON CONFLICT (id) DO NOTHING",
-                 tuple(obs.get(c) for c in columns) + (Jsonb(obs["details"]),))
+                 tuple(obs.get(c) for c in columns) + (Jsonb(clothing_descriptions.public_details(obs)),))
     save_sessions(conn, obs)
     clothing_descriptions.save_job(conn, obs)
 
@@ -397,7 +402,7 @@ def cycle(cfg, fixture=None, reset_clothing=False):
         temp.replace(pending)
         obs["status"] = "database_unavailable"
         frame_retention.register(cfg["data"], obs)
-    print(json.dumps(obs), flush=True)
+    print(json.dumps(dict(obs, details=clothing_descriptions.public_details(obs))), flush=True)
     return obs
 
 

@@ -105,10 +105,10 @@ class SupervisorTests(unittest.TestCase):
             fixture = Path(temporary) / 'morning.png'
             def camera(*args, **kwargs):
                 status = 'baseline_created' if kwargs.get('reset') else (
-                    'change_pending' if index == 1 else 'no_clothing_change_detected')
+                    'change_pending' if index <= 2 else 'no_clothing_change_detected')
                 return ({}, status, .8, None, {'view': 'presenter_main',
                         'tracking': {'changed_since': base.timestamp()+10}})
-            for index, value in [(1, 63340), (2, 63347)]:
+            for index, value in [(1, 63340), (2, 63347), (3, 63354)]:
                 image = Image.new('RGB', (32, 32), 'white')
                 ImageDraw.Draw(image).rectangle((0, 0, index, 5), fill='black')
                 image.save(fixture)
@@ -118,15 +118,19 @@ class SupervisorTests(unittest.TestCase):
                     clock.now.return_value = base+timedelta(seconds=index*10)
                     obs = observation(cfg)
                     state = analyze(cfg, state, obs, fixture)
+                if index == 1:
+                    self.assertEqual(obs['counter_status'], 'provisional')
+                    self.assertNotIn('current', state['presenters'])
+                    continue
                 self.assertFalse(obs['details']['presenter_attribution_review_required'])
                 self.assertNotIn('candidate', state['appearances'])
-                if index == 1:
+                if index == 2:
                     rows = obs['details']['presenter_appearance_updates']
                     self.assertEqual(len(rows), 1)
                     self.assertEqual(rows[0]['status'], 'resolved_on_activity_resumption_review_required')
                     self.assertEqual(state['presenters']['current']['detection_reason'],
                                      'activity_resumed_after_night_pause')
-            self.assertEqual(state['presenters']['current']['folding_start_counter'], 63347)
+            self.assertEqual(state['presenters']['current']['folding_start_counter'], 63354)
 
     def test_sustained_shirt_change_creates_only_one_new_stint(self):
         from datetime import timedelta

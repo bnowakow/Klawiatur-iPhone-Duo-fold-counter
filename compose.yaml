@@ -97,6 +97,8 @@ services:
         max-file: "3"
   vision:
     image: ollama/ollama:latest
+    cpus: 2.0
+    mem_limit: 4g
     environment:
       OLLAMA_MAX_LOADED_MODELS: 1
       OLLAMA_NUM_PARALLEL: 1
@@ -108,6 +110,15 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+  vision-model:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://vision:11434
+    command: ["pull", "${CLOTHING_DESCRIPTION_MODEL:-moondream:1.8b}"]
+    depends_on:
+      vision:
+        condition: service_started
+    restart: on-failure
   clothing-descriptions:
     build: .
     env_file:
@@ -123,8 +134,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      vision:
-        condition: service_started
+      vision-model:
+        condition: service_completed_successfully
     init: true
     stop_grace_period: 200s
     restart: unless-stopped

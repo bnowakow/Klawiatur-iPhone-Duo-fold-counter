@@ -53,7 +53,7 @@ def components(mask):
 
 def locate_counter(mask):
     # Join individual segments while retaining the gaps between digits.
-    kernel = max(3, round(mask.shape[0] / 1080 * 11)) | 1
+    kernel = max(3, round(mask.shape[0] / 1080 * 15)) | 1
     joined = np.asarray(Image.fromarray(mask).filter(ImageFilter.MaxFilter(kernel)))
     candidates = []
     for box in components(joined):
@@ -90,7 +90,9 @@ def recognize(image):
     boxes = locate_counter(strict)
     readings = []
     for x0, y0, x1, y1 in boxes:
-        ys, xs = np.where(strict[y0:y1, x0:x1])
+        # Bright LED cores can be almost white. Use the relaxed red support to
+        # bound each located digit so thin lower/right strokes are not clipped.
+        ys, xs = np.where(relaxed[y0:y1, x0:x1])
         left, top = x0 + int(xs.min()), y0 + int(ys.min())
         right, bottom = x0 + int(xs.max()) + 1, y0 + int(ys.max()) + 1
         digit = relaxed[top:bottom, left:right]
@@ -109,7 +111,7 @@ def recognize(image):
     # and vertical occupancy separately across this counter, with noise floors.
     horizontal = max(d["segment_occupancy"][i] for d in readings for i in (0,3,6))
     vertical = max(d["segment_occupancy"][i] for d in readings for i in (1,2,4,5))
-    thresholds = [max(.12,horizontal*.45) if i in (0,3,6) else max(.04,vertical*.35)
+    thresholds = [max(.12,horizontal*.45) if i in (0,3,6) else max(.035,vertical*.30)
                   for i in range(7)]
     for digit in readings:
         pattern = "".join("1" if value >= threshold else "0" for value, threshold

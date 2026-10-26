@@ -5,6 +5,7 @@ import io
 import json
 import logging
 import os
+import re
 from pathlib import Path
 import time
 from urllib.request import Request, urlopen
@@ -12,11 +13,7 @@ from urllib.request import Request, urlopen
 from PIL import Image, ImageDraw
 
 MODEL = 'moondream:1.8b'
-PROMPT = ('Describe only the visible clothing of the person in this image in one short sentence. '
-          'Include garment colors and types (for example, a white short-sleeved T-shirt). '
-          'Do not describe the person, face, identity, objects, or background. '
-          'Do not guess hidden clothing. If clothing type is unclear, say top. '
-          'If no clothing is clearly visible, say Clothing not clearly visible.')
+PROMPT = 'What clothing is the person wearing? Describe the colors and garment types.'
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS presenter_clothing_descriptions (
  session_id uuid PRIMARY KEY REFERENCES presenter_sessions(id),
@@ -51,7 +48,7 @@ def prepare(image, obs, sessions):
         ImageDraw.Draw(image).rectangle((int(image.width*.64), int(image.height*.63),
                                          image.width, image.height), fill='black')
     crop = image.crop(tuple(round(n*d) for n, d in zip(roi, (image.width,image.height)*2)))
-    crop.thumbnail((768, 768))
+    crop.thumbnail((384, 384))
     buffer = io.BytesIO()
     crop.save(buffer, format='JPEG', quality=88)
     import hashlib
@@ -62,6 +59,14 @@ def prepare(image, obs, sessions):
         'crop_roi': roi, 'image_sha256': hashlib.sha256(body).hexdigest(),
         'image_base64': base64.b64encode(body).decode('ascii')}
     current['clothing_description_queued'] = True
+
+
+def public_details(obs):
+    details = dict(obs['details'])
+    if details.get('clothing_description_job'):
+        details['clothing_description_job'] = {
+            k:v for k,v in details['clothing_description_job'].items() if k != 'image_base64'}
+    return details
 
 
 def save_job(conn, obs):
@@ -76,10 +81,28 @@ def save_job(conn, obs):
                   Jsonb(job['crop_roi']), job['image_sha256'], base64.b64decode(job['image_base64'], validate=True)))
 
 
+# Keep only garment phrases: small models sometimes append watches or facial details.
+_ADJECTIVES = ('white|black|grey|gray|red|blue|green|yellow|orange|purple|pink|brown|'
+               'beige|cream|navy|olive|maroon|burgundy|teal|khaki|light|dark|off|'
+               'short|long|sleeved|sleeve|striped|plain|printed|patterned|checked|'
+               'cotton|knitted|knit|denim|hooded|sleeveless|zip|up|button|collared')
+_GARMENTS = re.compile(r'\b(?:(?:' + _ADJECTIVES + r')[ -]+){0,7}'
+                       r'(?:t[ -]?shirt|sweatshirt|sweater|hoodie|pullover|cardigan|'
+                       r'jacket|shirt|blouse|vest|coat|top|dress|polo)\b', re.I)
+
+
+def clothing_only(text):
+    if any(term in text.lower() for term in ('not visible','not clearly visible','cannot tell',
+                                             "can't tell",'no person','unclear')):
+        return 'Clothing not clearly visible.'
+    phrases = list(dict.fromkeys(match.group().lower() for match in _GARMENTS.finditer(text)))
+    return (', '.join(phrases[:3]).capitalize()+'.') if phrases else 'Clothing not clearly visible.'
+
+
 def generate(body, base_url, model):
     payload = {'model':model, 'prompt':PROMPT, 'images':[base64.b64encode(body).decode('ascii')],
                'stream':False, 'keep_alive':0,
-               'options':{'temperature':0, 'num_predict':80, 'num_thread':2}}
+               'options':{'temperature':0, 'num_predict':80, 'num_thread':2, 'num_ctx':2048}}
     request = Request(base_url.rstrip('/')+'/api/generate', data=json.dumps(payload).encode(),
                       headers={'Content-Type':'application/json'})
     with urlopen(request, timeout=180) as response:
@@ -87,7 +110,9 @@ def generate(body, base_url, model):
     text = ' '.join(result.get('response','').split())
     if not result.get('done') or not text or len(text) > 600:
         raise ValueError('Incomplete or invalid clothing description')
-    return text, {k:result.get(k) for k in ('model','done_reason','total_duration','eval_count')}
+    metadata = {k:result.get(k) for k in ('model','done_reason','total_duration','eval_count')}
+    metadata['raw_description'] = text
+    return clothing_only(text), metadata
 
 
 def process_one():
