@@ -1,0 +1,4 @@
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-f73c2fbeaa7b Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-f73c2fbeaa7b Created 
+ERROR:root:Clothing description failed for session 0599dd17-a8ca-41f9-bcec-1b8482df4646: TimeoutError: simulated outage
+{"integration": "passed", "schema": "clothing_test_3fef88d0441c4a0281bc39508cdd8d54", "checks": ["one job per session", "transactional database crop storage", "outage retry", "completed description retained on replay", "no repeated inference", "Polish conversion and language marker", "original description preserved", "idempotent language migration"], "result": ["Bia\u0142a koszulka z kr\u00f3tkim r\u0119kawem.", "completed", 2, "1ffd197a69c2e54a1936c8cf0bc57e3fa495a27854ca1922bda445fd75b8ce2d"]}

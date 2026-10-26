@@ -17,7 +17,7 @@ def main():
     schema = 'clothing_test_' + uuid.uuid4().hex
     with psycopg.connect() as conn:
         conn.execute(sql.SQL('CREATE SCHEMA {}').format(sql.Identifier(schema)))
-    with patch.dict(os.environ, {'PGOPTIONS':'-c search_path='+schema}):
+    with patch.dict(os.environ, {'PGOPTIONS':'-c search_path='+schema, 'STREAM_URL':'integration:clothing'}):
         stamp = datetime.now(timezone.utc).isoformat()
         identifier, observation = str(uuid.uuid4()), str(uuid.uuid4())
         obs = {'id':observation,'observed_at':stamp,'details':{'camera_view':{'view':'presenter_main'}}}
@@ -38,16 +38,26 @@ def main():
             status, attempts = conn.execute('SELECT status,attempts FROM presenter_clothing_descriptions').fetchone()
             assert (status, attempts) == ('retry',1)
             conn.execute('UPDATE presenter_clothing_descriptions SET retry_at=now()')
-        with patch('clothing_descriptions.generate',return_value=('White short-sleeved T-shirt.',{'model':'test'})):
+        with patch('clothing_descriptions.generate',return_value=('Biała koszulka z krótkim rękawem.',{'model':'test','raw_description':'White short-sleeved T-shirt.'})):
             assert clothing.process_one()
             assert not clothing.process_one()
         with psycopg.connect() as conn:
             clothing.save_job(conn,obs)
             result = conn.execute('SELECT description,status,attempts,image_sha256 FROM presenter_clothing_descriptions').fetchone()
-            assert result[0:3] == ('White short-sleeved T-shirt.','completed',2)
+            assert result[0:3] == ('Biała koszulka z krótkim rękawem.','completed',2)
+        with psycopg.connect() as conn:
+            conn.execute("UPDATE presenter_clothing_descriptions SET description=%s,description_language='en'",
+                         ('White short-sleeved T-shirt.',))
+            assert clothing.migrate_polish(conn) == 1
+            assert clothing.migrate_polish(conn) == 0
+            translated = conn.execute('SELECT description,description_language,response FROM presenter_clothing_descriptions').fetchone()
+            assert translated[0] == 'Biała koszulka z krótkim rękawem.'
+            assert translated[1] == 'pl'
+            assert translated[2]['previous_description'] == 'White short-sleeved T-shirt.'
         report = {'integration':'passed','schema':schema,'checks':[
             'one job per session','transactional database crop storage','outage retry',
-            'completed description retained on replay','no repeated inference'], 'result':result}
+            'completed description retained on replay','no repeated inference',
+            'Polish conversion and language marker','original description preserved','idempotent language migration'], 'result':result}
         root = Path('/data/test-evidence/clothing-descriptions')/schema
         root.mkdir(parents=True,exist_ok=True)
         (root/'result.json').write_text(json.dumps(report,indent=2)+'\n')

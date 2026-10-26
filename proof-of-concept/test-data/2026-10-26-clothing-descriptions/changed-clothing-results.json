@@ -1,0 +1,26 @@
+[
+  {
+    "fixture": "gray-after",
+    "detected_view": "presenter_inset",
+    "description": "The person is wearing a grey sweater and a beard.",
+    "seconds": 23.59,
+    "metadata": {
+      "model": "moondream:1.8b",
+      "done_reason": "stop",
+      "total_duration": 23578616553,
+      "eval_count": 13
+    }
+  },
+  {
+    "fixture": "olive-candidate",
+    "detected_view": "presenter_inset",
+    "description": "The person is wearing a green jacket and khaki pants.",
+    "seconds": 23.36,
+    "metadata": {
+      "model": "moondream:1.8b",
+      "done_reason": "stop",
+      "total_duration": 23353213760,
+      "eval_count": 14
+    }
+  }
+]

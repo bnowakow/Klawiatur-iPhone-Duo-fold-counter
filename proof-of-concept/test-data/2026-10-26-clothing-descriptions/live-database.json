@@ -1,0 +1,11 @@
+[
+  {
+    "session_id": "2b6c053f-47be-4abb-a165-c4b0dafe031c",
+    "description": "Black shirt.",
+    "status": "completed",
+    "model": "moondream:1.8b",
+    "source_observed_at": "2026-10-26 05:11:52.068190+00:00",
+    "generated_at": "2026-10-26 05:16:23.268976+00:00",
+    "folding_started_at": "2026-10-26 05:06:49.895794+00:00"
+  }
+]

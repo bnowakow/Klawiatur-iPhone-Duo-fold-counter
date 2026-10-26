@@ -1,16 +1,16 @@
- Container klawiatur-iphone-duo-fold-counter-supervisor-run-33408e5d4bfc Creating 
- Container klawiatur-iphone-duo-fold-counter-supervisor-run-33408e5d4bfc Created 
-...................................................................................../usr/local/lib/python3.12/unittest/mock.py:657: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpg2rsm36i/frames/01b3e690-529c-4958-9efb-6405a4b18afd/frame.jpg' mode='rb' closefd=True>
-  raise AttributeError(name)
-ResourceWarning: Enable tracemalloc to get the object allocation traceback
-......./usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpg2rsm36i/frames/88181d9a-7cb9-4ee9-8b60-e33cd8947ff8/frame.jpg' mode='rb' closefd=True>
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-b85038dc45ec Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-b85038dc45ec Created 
+............................................................................................/usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpmjg3yiog/frames/0d4c64af-6f19-42f5-8392-732f1734d8cf/frame.jpg' mode='rb' closefd=True>
   def __init__(self, name, parent):
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpg2rsm36i/frames/389a657f-94fc-4367-abdb-35577145dd23/frame.jpg' mode='rb' closefd=True>
+......./usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpmjg3yiog/frames/331c1067-a4b6-4adf-b89d-dd4001548128/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpmjg3yiog/frames/09ed8376-d2e2-44c0-b342-89f3cbe7a150/frame.jpg' mode='rb' closefd=True>
   def __init__(self, name, parent):
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 ..
 ----------------------------------------------------------------------
-Ran 94 tests in 18.355s
+Ran 101 tests in 25.442s
 
 OK

@@ -54,7 +54,7 @@ class ClothingDescriptionTests(unittest.TestCase):
             fetch.return_value.__enter__.return_value = io.BytesIO(
                 b'{"done":true,"response":"White short-sleeved T-shirt.","model":"model"}')
             text, metadata = clothing.generate(b'image','http://vision:11434','model')
-            self.assertEqual(text,'White short-sleeved t-shirt.')
+            self.assertEqual(text,'Biała koszulka z krótkim rękawem.')
             payload = __import__('json').loads(fetch.call_args.args[0].data)
             self.assertEqual(payload['images'],[base64.b64encode(b'image').decode()])
             self.assertEqual(payload['keep_alive'],0)
@@ -64,15 +64,29 @@ class ClothingDescriptionTests(unittest.TestCase):
 class ClothingOnlyTests(unittest.TestCase):
     def test_accessories_and_facial_details_are_excluded(self):
         self.assertEqual(clothing.clothing_only('The person is wearing a grey sweater and a beard.'),
-                         'Grey sweater.')
-        self.assertEqual(clothing.clothing_only('A white shirt and a black watch.'), 'White shirt.')
+                         'Szary sweter.')
+        self.assertEqual(clothing.clothing_only('A white shirt and a black watch.'), 'Biała koszula.')
 
     def test_types_and_colors_are_preserved(self):
         self.assertEqual(clothing.clothing_only('A dark green hoodie and blue jeans.'),
-                         'Dark green hoodie.')
+                         'Ciemnozielona bluza z kapturem.')
         self.assertEqual(clothing.clothing_only('A white short-sleeved T-shirt.'),
-                         'White short-sleeved t-shirt.')
+                         'Biała koszulka z krótkim rękawem.')
 
     def test_no_garment_or_unclear_view_is_explicit(self):
         for text in ['A silver ring and black watch.', 'The shirt is not clearly visible.']:
-            self.assertEqual(clothing.clothing_only(text), 'Clothing not clearly visible.')
+            self.assertEqual(clothing.clothing_only(text), 'Ubiór nie jest wyraźnie widoczny.')
+
+
+class PolishDescriptionTests(unittest.TestCase):
+    def test_adjective_agreement_and_sleeve_length(self):
+        self.assertEqual(clothing.clothing_only('A black shirt.'), 'Czarna koszula.')
+        self.assertEqual(clothing.clothing_only('A grey sweater.'), 'Szary sweter.')
+        self.assertEqual(clothing.clothing_only('A light grey long-sleeved sweatshirt.'),
+                         'Jasnoszara bluza z długim rękawem.')
+
+    def test_patterns_and_multiple_garments(self):
+        self.assertEqual(clothing.clothing_only('A blue striped shirt and a black jacket.'),
+                         'Niebieska koszula w paski, czarna kurtka.')
+        self.assertEqual(clothing.clothing_only('A white sleeveless top.'),
+                         'Biała góra stroju bez rękawów.')

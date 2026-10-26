@@ -479,4 +479,4 @@ Captured images follow [anomaly-window retention](docs/frame-retention.md); data
 
 Licensed under the GNU General Public License v3.0; see [LICENSE](LICENSE).
 
-Each confirmed folding stint receives a short clothing description (visible colors and garment types) from a local background vision worker, stored in PostgreSQL. See [clothing descriptions](docs/clothing-descriptions.md).
+Each confirmed folding stint receives a short Polish clothing description (visible colors and garment types) from a local background vision worker, stored in PostgreSQL. See [clothing descriptions](docs/clothing-descriptions.md).

@@ -1,0 +1,11 @@
+{
+  "description": "Grey sweater.",
+  "metadata": {
+    "model": "moondream:1.8b",
+    "done_reason": "stop",
+    "total_duration": 22894136094,
+    "eval_count": 13,
+    "raw_description": "The person is wearing a grey sweater and a beard."
+  },
+  "seconds": 22.91
+}

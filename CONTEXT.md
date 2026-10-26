@@ -589,3 +589,5 @@ Captured-frame retention is specified in `docs/frame-retention.md`: keep anomali
 `IMAGE_STORAGE_LIMIT_BYTES=20000000000`: after each supervisor cycle, log ERROR on excess image bytes under `data/`, then delete oldest image files only until within the limit. The cap overrides anomaly protection; DB/metadata and repository regression fixtures are excluded. Events are saved in the retention ledger.
 
 Clothing descriptions: `clothing_descriptions.py` queues a torso crop once per confirmed stint after folding starts; a separate Compose worker uses local Ollama/Moondream and persists the caption, source image, model and retry details in `presenter_clothing_descriptions`. See `docs/clothing-descriptions.md`. `vision_models` is a separate persistent model volume.
+
+Clothing descriptions are stored in Polish (`description_language=pl`). `clothing_descriptions.py` localizes validated English garment phrases with Polish noun/adjective agreement and migrates existing English descriptions on worker startup, preserving originals in response metadata.

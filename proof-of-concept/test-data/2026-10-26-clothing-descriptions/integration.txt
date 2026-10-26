@@ -1,4 +1,4 @@
- Container klawiatur-iphone-duo-fold-counter-supervisor-run-955c3251faa7 Creating 
- Container klawiatur-iphone-duo-fold-counter-supervisor-run-955c3251faa7 Created 
-ERROR:root:Clothing description failed for session 18008cfd-f6cc-4b22-aa01-0f92a09657db: TimeoutError: simulated outage
-{"integration": "passed", "schema": "clothing_test_60ee670300254631b4e7ceac9e189193", "checks": ["one job per session", "transactional database crop storage", "outage retry", "completed description retained on replay", "no repeated inference"], "result": ["White short-sleeved T-shirt.", "completed", 2, "fbf4f308452dbe4ad6fa8cd32c62297eefef4af8ac031163266118b96cefc570"]}
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-8097605e51a8 Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-8097605e51a8 Created 
+ERROR:root:Clothing description failed for session c7aa6d50-8856-4e57-af88-43ce531917c2: TimeoutError: simulated outage
+{"integration": "passed", "schema": "clothing_test_a5af0347a4ef435b8e683d2cc600b759", "checks": ["one job per session", "transactional database crop storage", "outage retry", "completed description retained on replay", "no repeated inference"], "result": ["White short-sleeved T-shirt.", "completed", 2, "1ffd197a69c2e54a1936c8cf0bc57e3fa495a27854ca1922bda445fd75b8ce2d"]}

@@ -1,8 +1,7 @@
 # Clothing descriptions for folding stints
 
-Each confirmed anonymous presenter stint gets one short English clothing
-description after its first accepted counter increase. For example: “White
-short-sleeved T-shirt.” The local vision model describes visible garment colors
+Each confirmed anonymous presenter stint gets one short Polish clothing
+description after its first accepted counter increase. For example: “Biała koszulka z krótkim rękawem.” The local vision model describes visible garment colors
 and types; items outside the crop cannot be established. These descriptions are model estimates,
 not verified identity labels or additional person-detection evidence. The saved
 short text includes only recognized garment phrases; accessories and facial
@@ -24,7 +23,8 @@ The crop and job are stored transactionally alongside session updates in
 PostgreSQL. A separate `clothing-descriptions` worker calls the local `vision`
 service, keeping model inference outside the capture loop. Each session UUID is
 the queue's primary key: repeated samples and outbox replay do not create duplicate
-jobs or replace completed descriptions. Failures remain visible in logs and retry
+jobs or replace completed descriptions. The worker processes only its configured
+`STREAM_URL`, keeping isolated integration-test streams out of live inference. Failures remain visible in logs and retry
 after five minutes. “Clothing not clearly visible” results have status `uncertain`
 instead of being treated as verified descriptions. No remote vision API is used.
 
@@ -34,7 +34,7 @@ instead of being treated as verified descriptions. No remote vision API is used.
 
 - `session_id`, `observation_id`, `observed_at`: stint and source-frame provenance.
 - `camera_view`, `crop_roi`, `image_sha256`, `image`: the actual JPEG input crop.
-- `description`, `status`: generated text and `pending`, `retry`, `completed`, or
+- `description`, `description_language`, `status`: Polish text (`description_language=pl`) and `pending`, `retry`, `completed`, or
   `uncertain` status.
 - `model`, `prompt_version`, `generated_at`, `response`: model and inference metadata.
 - `attempts`, `retry_at`, `last_error`: retry diagnostics.
@@ -47,7 +47,7 @@ stint; it is outside the image-file cap, just like other database contents.
 
 ```sql
 SELECT s.id, s.detected_at, s.folding_started_at,
-       d.description, d.status, d.observed_at, d.generated_at, d.model
+       d.description, d.description_language, d.status, d.observed_at, d.generated_at, d.model
 FROM presenter_sessions s
 LEFT JOIN presenter_clothing_descriptions d ON d.session_id = s.id
 ORDER BY s.detected_at DESC;
@@ -71,3 +71,16 @@ Back up PostgreSQL for description history; model weights can be downloaded agai
 
 Sources: [Moondream model](https://ollama.com/library/moondream),
 [Ollama generate API](https://github.com/ollama/ollama/blob/main/docs/api.md).
+
+## Polish output
+
+The local vision model keeps its validated English prompt. Garment phrases are
+converted deterministically to Polish with matching adjective gender, color shades,
+sleeve lengths and visible patterns. For example, “Black shirt.” becomes
+“Czarna koszula.” and “Grey sweater.” becomes “Szary sweter.” Descriptions with no
+clear clothing become “Ubiór nie jest wyraźnie widoczny.” with status `uncertain`.
+
+The worker converts existing English descriptions on startup without rerunning
+vision inference. The original caption and previous text remain in response
+metadata for provenance. Conversion is idempotent and stored descriptions have
+`description_language=pl`. Raw model diagnostics remain in their original language.

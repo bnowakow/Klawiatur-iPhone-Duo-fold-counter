@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 from PIL import Image, ImageDraw
 
 MODEL = 'moondream:1.8b'
+UNCERTAIN = 'Ubiór nie jest wyraźnie widoczny.'
 PROMPT = 'What clothing is the person wearing? Describe the colors and garment types.'
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS presenter_clothing_descriptions (
@@ -20,10 +21,13 @@ CREATE TABLE IF NOT EXISTS presenter_clothing_descriptions (
  observation_id uuid NOT NULL, observed_at timestamptz NOT NULL,
  camera_view text NOT NULL, crop_roi jsonb NOT NULL, image_sha256 text NOT NULL,
  image bytea NOT NULL, status text NOT NULL DEFAULT 'pending',
- description text, model text, prompt_version integer NOT NULL DEFAULT 1,
+ description text, description_language text NOT NULL DEFAULT 'pl', model text, prompt_version integer NOT NULL DEFAULT 1,
  generated_at timestamptz, attempts integer NOT NULL DEFAULT 0,
  retry_at timestamptz NOT NULL DEFAULT now(), last_error text, response jsonb
 );
+ALTER TABLE presenter_clothing_descriptions
+ ADD COLUMN IF NOT EXISTS description_language text NOT NULL DEFAULT 'en';
+ALTER TABLE presenter_clothing_descriptions ALTER COLUMN description_language SET DEFAULT 'pl';
 """
 
 
@@ -91,12 +95,98 @@ _GARMENTS = re.compile(r'\b(?:(?:' + _ADJECTIVES + r')[ -]+){0,7}'
                        r'jacket|shirt|blouse|vest|coat|top|dress|polo)\b', re.I)
 
 
+# Deterministic localization keeps the small vision model's tested English prompt,
+# but every user-facing description is stored in Polish, with noun agreement.
+_NOUNS = {
+    't-shirt': ('koszulka','f'), 't shirt': ('koszulka','f'), 'tshirt': ('koszulka','f'),
+    'shirt': ('koszula','f'), 'sweatshirt': ('bluza','f'), 'sweater': ('sweter','m'),
+    'hoodie': ('bluza z kapturem','f'), 'pullover': ('sweter','m'),
+    'cardigan': ('kardigan','m'), 'jacket': ('kurtka','f'), 'blouse': ('bluzka','f'),
+    'vest': ('kamizelka','f'), 'coat': ('płaszcz','m'), 'top': ('góra stroju','f'),
+    'dress': ('sukienka','f'), 'polo': ('koszulka polo','f')}
+_COLORS = {
+    'white':('biały','biała'), 'black':('czarny','czarna'),
+    'grey':('szary','szara'), 'gray':('szary','szara'),
+    'red':('czerwony','czerwona'), 'blue':('niebieski','niebieska'),
+    'green':('zielony','zielona'), 'yellow':('żółty','żółta'),
+    'orange':('pomarańczowy','pomarańczowa'), 'purple':('fioletowy','fioletowa'),
+    'pink':('różowy','różowa'), 'brown':('brązowy','brązowa'),
+    'beige':('beżowy','beżowa'), 'cream':('kremowy','kremowa'),
+    'navy':('granatowy','granatowa'), 'olive':('oliwkowy','oliwkowa'),
+    'maroon':('kasztanowy','kasztanowa'), 'burgundy':('bordowy','bordowa'),
+    'teal':('turkusowy','turkusowa'), 'khaki':('khaki','khaki')}
+
+
+def polish_phrase(phrase):
+    kind = next(key for key in sorted(_NOUNS,key=len,reverse=True)
+                if phrase == key or phrase.endswith(' '+key))
+    noun, gender = _NOUNS[kind]
+    modifiers = phrase[:-len(kind)].strip().replace('-', ' ').split()
+    index = 1 if gender == 'f' else 0
+    colors, adjectives, endings = [], [], []
+    for i, word in enumerate(modifiers):
+        if word in _COLORS:
+            if word == 'blue' and 'navy' in modifiers:
+                continue
+            color = _COLORS[word][index]
+            previous = modifiers[i-1] if i else ''
+            if previous in {'light','dark'}:
+                color = ('jasno' if previous == 'light' else 'ciemno')+color
+            colors.append(color)
+    if 'off' in modifiers and 'white' in modifiers:
+        colors = []
+        endings.append('w kolorze złamanej bieli')
+    for english, male, female in [('plain','gładki','gładka'),
+                                  ('cotton','bawełniany','bawełniana'),
+                                  ('denim','dżinsowy','dżinsowa'),
+                                  ('knit','dzianinowy','dzianinowa'),
+                                  ('knitted','dzianinowy','dzianinowa')]:
+        if english in modifiers:
+            adjectives.append(female if gender == 'f' else male)
+    if not colors and 'off' not in modifiers:
+        if 'light' in modifiers: adjectives.append('jasna' if gender == 'f' else 'jasny')
+        if 'dark' in modifiers: adjectives.append('ciemna' if gender == 'f' else 'ciemny')
+    if 'short' in modifiers and any(w in modifiers for w in ('sleeve','sleeved')):
+        endings.append('z krótkim rękawem')
+    if 'long' in modifiers and any(w in modifiers for w in ('sleeve','sleeved')):
+        endings.append('z długim rękawem')
+    for english, polish in [('striped','w paski'), ('checked','w kratę'),
+                             ('printed','z nadrukiem'), ('patterned','we wzory'),
+                             ('sleeveless','bez rękawów'), ('collared','z kołnierzykiem')]:
+        if english in modifiers: endings.append(polish)
+    if 'hooded' in modifiers and 'z kapturem' not in noun:
+        endings.append('z kapturem')
+    if 'zip' in modifiers:
+        endings.append('rozpinana' if gender == 'f' else 'rozpinany')
+    if 'button' in modifiers:
+        endings.append('zapinana na guziki' if gender == 'f' else 'zapinany na guziki')
+    return ' '.join(dict.fromkeys(colors+adjectives+[noun]+endings))
+
+
 def clothing_only(text):
     if any(term in text.lower() for term in ('not visible','not clearly visible','cannot tell',
                                              "can't tell",'no person','unclear')):
-        return 'Clothing not clearly visible.'
-    phrases = list(dict.fromkeys(match.group().lower() for match in _GARMENTS.finditer(text)))
-    return (', '.join(phrases[:3]).capitalize()+'.') if phrases else 'Clothing not clearly visible.'
+        return UNCERTAIN
+    phrases = list(dict.fromkeys(polish_phrase(match.group().lower())
+                                 for match in _GARMENTS.finditer(text)))
+    return (', '.join(phrases[:3]).capitalize()+'.') if phrases else UNCERTAIN
+
+
+def migrate_polish(conn):
+    """Translate existing descriptions without rerunning inference or losing history."""
+    from psycopg.types.json import Jsonb
+    rows = conn.execute('SELECT session_id,description,response FROM presenter_clothing_descriptions '
+                        "WHERE description IS NOT NULL AND description_language<>'pl' "
+                        'FOR UPDATE SKIP LOCKED').fetchall()
+    for session, old_text, response in rows:
+        response = dict(response or {})
+        text = clothing_only(response.get('raw_description') or old_text)
+        response.setdefault('previous_description',old_text)
+        response.update(description_language='pl', localization_version=1)
+        conn.execute("UPDATE presenter_clothing_descriptions SET description=%s,description_language='pl',"
+                     'response=%s,status=%s WHERE session_id=%s',
+                     (text,Jsonb(response),'uncertain' if text == UNCERTAIN else 'completed',session))
+    return len(rows)
 
 
 def generate(body, base_url, model):
@@ -111,7 +201,7 @@ def generate(body, base_url, model):
     if not result.get('done') or not text or len(text) > 600:
         raise ValueError('Incomplete or invalid clothing description')
     metadata = {k:result.get(k) for k in ('model','done_reason','total_duration','eval_count')}
-    metadata['raw_description'] = text
+    metadata.update(raw_description=text, description_language='pl', localization_version=1)
     return clothing_only(text), metadata
 
 
@@ -120,17 +210,19 @@ def process_one():
     from psycopg.types.json import Jsonb
     with psycopg.connect(os.getenv('DATABASE_URL',''), connect_timeout=10) as conn:
         # A dedicated row lock prevents duplicate workers. No supervisor row is locked.
-        row = conn.execute('SELECT session_id,image FROM presenter_clothing_descriptions '
-                           "WHERE status IN ('pending','retry') AND retry_at<=now() "
-                           'ORDER BY observed_at FOR UPDATE SKIP LOCKED LIMIT 1').fetchone()
+        row = conn.execute('SELECT d.session_id,d.image FROM presenter_clothing_descriptions d '
+                           'JOIN presenter_sessions s ON s.id=d.session_id '
+                           "WHERE d.status IN ('pending','retry') AND d.retry_at<=now() AND s.stream_url=%s "
+                           'ORDER BY d.observed_at FOR UPDATE OF d SKIP LOCKED LIMIT 1',
+                           (os.getenv('STREAM_URL','https://www.youtube.com/watch?v=vaiHWiExDXg'),)).fetchone()
         if row is None:
             return False
         model = os.getenv('CLOTHING_DESCRIPTION_MODEL',MODEL)
         try:
             text, response = generate(bytes(row[1]), os.getenv('CLOTHING_DESCRIPTION_URL','http://vision:11434'), model)
-            status = 'uncertain' if 'not clearly visible' in text.lower() else 'completed'
+            status = 'uncertain' if text == UNCERTAIN else 'completed'
             conn.execute('UPDATE presenter_clothing_descriptions SET description=%s,status=%s,model=%s,'
-                         'response=%s,generated_at=now(),attempts=attempts+1,last_error=NULL WHERE session_id=%s',
+                         "response=%s,description_language='pl',generated_at=now(),attempts=attempts+1,last_error=NULL WHERE session_id=%s",
                          (text,status,model,Jsonb(response),row[0]))
             logging.info('Clothing description stored for session %s: %s',row[0],text)
         except Exception as exc:
@@ -148,6 +240,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     with psycopg.connect(os.getenv('DATABASE_URL',''),connect_timeout=10) as conn:
         supervisor.ensure_schema(conn)
+        logging.info("Existing descriptions converted to Polish: %s", migrate_polish(conn))
     while True:
         try:
             if not process_one():

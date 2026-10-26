@@ -129,6 +129,7 @@ services:
       PGDATABASE: folding
       PGUSER: folding
       PGPASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
+      STREAM_URL: ${STREAM_URL:-https://www.youtube.com/watch?v=vaiHWiExDXg}
       CLOTHING_DESCRIPTION_URL: http://vision:11434
       CLOTHING_DESCRIPTION_MODEL: ${CLOTHING_DESCRIPTION_MODEL:-moondream:1.8b}
     depends_on:

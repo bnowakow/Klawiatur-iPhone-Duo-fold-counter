@@ -1,0 +1,13 @@
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-29d76e306222 Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-29d76e306222 Created 
+............................................................................................../usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpuxzt2v0_/frames/392f5771-d530-4334-9425-3f590943c79d/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+......./usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpuxzt2v0_/frames/2ca242ba-33ed-4009-9163-e46494db9e4c/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..
+----------------------------------------------------------------------
+Ran 103 tests in 25.405s
+
+OK
