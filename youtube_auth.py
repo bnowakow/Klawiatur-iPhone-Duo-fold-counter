@@ -29,7 +29,7 @@ def directory():
 @contextmanager
 def locked():
     """Serialize refresh, connect, disconnect and sends across local containers."""
-    with (directory()/'credentials.lock').open('a', opener=lambda p, f: os.open(p, f, 0o600)) as handle:
+    with open(directory()/'credentials.lock', 'a', opener=lambda p, f: os.open(p, f, 0o600)) as handle:
         fcntl.flock(handle, fcntl.LOCK_EX)
         try:
             yield

@@ -20,7 +20,7 @@ class ChatTests(unittest.TestCase):
                 chat.validate_message(text)
 
     def test_target_mismatch_never_posts(self):
-        with patch.object(chat, 'initialize'), patch.object(chat, 'existing', return_value=None), patch.object(chat, 'context', return_value={'channel': {'id': 'other'}, 'chat_id': 'chat'}), patch.object(chat.quota, 'tracked_request') as api:
+        with patch.dict(os.environ, {'YOUTUBE_CHAT_ENABLED': 'true'}), patch.object(chat, 'initialize'), patch.object(chat, 'existing', return_value=None), patch.object(chat, 'context', return_value={'channel': {'id': 'other'}, 'chat_id': 'chat'}), patch.object(chat.quota, 'tracked_request') as api:
             with self.assertRaisesRegex(ValueError, 'changed'):
                 chat.send('p', 'https://youtu.be/vaiHWiExDXg', 'test', 'key', 'expected', 'chat')
             api.assert_not_called()

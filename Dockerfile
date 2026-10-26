@@ -10,6 +10,7 @@ COPY proof-of-concept/*.py proof-of-concept/
 COPY break_scene_integration_check.py ./
 COPY youtube_quota.py youtube_quota_integration_check.py ./
 COPY youtube_auth.py youtube_chat.py youtube_chat_integration_check.py ./
+COPY youtube_commands.py ./
 COPY refine_break_endpoint.py ./
 COPY proof-of-concept/test-data/2026-10-25-night-break/ proof-of-concept/test-data/2026-10-25-night-break/
 COPY proof-of-concept/camera-profiles/ proof-of-concept/camera-profiles/

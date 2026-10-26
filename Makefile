@@ -19,6 +19,8 @@ codex-commit:
 	@utilities/codex-commit.sh
 
 .PHONY: youtube-auth youtube-status youtube-preview youtube-send youtube-disconnect youtube-deliveries
+# Quote each caller-provided value as a single shell argument.
+youtube-quote = '$(subst ','"'"',$(1))'
 youtube-auth:
 	docker compose --profile youtube run --rm --service-ports youtube-chat python youtube_chat.py connect
 
@@ -27,10 +29,10 @@ youtube-status:
 
 # MESSAGE_FILE is a container path under /data; shell values are single-quoted.
 youtube-preview:
-	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py preview --message-file '$(MESSAGE_FILE)'
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py preview --message-file $(call youtube-quote,$(MESSAGE_FILE))
 
 youtube-send:
-	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py send --message-file '$(MESSAGE_FILE)' --request-key '$(REQUEST_KEY)' --expected-channel '$(CHANNEL_ID)' --expected-chat '$(CHAT_ID)'
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py send --message-file $(call youtube-quote,$(MESSAGE_FILE)) --request-key $(call youtube-quote,$(REQUEST_KEY)) --expected-channel $(call youtube-quote,$(CHANNEL_ID)) --expected-chat $(call youtube-quote,$(CHAT_ID))
 
 youtube-disconnect:
 	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py disconnect

@@ -87,12 +87,14 @@ Generate a ready-to-copy Polish message using our current person's average:
 make docker-message
 ```
 
-It prints `dotychczasowe tempo składania: … złożeń/min, w tym tempie telefon
+It prints `ilość złożeń przez aktualną osobę …. dotychczasowe tempo składania: … złożeń/min, w tym tempie telefon
 powinien być złożony … razy w ciągu godziny` and copies it to the macOS clipboard
 using host `pbcopy`. If message generation fails, the clipboard stays unchanged.
 Without `pbcopy`, the message is printed for manual copying. The projection is the unrounded
 average since the recorded folding start multiplied by 60, rounded to a whole
-fold; it is that person's projected total for one full hour, not the phone's
+fold. The fold count is the accepted counter increase since that stint's first
+accepted baseline (`last_counter - baseline_counter`), so an initially missed
+start can undercount it. The projection is that person's total for one full hour, not the phone's
 cumulative counter. The command reads PostgreSQL through the running supervisor
 and does not fetch website data or send the message anywhere. Missing, stale,
 break or uncertain-stint data produces an explanation instead (exit 2).

@@ -11,7 +11,7 @@ history and does not control our counter or presenter attribution.
 | Future use | Stored inputs | Database location |
 | --- | --- | --- |
 | Cumulative counter history and time-series charts | Stream URL, observation UUID, UTC receipt timestamp, raw OCR value, accepted value, verdict, reason, pace and OCR diagnostics | `observations`, including `details.ocr` and `details.counter_validation` |
-| Clothing colors and garment types per folding stint | Short generated description, input crop, source observation and model/retry provenance | `presenter_clothing_descriptions`; [details](clothing-descriptions.md) |
+| Visible appearance per folding stint | Polish clothing, hair, headwear, glasses, facial-hair/accessory description; structured attributes, portrait crop, prior revisions and source/model provenance | `presenter_clothing_descriptions`; [details](clothing-descriptions.md) |
 | Presenter arrival and actual folding-start estimates | Stint UUID, first detection, sustained-cue confirmation, first accepted increase time and counter, evidence observation IDs | `presenter_sessions` |
 | Individual fold totals and duration | Counter baseline and timestamp, first-increase counter, last accepted counter and timestamp, stint end time and reason | `presenter_sessions`; intermediate evidence remains in `observations` |
 | Night-pause stop estimates and confirmation | Estimated stop, separate confirmation time, counter, sample count, first stationary observation, last-increase interval, and explicit unverified-absence flag | `presenter_sessions.ended_at`, `.end_reason`; `presenter_session_ends`; immutable snapshots in `observations.details.presenter_session_updates` |

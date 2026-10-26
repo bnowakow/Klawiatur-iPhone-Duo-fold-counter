@@ -4,7 +4,7 @@ Each confirmed anonymous presenter stint gets a Polish appearance
 description after its first accepted counter increase. For example: “Biała koszulka z krótkim rękawem.” The local vision model describes visible garment colors
 and types; items outside the crop cannot be established. These descriptions are model estimates,
 not verified identity labels or additional person-detection evidence. The clothing section includes recognized garment phrases. Hair, headwear, glasses,
-facial hair and accessories are collected separately by targeted questions. These torso crops support
+facial hair and accessories are collected in separate structured fields. These torso crops support
 upper-body garments; model claims about hidden trousers or other lower-body
 clothing are excluded. The raw model response
 remains available in `response.raw_answers` (or `response.raw_description` for older clothing-only records) for auditing. If no garment phrase
@@ -73,7 +73,7 @@ Sources: [LLaVA-Phi3 model](https://ollama.com/library/llava-phi3),
 
 ## Polish output
 
-The local vision model keeps its validated English prompt. Garment phrases are
+The local vision model returns structured English observations. Garment phrases are
 converted deterministically to Polish with matching adjective gender, color shades,
 sleeve lengths and visible patterns. For example, “Black shirt.” becomes
 “Czarna koszula.” and “Grey sweater.” becomes “Szary sweter.” Descriptions with no

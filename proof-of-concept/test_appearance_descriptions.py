@@ -37,3 +37,35 @@ class AppearanceTests(unittest.TestCase):
 
     def test_unrequested_gender_labels_removed_from_diagnostics(self):
         self.assertEqual(appearance.neutralize('A man has short hair.'),'A person has short hair.')
+
+
+class StructuredRequestTests(unittest.TestCase):
+    def test_structured_reply_is_localized_and_demographics_are_not_stored(self):
+        import io,json
+        from unittest.mock import patch
+        import clothing_descriptions as clothing
+        answers={'clothing':'A black T-shirt.','hair':'A man has short brown hair.',
+                 'headwear':'none visible','glasses':'black glasses','facial_hair':'short beard',
+                 'accessories':'black watch'}
+        body=json.dumps({'done':True,'done_reason':'stop','response':json.dumps(answers)}).encode()
+        with patch('clothing_descriptions.urlopen') as request:
+            request.return_value.__enter__.return_value=io.BytesIO(body)
+            text,metadata=clothing.generate(b'image','http://vision:11434','model',detailed=True)
+            payload=json.loads(request.call_args.args[0].data)
+        self.assertIn('brązowe',text)
+        self.assertIn('krótka broda',text)
+        self.assertNotIn('man',metadata['raw_answers']['hair'])
+        self.assertFalse(payload['format']['additionalProperties'])
+        self.assertNotIn('sex',payload['format']['properties'])
+        self.assertNotIn('gender',payload['format']['properties'])
+
+    def test_invalid_schema_or_truncated_reply_is_rejected(self):
+        import io,json
+        from unittest.mock import patch
+        import clothing_descriptions as clothing
+        for response in [{'done':True,'response':'{}'},
+                         {'done':True,'done_reason':'length','response':'{}'}]:
+            with patch('clothing_descriptions.urlopen') as request:
+                request.return_value.__enter__.return_value=io.BytesIO(json.dumps(response).encode())
+                with self.assertRaises(ValueError):
+                    clothing.generate(b'image','http://vision:11434','model',detailed=True)

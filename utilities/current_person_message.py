@@ -9,24 +9,28 @@ class PaceUnavailable(ValueError):
     pass
 
 
-def message_for_pace(pace):
+def message_for_pace(pace, folds):
     pace = Decimal(str(pace))
     if not pace.is_finite() or pace < 0:
         raise PaceUnavailable('Nieprawidłowe tempo składania.')
+    if not isinstance(folds, int) or isinstance(folds, bool) or folds < 0:
+        raise PaceUnavailable('Brak wiarygodnej liczby złożeń obecnej osoby.')
     displayed = format(pace.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), 'f')
     displayed = displayed.rstrip('0').rstrip('.').replace('.', ',')
     hourly = (pace * 60).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
-    return (f'dotychczasowe tempo składania: {displayed} złożeń/min, '
+    return (f'ilość złożeń przez aktualną osobę {folds}. '
+            f'dotychczasowe tempo składania: {displayed} złożeń/min, '
             f'w tym tempie telefon powinien być złożony {hourly} razy w ciągu godziny')
 
 
-def current_pace(conn, stream, now=None):
+def current_measurements(conn, stream, now=None):
     now = now or datetime.now(timezone.utc)
     row = conn.execute(
-        'SELECT folding_started_at,last_counter_at,folding_folds_per_hour / 60 '
+        'SELECT folding_started_at,last_counter_at,folding_folds_per_hour / 60, '
+        'folds_since_detection_baseline '
         'FROM presenter_session_rates WHERE stream_url=%s AND ended_at IS NULL '
         'ORDER BY detected_at DESC LIMIT 1', (stream,)).fetchone()
-    if not row or row[0] is None or row[2] is None:
+    if not row or row[0] is None or row[2] is None or row[3] is None:
         raise PaceUnavailable('Brak wystarczających danych o tempie obecnej osoby.')
     latest = conn.execute(
         'SELECT observed_at,status,clothing_status,details FROM observations '
@@ -43,7 +47,7 @@ def current_pace(conn, stream, now=None):
     limit = max(60, interval * 2.5)
     if any(not 0 <= (now - stamp).total_seconds() <= limit for stamp in (observed, row[1])):
         raise PaceUnavailable('Odczyty obecnej osoby są nieaktualne.')
-    return row[2]
+    return row[2], row[3]
 
 
 def main():
@@ -52,7 +56,7 @@ def main():
     try:
         with psycopg.connect(os.getenv('DATABASE_URL', ''), connect_timeout=10) as conn:
             conn.execute('SET TRANSACTION READ ONLY')
-            message = message_for_pace(current_pace(conn, stream))
+            message = message_for_pace(*current_measurements(conn, stream))
     except PaceUnavailable as exc:
         print(str(exc), file=sys.stderr)
         return 2

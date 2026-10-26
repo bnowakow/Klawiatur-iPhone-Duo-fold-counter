@@ -1,7 +1,5 @@
 """Manual YouTube live-chat delivery; reusable by future command handlers."""
 import argparse
-from datetime import datetime, timezone
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -112,6 +110,8 @@ def send(project, stream, text, request_key, expected_channel, expected_chat,
     previous = existing(request_key, project, video, expected_channel, expected_chat, text, source_kind, source_id)
     if previous:
         return previous
+    if os.getenv('YOUTUBE_CHAT_ENABLED', 'false').lower() != 'true':
+        raise ValueError('Sending is disabled; set YOUTUBE_CHAT_ENABLED=true explicitly')
     target = context(project, stream)
     if target['channel']['id'] != expected_channel or target['chat_id'] != expected_chat:
         raise ValueError('Posting identity or live chat changed; preview again')
