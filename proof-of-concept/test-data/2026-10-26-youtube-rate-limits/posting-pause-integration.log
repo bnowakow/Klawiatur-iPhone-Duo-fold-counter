@@ -1,0 +1,19 @@
+time="2026-10-26T07:26:19+01:00" level=warning msg="Found orphan containers (klawiatur-iphone-duo-fold-counter-official-data-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-772ea49883ff Creating 
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-772ea49883ff Created 
+{"event": "youtube_posting_rate_limited", "reason": "rateLimitExceeded", "request_id": "99d10831-cc33-4e01-9f95-a7b2d850acf8", "channel_id": "integration:posting-channel:06a88cd1-2767-47e0-b16c-433c39ac2635", "not_before": "2026-10-26T06:56:20.023645+00:00", "http_status": 403}
+{"event": "youtube_posting_rate_limited", "reason": "rateLimitExceeded", "request_id": "36150b8b-d884-43b2-ac32-bad4fb079052", "channel_id": "integration:posting-channel:06a88cd1-2767-47e0-b16c-433c39ac2635", "not_before": "2026-10-26T06:46:45.107248+00:00", "http_status": 403}
+{
+  "passed": true,
+  "run_id": "06a88cd1-2767-47e0-b16c-433c39ac2635",
+  "real_google_requests": 0,
+  "checks": [
+    "shared persistent account pause",
+    "provider Retry-After honored",
+    "command skipped without send",
+    "manual send blocked before discovery",
+    "backoff increases after another rejection",
+    "history restored without posting",
+    "provider diagnostic stored"
+  ]
+}

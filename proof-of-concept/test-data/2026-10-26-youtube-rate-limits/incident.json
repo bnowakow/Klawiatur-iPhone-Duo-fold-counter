@@ -1,0 +1,70 @@
+{
+  "stored": true,
+  "incident_key": "youtube-rate-limit-2026-10-26-command-23",
+  "details": {
+    "event_id": 23,
+    "command": "!ile",
+    "delivery_id": "3064e98d-b375-4733-b7f3-ccda7313514e",
+    "request_id": "f3322099-bc60-42b9-8aed-b515e392c24e",
+    "project_id": "klawiatur-iphoneduo-fold-count",
+    "channel_id": "UCUMPSpJmNG3MIpZQLXsHg6Q",
+    "http_status": 403,
+    "reason": "rateLimitExceeded",
+    "received_at": "2026-10-26T06:04:11.599295+00:00",
+    "attempted_at": "2026-10-26T06:04:11.980280+00:00",
+    "attempted_at_warsaw": "2026-10-26T07:04:11.980280+01:00",
+    "prepared_reply": "Złożenia aktualnej osoby: 2624. Tempo: 44,87 złożeń/min; prognoza: 2692 złożeń/h. zapytanie !ile może być użyte nie częściej niż raz na 10 minut",
+    "event_status": "rejected",
+    "previous_success_request_id": "e96ec3d1-1130-4149-aea9-788f746883d7",
+    "previous_success_at": "2026-10-26T05:48:53.265901+00:00",
+    "seconds_since_previous_success": 918.714379,
+    "investigation_snapshot": {
+      "historical_not_current": true,
+      "api_day": "2026-10-25",
+      "attempts": 128,
+      "estimated_units": 322,
+      "local_daily_budget": 10000,
+      "prior_30_minutes": {
+        "posting_attempts": 2,
+        "successful_posts": 1,
+        "rejected_posts": 1,
+        "stream_openings": 39,
+        "channels_list": 44,
+        "videos_list": 43,
+        "channels_list_accessNotConfigured": 1
+      }
+    },
+    "interpretation": {
+      "provider_meaning": "Account posting frequency restriction",
+      "exact_provider_trigger": "unknown",
+      "daily_quota_exhaustion_supported": false,
+      "viewer_11_messages_per_30_seconds_is_not_guaranteed_api_allowance": true,
+      "original_provider_message_domain_retry_after": "not retained; cannot reconstruct",
+      "reader_reconnect_churn": "Observed separately; persistent stream and reconnect backoff recommended, not proven cause"
+    },
+    "policy": {
+      "backoff_seconds": [
+        600,
+        1200,
+        2400,
+        3600
+      ],
+      "jitter_fraction": 0.05,
+      "max_message_age_seconds": 120,
+      "resend_old_messages": false,
+      "read_reconnect_recommendation": "Keep streams open; honor provider pacing and back off on reconnects.",
+      "thresholds_are_app_policy_not_guaranteed_youtube_limits": true,
+      "sources": [
+        "https://developers.google.com/youtube/data/live/reference/rest/v3/liveChatMessages/insert",
+        "https://developers.google.com/youtube/data/live/reference/rest/v3/liveChatMessages/streamList"
+      ]
+    },
+    "resend_this_reply": false
+  },
+  "restored_history_rows": 0,
+  "account_state": [
+    "2026-10-26 06:36:54.025343+00:00",
+    2
+  ],
+  "real_google_requests": 0
+}

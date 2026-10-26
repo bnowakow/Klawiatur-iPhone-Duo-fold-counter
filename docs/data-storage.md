@@ -139,3 +139,9 @@ See [automatic final-stint summaries](youtube-bot.md#automatic-end-of-stint-summ
 `youtube_bot_command_cache` retains the `!samsung` historical summary, canonical
 source URL/title, structured model/fold-count facts, verification date and cache
 timestamp. Runtime replies read this snapshot without refetching the source.
+
+Posting rate-limit incidents, sanitized provider errors, account pause state,
+backoff decisions and delivery expiry times are retained in PostgreSQL with no
+automatic expiry. Suppressed or stale replies remain audit records and are never
+queued for later posting. See [posting limits](youtube-rate-limits.md) for tables,
+the investigated incident and freshness policy.

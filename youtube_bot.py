@@ -317,8 +317,8 @@ def run():
                 restored=quota.rate_limits.restore_history(conn,channel_id)
                 until=quota.rate_limits.paused(conn,channel_id)
             if until:
-                print(json.dumps({'event':'posting_cooldown_active','channel_id':channel_id,
-                                  'not_before':until.isoformat(),'restored_history_rows':restored}),flush=True)
+                quota.rate_limits.log_pause('posting_cooldown_active',channel_id,until,
+                                            restored_history_rows=restored)
         from youtube_stint_notifications import start as start_notifications
         notification_thread = start_notifications(project,stream,stop)
         backoff = 5

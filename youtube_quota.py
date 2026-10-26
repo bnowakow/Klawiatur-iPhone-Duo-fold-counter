@@ -5,7 +5,6 @@ No OAuth authorization or automatic posting is started by this module.
 import argparse
 from datetime import date, datetime, time, timedelta, timezone
 import json
-import logging
 import os
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -187,9 +186,8 @@ def finish(request_id, status, http_status=None, error_reason=None, response_id=
         rate_limits.record_result(conn,request_id,row[0],row[1],status,error_reason,provider)
         until=rate_limits.paused(conn,row[1]) if row[1] and error_reason=='rateLimitExceeded' else None
     if until:
-        logging.getLogger(__name__).error(json.dumps({'event':'youtube_posting_rate_limited',
-            'reason':'rateLimitExceeded','request_id':str(request_id),'channel_id':row[1],
-            'not_before':until.isoformat(),'http_status':http_status}))
+        rate_limits.log_pause('youtube_posting_rate_limited',row[1],until,
+            reason='rateLimitExceeded',request_id=str(request_id),http_status=http_status)
 
 
 def tracked_request(project_id, method, access_token, params=None, body=None, account_channel_id=None, delivery_id=None, expires_at=None):

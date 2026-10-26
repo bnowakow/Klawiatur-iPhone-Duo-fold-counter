@@ -1,0 +1,17 @@
+time="2026-10-26T07:26:47+01:00" level=warning msg="Found orphan containers (klawiatur-iphone-duo-fold-counter-official-data-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-62b987f175b0 Creating 
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-62b987f175b0 Created 
+........................................................................................................................./usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmp8jsvcfvg/frames/dae1fbe4-fd26-4372-9dcc-371e11d68377/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+......./usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmp8jsvcfvg/frames/b64d8d6f-f81f-4b47-a9b9-660dd8d833da/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp8jsvcfvg/frames/5636d827-90fe-482a-a48e-2dfc04e18ad2/frame.jpg'>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.............................
+----------------------------------------------------------------------
+Ran 157 tests in 26.165s
+
+OK

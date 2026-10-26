@@ -1,0 +1,46 @@
+time="2026-10-26T07:26:47+01:00" level=warning msg="Found orphan containers (klawiatur-iphone-duo-fold-counter-official-data-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-1d68478ffc32 Creating 
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-1d68478ffc32 Created 
+{
+  "passed": true,
+  "test_project": "integration:youtube:aedb739d-92b8-4ec8-b208-5027de402322",
+  "checks": [
+    "budget",
+    "failed and uncertain counted",
+    "idempotent completion",
+    "Pacific daily rollover",
+    "concurrent reservation",
+    "account posting guard"
+  ],
+  "real_google_requests": 0,
+  "report": {
+    "api_day": "2026-10-25",
+    "resets_at": "2026-10-26T00:00:00-07:00",
+    "policy_verified_on": "2026-10-26",
+    "documented_limits": {
+      "default_daily_units": 10000,
+      "daily_reset_timezone": "America/Los_Angeles",
+      "cost.liveChatMessages.insert": 20,
+      "cost.liveChatMessages.list": 5,
+      "cost.liveChatMessages.streamList": 5,
+      "cost.videos.list": 1,
+      "cost.channels.list": 1,
+      "chat_message_characters": 200,
+      "viewer_messages_per_window": 11,
+      "viewer_window_seconds": 30,
+      "oauth_testing_users": 100,
+      "oauth_external_testing_authorization_days": 7
+    },
+    "project_id": "integration:youtube:aedb739d-92b8-4ec8-b208-5027de402322",
+    "accounting": "local conservative estimate; Google Cloud is authoritative",
+    "oauth_authorization_flow_implemented": true,
+    "daily_limit": 45,
+    "attempts": 3,
+    "estimated_used_units": 41,
+    "succeeded": 0,
+    "failed": 1,
+    "uncertain": 2,
+    "remaining_budget_units": 4,
+    "theoretical_posts_remaining": 0
+  }
+}

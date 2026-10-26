@@ -51,6 +51,8 @@ def main():
             assert [r[1] for r in rows] == [3600, 3630, 3660]
             assert str(rows[1][2]) == saved[1]['id']
             assert rows[2][3]['previous_sample']['accepted_counter'] == 120
+            assert rows[2][3]['confirmed_at'] == end['observed_at']
+            assert rows[2][3]['confirmation_observation_id'] == end['id']
             assert not rows[1][3]['training_label_verified']
             conn.execute("UPDATE presenter_video_events SET review_status='corrected',reviewer='integration',"
                          "reviewed_at=now(),reviewed_video_offset_seconds=3625 WHERE event_kind='folding_start'")

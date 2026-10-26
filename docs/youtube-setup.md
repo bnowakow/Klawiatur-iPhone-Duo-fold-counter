@@ -196,3 +196,7 @@ sends in `.env`. The generated message may change between previews and sends as
 new measurements arrive. An existing key is never resent; changed generated text
 with that key is rejected. Inspect delivery history before retrying an uncertain
 outcome. No automatic schedule is introduced.
+
+Posting failures and account cooldowns persist in PostgreSQL. Old replies are
+never retried after the pause; a new command must generate a fresh response.
+See [posting limits and retained diagnostics](youtube-rate-limits.md).

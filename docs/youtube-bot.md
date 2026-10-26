@@ -253,8 +253,9 @@ No automatic probe or backlog resend occurs when the timer expires.
 The existing API request and delivery records already stored the error reason.
 New failures additionally retain sanitized provider messages/domain/Retry-After
 in `youtube_api_error_details` and emit an ERROR-level
-`youtube_posting_rate_limited` log with request ID, channel, HTTP status and
-`not_before`. Historical raw response text cannot be reconstructed if it was not
+`youtube_posting_rate_limited` JSON log on **stdout**, flushed immediately,
+with `level: ERROR`, request ID, channel, HTTP status, `retry_in_seconds`,
+`retry_in` (`HH:MM:SS`), `not_before` and `not_before_warsaw`. Historical raw response text cannot be reconstructed if it was not
 saved. Startup logs `posting_cooldown_active` when a pause is in effect.
 `make youtube-bot-stats` includes `posting_backoff` and whether it is currently active.
 
@@ -273,3 +274,16 @@ posting attempt as an ISO timestamp with an explicit timezone offset. Ordinary
 successful replies with `error_reason: null` are excluded. The deadline is the
 app's local pause, not a guarantee YouTube will accept the next post. Press Ctrl+C
 to stop following. No Docker rebuild is required for this Make target.
+
+`make docker-logs-errors` first prints the latest persisted `rateLimitExceeded`
+for the configured project when the bot container is running, then follows Compose
+errors. The initial row is explicitly marked `historical: true`; it includes the
+original error time, posting deadline and current local pause flag in Warsaw time.
+This keeps rate-limit context visible after container recreation removes its old
+Compose logs. `local_pause_active: false` means the app's pause expired, not that
+Google has confirmed recovery. The display utility is passed to the container on
+stdin, so this Make change requires no image rebuild.
+
+Monitor with `docker compose logs -f youtube-bot`. Startup also logs the remaining
+wait for an already active pause. Deadlines indicate when a fresh attempt is
+allowed locally; YouTube may still reject it. No old replies are retried.

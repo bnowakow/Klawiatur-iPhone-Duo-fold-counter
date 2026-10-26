@@ -96,10 +96,26 @@ def save_session(conn, session, confirmation):
                                 'ORDER BY observed_at DESC,id LIMIT 1', (session['stream_url'], stamp)).fetchone()
         before = ({'observation_id': str(previous[0]), 'observed_at': previous[1].isoformat(),
                    'frame_path': previous[2], 'accepted_counter': previous[3]} if previous else None)
+        confirmed_at = source.get('observed_at', stamp)
+        confirmation_id = source_id
+        if kind == 'appearance_start':
+            confirmed_at = session['confirmed_at']
+            confirmed = conn.execute('SELECT id FROM observations WHERE stream_url=%s AND observed_at=%s '
+                                     'ORDER BY id LIMIT 1', (session['stream_url'], confirmed_at)).fetchone()
+            confirmation_id = str(confirmed[0]) if confirmed else None
+        elif kind == 'folding_finish':
+            evidence = session.get('end_evidence') or {}
+            closed = conn.execute("SELECT id,observed_at FROM observations WHERE stream_url=%s "
+                                  "AND observed_at>=%s AND details->'presenter_session_updates' @> %s "
+                                  'ORDER BY observed_at,id LIMIT 1',
+                                  (session['stream_url'], stamp, Jsonb([{
+                                      'id': session['id'], 'ended_at': session['ended_at']}]))).fetchone()
+            confirmed_at = evidence.get('confirmed_at') or (closed[1].isoformat() if closed else session['version_at'])
+            confirmation_id = evidence.get('observation_id') or (str(closed[0]) if closed else None)
         details = {'prediction': True, 'training_label_verified': False,
                    'event_basis': session.get('end_reason') if kind == 'folding_finish' else session['detection_reason'],
-                   'confirmed_at': confirmation['observed_at'],
-                   'confirmation_observation_id': confirmation['id'],
+                   'confirmed_at': confirmed_at,
+                   'confirmation_observation_id': confirmation_id,
                    'source_frame_path': source.get('frame_path'),
                    'source_capture_at': source.get('observed_at'),
                    'source_counter': source.get('accepted_counter'),
@@ -121,7 +137,8 @@ def save_session(conn, session, confirmation):
                      'WHERE presenter_video_events.version_at <= EXCLUDED.version_at AND '
                      '(presenter_video_events.event_at IS DISTINCT FROM EXCLUDED.event_at OR '
                      'presenter_video_events.source_observation_id IS DISTINCT FROM EXCLUDED.source_observation_id OR '
-                     'presenter_video_events.video_offset_seconds IS DISTINCT FROM EXCLUDED.video_offset_seconds)',
+                     'presenter_video_events.video_offset_seconds IS DISTINCT FROM EXCLUDED.video_offset_seconds OR '
+                     "presenter_video_events.details->>'confirmed_at' IS DISTINCT FROM EXCLUDED.details->>'confirmed_at')",
                      (session['id'], kind, session['stream_url'], stamp, source_id, mark['video_id'],
                       mark['video_offset_seconds'], mark['review_url'], mark['timing_quality'], Jsonb(details), session['version_at']))
 

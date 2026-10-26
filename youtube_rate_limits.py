@@ -1,9 +1,27 @@
 """Persistent posting backpressure and diagnostic context; never queues a send."""
 from datetime import datetime, timedelta, timezone
 import math
+import json
 import random
 import re
 from email.utils import parsedate_to_datetime
+from zoneinfo import ZoneInfo
+
+
+def log_pause(event, channel_id, until, *, now=None, **details):
+    """Flush one structured stdout record for Compose log monitoring."""
+    now = now or datetime.now(timezone.utc)
+    remaining = max(0, math.ceil((until-now).total_seconds()))
+    hours, remainder = divmod(remaining, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    print(json.dumps({**details, 'event':event, 'level':'ERROR',
+        'timestamp':now.isoformat(), 'channel_id':channel_id,
+        'not_before':until.isoformat(),
+        'not_before_warsaw':until.astimezone(ZoneInfo('Europe/Warsaw')).isoformat(),
+        'retry_in_seconds':remaining,
+        'retry_in':f'{hours:02d}:{minutes:02d}:{seconds:02d}',
+        'message':f'YouTube posting paused; next eligible attempt in {hours:02d}:{minutes:02d}:{seconds:02d}. '
+                  'Only fresh messages may be posted; YouTube may still reject them.'}), flush=True)
 
 POLICY = {'backoff_seconds':[600,1200,2400,3600], 'jitter_fraction':0.05,
           'max_message_age_seconds':120, 'resend_old_messages':False,
