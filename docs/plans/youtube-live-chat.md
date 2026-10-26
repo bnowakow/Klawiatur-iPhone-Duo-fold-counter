@@ -2,8 +2,9 @@
 
 Status: OAuth, manual delivery and command extension interfaces implemented on
 2026-10-26; real account authorization and real posting await credentials and user
-chosen content. Incoming-message reading, bot cooldowns and scheduling remain future
-work. See [current setup](../youtube-setup.md). This plan does not enable posting.
+chosen content at that milestone. The live incoming `!ile` bot, global cooldown and
+usage statistics are now implemented and deployed; scheduled broadcasts remain
+future work. See [current setup](../youtube-setup.md) and [bot operation](../youtube-bot.md).
 
 ## Outcome and scope
 

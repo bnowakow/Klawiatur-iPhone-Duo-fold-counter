@@ -11,6 +11,9 @@ COPY break_scene_integration_check.py ./
 COPY youtube_quota.py youtube_quota_integration_check.py ./
 COPY youtube_auth.py youtube_chat.py youtube_chat_integration_check.py ./
 COPY youtube_commands.py ./
+COPY youtube_bot.py youtube_stream.py youtube_bot_integration_check.py youtube_stream.proto ./
+COPY youtube_stint_notifications.py youtube_stint_notifications_integration_check.py ./
+RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. youtube_stream.proto
 COPY refine_break_endpoint.py ./
 COPY proof-of-concept/test-data/2026-10-25-night-break/ proof-of-concept/test-data/2026-10-25-night-break/
 COPY proof-of-concept/camera-profiles/ proof-of-concept/camera-profiles/

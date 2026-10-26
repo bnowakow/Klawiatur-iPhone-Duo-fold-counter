@@ -142,10 +142,11 @@ It does not start a listener/bot by default or interrupt folding analysis.
 until the user initiates authorization. Use the [quota documentation](youtube-live-chat.md)
 for policy sources and budget commands.
 
-## Future bot command integration
+## Bot command integration
 
 `youtube_commands.py` provides `IncomingMessage`, `CommandRegistry` and `Reply`.
-The registry starts empty: `!ile` or other commands do not trigger anything yet.
+This reusable registry starts empty; the separately enabled `youtube_bot.py`
+worker uses its database command configuration to activate `!ile`.
 A handler takes `(incoming_message, arguments)` and returns optional reply text;
 it can read accepted folding statistics through a separate data access layer.
 Dispatch ignores the bot's own channel and derives a stable delivery key from
@@ -154,13 +155,12 @@ source message ID. Route those fields to `youtube_chat.send()` while holding
 `youtube_auth.locked()`; check the reply chat matches the active configured target.
 Handlers do not authorize, perform HTTP calls or publish by themselves.
 
-A future reader can use `liveChatMessages.streamList` or `list`. It must store
-processed incoming IDs and reconnect checkpoints, avoid replaying old commands,
-respect Google's polling interval when using `list`, enforce per-user/command/global
-cooldowns, ignore its own replies and handle moderation/access errors. Receiving
-and replying both consume quota. The reader and these persistent bot controls are
-separate future work; no auto replies are enabled by this implementation. Message
-content and the handler for `!ile` will be chosen later.
+The continuous [bot worker](youtube-bot.md) uses `liveChatMessages.streamList`,
+persists incoming command IDs/checkpoints and enforces a global 600-second cooldown.
+It answers `!ile` with the compact shared statistics message and the required Polish
+disclaimer. Exact command matching prevents its own replies from triggering loops.
+Receiving and replying both consume quota. Per-user cooldowns, other handlers and
+scheduled broadcasts can be added separately.
 
 ## Tests
 

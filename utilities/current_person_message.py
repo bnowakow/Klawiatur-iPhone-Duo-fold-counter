@@ -9,7 +9,7 @@ class PaceUnavailable(ValueError):
     pass
 
 
-def message_for_pace(pace, folds):
+def message_for_pace(pace, folds, compact=False):
     pace = Decimal(str(pace))
     if not pace.is_finite() or pace < 0:
         raise PaceUnavailable('Nieprawidłowe tempo składania.')
@@ -18,6 +18,9 @@ def message_for_pace(pace, folds):
     displayed = format(pace.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), 'f')
     displayed = displayed.rstrip('0').rstrip('.').replace('.', ',')
     hourly = (pace * 60).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    if compact:
+        return (f'Złożenia aktualnej osoby: {folds}. Tempo: {displayed} złożeń/min; '
+                f'prognoza: {hourly} złożeń/h.')
     return (f'ilość złożeń przez aktualną osobę {folds}. '
             f'dotychczasowe tempo składania: {displayed} złożeń/min, '
             f'w tym tempie telefon powinien być złożony {hourly} razy w ciągu godziny')
@@ -50,13 +53,13 @@ def current_measurements(conn, stream, now=None):
     return row[2], row[3]
 
 
-def generate_current_message(stream=None):
+def generate_current_message(stream=None, compact=False):
     """Shared, read-only entry point for clipboard, chat delivery and future bots."""
     import psycopg
     stream = stream or os.getenv('STREAM_URL', 'https://www.youtube.com/watch?v=vaiHWiExDXg')
     with psycopg.connect(os.getenv('DATABASE_URL', ''), connect_timeout=10) as conn:
         conn.execute('SET TRANSACTION READ ONLY')
-        return message_for_pace(*current_measurements(conn, stream))
+        return message_for_pace(*current_measurements(conn, stream), compact=compact)
 
 
 def main():

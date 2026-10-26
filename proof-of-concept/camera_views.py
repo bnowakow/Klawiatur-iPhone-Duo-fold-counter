@@ -83,11 +83,15 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
     crop_roi = roi if view == "presenter_main" else profile["clothing_roi"]
     crop = clothing_crop(image, crop_roi)
     features = histogram(crop)
+    garment_rois = profile.get("garment_rois", [])
+    garment_features = [histogram(clothing_crop(image, region)) for region in garment_rois]
     details["clothing_roi"] = list(crop_roi)
+    details["garment_rois"] = garment_rois
     saved = state["views"].get(view)
     if saved is None:
         saved = {"baseline": features.tolist(), "baseline_observation": observation_id,
-                 "luminance_baseline": luminance_histogram(crop).tolist()}
+                 "luminance_baseline": luminance_histogram(crop).tolist(),
+                 "garment_baselines": [feature.tolist() for feature in garment_features]}
         state["views"][view] = saved
         status, score = "baseline_created", 0
     else:
@@ -107,6 +111,14 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
                                           np.asarray(saved["luminance_baseline"])).sum()/2)
         details["colour_score"] = score
         details["luminance_score"] = luminance_score
+        garment_baselines = saved.get("garment_baselines", [])
+        garment_scores = [float(np.abs(feature-np.asarray(reference)).sum()/2)
+                          for feature, reference in zip(garment_features, garment_baselines)]
+        details["garment_scores"] = garment_scores
+        # A shirt print can disappear while a plain shoulder crop stays black.
+        # The additional regions remain clothing-only and use the same
+        # persistence, layout-continuity and review rules as the primary crop.
+        score = max([score] + garment_scores)
         # Fine brightness bins distinguish light grey from white. This remains
         # an appearance cue: lighting changes can also require review.
         if luminance_score is not None and luminance_score >= .60:

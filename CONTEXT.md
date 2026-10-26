@@ -637,3 +637,24 @@ YouTube returned message ID `LCC.EhwKGkNLSEl4WlQtMXBjREZSMktMUWtkeXJzRjl3`.
 The message reported 2014 folds, 44.68 folds/minute and 2681 folds/hour projection.
 Only that one-shot container enabled sending; `.env` remains disabled. This confirms
 manual OAuth posting, not incoming-command reading or scheduled operation.
+
+### Continuous YouTube !ile worker (2026-10-26)
+
+`youtube_bot.py` now runs as the independent persistent `youtube-bot` Compose
+service. `youtube_stream.py` uses the official gRPC `streamList` transport and
+Docker-generated `youtube_stream.proto` bindings; each connection is quota-accounted.
+The bot is explicitly authorized to answer new exact `!ile` messages using the
+shared generator's compact format plus the exact Polish ten-minute disclaimer.
+It reserves one global cooldown per chat/command and suppresses throttled requests
+silently. `youtube_bot_commands` stores enabled/handler/disclaimer/cooldown=600/max-age
+settings. `youtube_bot_command_events` stores deduplicated incoming command usage,
+source author ID, outcomes and delivery links; `youtube_bot_cooldowns` persists
+reservations; `youtube_bot_state` persists activation/cursor/health. Usage views
+provide totals and Warsaw daily aggregates, including answered/throttled/stale/
+unavailable/failed/uncertain categories. Stats default to the configured stream and
+exclude integration streams. Old history, commands over 120 seconds old and stale
+measurements do not produce replies; uncertain sends are never blindly retried.
+The worker enables replies through its Compose environment override; manual
+`.env` sending remains false. Control it with `make youtube-bot-up/stop/stats/logs`.
+Docker restart policy is unless-stopped; only an already running bot is recreated
+by docker-upgrade. See [bot behavior and schema](docs/youtube-bot.md).

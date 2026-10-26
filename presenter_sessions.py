@@ -22,6 +22,11 @@ CREATE TABLE IF NOT EXISTS presenter_appearances (
  detected_at timestamptz NOT NULL, version_at timestamptz NOT NULL,
  status text NOT NULL, details jsonb NOT NULL
 );
+CREATE TABLE IF NOT EXISTS presenter_handover_corrections (
+ id uuid PRIMARY KEY, stream_url text NOT NULL, corrected_at timestamptz NOT NULL,
+ old_session_id uuid NOT NULL REFERENCES presenter_sessions(id),
+ new_session_id uuid NOT NULL REFERENCES presenter_sessions(id), details jsonb NOT NULL
+);
 CREATE OR REPLACE VIEW presenter_session_rates AS
  SELECT *,
    last_counter - baseline_counter AS folds_since_detection_baseline,

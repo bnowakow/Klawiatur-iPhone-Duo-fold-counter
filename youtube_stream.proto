@@ -1,0 +1,34 @@
+// Wire-compatible subset of Google's streaming live-chat example.
+// Source: https://developers.google.com/youtube/data/live/streaming-live-chat
+// Google sample code licensed under Apache-2.0.
+syntax = "proto2";
+package youtube.api.v3;
+service V3DataLiveChatMessageService {
+  rpc StreamList(LiveChatMessageListRequest) returns (stream LiveChatMessageListResponse) {}
+}
+message LiveChatMessageListRequest {
+  optional string live_chat_id = 1;
+  optional uint32 max_results = 98;
+  optional string page_token = 99;
+  repeated string part = 100;
+}
+message LiveChatMessageListResponse {
+  optional string offline_at = 2;
+  optional string next_page_token = 100602;
+  repeated LiveChatMessage items = 1007;
+}
+message LiveChatMessage {
+  optional string id = 101;
+  optional LiveChatMessageSnippet snippet = 2;
+}
+message LiveChatMessageSnippet {
+  optional int32 type = 1;
+  optional string live_chat_id = 201;
+  optional string author_channel_id = 301;
+  optional string published_at = 4;
+  optional string display_message = 16;
+  optional LiveChatTextMessageDetails text_message_details = 19;
+}
+message LiveChatTextMessageDetails {
+  optional string message_text = 1;
+}

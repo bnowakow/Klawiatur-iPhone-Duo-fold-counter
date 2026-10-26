@@ -501,8 +501,13 @@ Each confirmed folding stint receives a Polish appearance description (visible c
 
 YouTube live-chat API policies and conservative PostgreSQL usage accounting are
 available through `youtube_quota.py`; see [YouTube quotas and OAuth setup](docs/youtube-live-chat.md).
-Google OAuth and manual delivery are available; automatic posting remains disabled.
+Google OAuth and manual delivery are available; scheduled broadcasts remain disabled.
 
 Google OAuth and explicit manual YouTube chat delivery are implemented. Follow the
 [Google Cloud setup and chat commands](docs/youtube-setup.md). Sending defaults off;
 an empty command-handler registry supports future bot extensions.
+
+The [continuous YouTube command bot](docs/youtube-bot.md) answers `!ile` with current
+folding statistics and a disclaimer, at most once per ten minutes across the chat.
+Its command settings, cooldowns and usage statistics persist in PostgreSQL.
+Use `make youtube-bot-stats`, `make youtube-bot-logs` and `make youtube-bot-stop`.

@@ -171,6 +171,39 @@ services:
     init: true
     restart: "no"
 
+  youtube-bot:
+    build: .
+    profiles: [youtube]
+    env_file:
+      - ./.env
+    command: ["python", "youtube_bot.py", "run"]
+    environment:
+      PGHOST: db
+      PGDATABASE: folding
+      PGUSER: folding
+      PGPASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
+      YOUTUBE_AUTH_DIR: /secrets/youtube
+      YOUTUBE_CHAT_ENABLED: "true"
+    volumes:
+      - ./secrets/youtube:/secrets/youtube
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "youtube_bot.py", "health"]
+      interval: 30s
+      timeout: 15s
+      start_period: 30s
+      retries: 3
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres_data:
   vision_models:

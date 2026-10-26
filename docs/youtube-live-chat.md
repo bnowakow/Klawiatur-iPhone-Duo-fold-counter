@@ -6,7 +6,8 @@ ledger and HTTP transport are in `youtube_quota.py`; `youtube_auth.py` handles
 credentials and `youtube_chat.py` handles delivery. See the
 [Google Cloud setup and commands](youtube-setup.md).
 No Google account has been connected or real messages sent during implementation.
-Scheduled posting and an incoming-message reader are not implemented.
+The [continuous command bot](youtube-bot.md) reads live chat and answers `!ile`
+with a persisted ten-minute global cooldown. Scheduled broadcasts are not enabled.
 
 ## Published policies
 
@@ -74,8 +75,8 @@ This is a **local estimate**, not a measurement of Google's authoritative billed
 units. Requests from other applications, manual tools, or code bypassing this
 transport are invisible. Use Google Cloud Console to reconcile actual usage.
 The existing video-frame downloader and folding supervisor do not call this
-transport and do not generate official API usage records. `streamList` has a
-stored cost but needs a separate streaming transport before use.
+transport and do not generate official API usage records. `youtube_stream.py`
+accounts for each official `streamList` gRPC connection through the same ledger.
 
 ## Connecting a personal account next
 

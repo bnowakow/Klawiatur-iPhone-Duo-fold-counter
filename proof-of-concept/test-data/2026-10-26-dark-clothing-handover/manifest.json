@@ -1,0 +1,42 @@
+[
+  {
+    "file": "old-main.jpg",
+    "observation_id": "41bb7fa0-47e0-48b1-b424-7b3b454e71bb",
+    "sha256": "ed2434e643e5911353ee8bd9a0f3ebaf15e73d1dbb0a87431de6d4d5ce08e8c0"
+  },
+  {
+    "file": "old-inset.jpg",
+    "observation_id": "1d3debbf-5997-49cc-906d-310d47256fa5",
+    "sha256": "a91f87d1d8864d7b921a6c8b7ca1a7d2dcba8570d942537212c88a2735a4bdf5"
+  },
+  {
+    "file": "old-inset-later.jpg",
+    "observation_id": "c3b887c4-6e45-4caf-871b-18aa3de67eb8",
+    "sha256": "1b9a3905169c3fd23143b5316c06ddbb00073026731f759e6509b809366a9cab"
+  },
+  {
+    "file": "last-old-main.jpg",
+    "observation_id": "07ed2135-c2ed-4c16-9f9b-b9da1fd80017",
+    "sha256": "4e3dd7a6061420237f227bdde28f4917aa20bdda36f20edc7a7993b85ecbb46b"
+  },
+  {
+    "file": "old-main-later.jpg",
+    "observation_id": "cedb6a50-a014-40fc-bd23-b4bea32cfbbd",
+    "sha256": "b5fcdf9b60797d986635115c2ea3e435da10771c9b0aa300feb051933ef78989"
+  },
+  {
+    "file": "first-new-main.jpg",
+    "observation_id": "97dff2dd-11e0-4d45-afc1-0ec9910cbbc6",
+    "sha256": "056ca6f0e07f724d89d4d823785de808e7e0400cc9d71ea62712c873da2f8620"
+  },
+  {
+    "file": "new-main-second.jpg",
+    "observation_id": "536adfc9-b84f-42df-b632-697794f0da89",
+    "sha256": "b2d7ec9a2eff27b1d146b8745ab2f32892759bed266b98080f97655fb98e37a5"
+  },
+  {
+    "file": "new-main-later.jpg",
+    "observation_id": "21583a6d-474d-4e6e-96ad-17673827ccc1",
+    "sha256": "9b619da8dce0f72dfcf23ebdb19879047f9cd40200027258a5e0c3a2f2222197"
+  }
+]

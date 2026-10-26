@@ -111,5 +111,18 @@ are preserved and never automatically resent. Integration fixtures use isolated
 OAuth client JSON and refresh credentials are private files in ignored
 `secrets/youtube/`, mounted only into the optional chat service. They are outside
 PostgreSQL and image retention. Protect any credential backups separately; database
-or log backups must not acquire tokens. No incoming live-chat archive or bot reader
-exists yet. See [Google setup, delivery and command extension](youtube-setup.md).
+or log backups must not acquire tokens. The bot retains command events and resume
+state rather than an archive of all chat text. See
+[Google setup, delivery and command extension](youtube-setup.md).
+
+### Live-chat command statistics
+
+The persistent bot is now implemented. `youtube_bot_commands` stores `!ile`, its
+600-second cooldown and exact disclaimer. `youtube_bot_cooldowns` holds shared
+per-chat reservations; `youtube_bot_state` stores activation, cursor and health.
+`youtube_bot_command_events` retains unique command message IDs, author channel
+IDs, times, outcome and delivery reference. Total and Warsaw-day usage views are
+`youtube_bot_command_usage` and `youtube_bot_command_daily_usage`; counts distinguish
+answered, throttled, stale, unavailable and failed/uncertain commands. Other chat
+content is not archived. History has no automatic expiry. See [bot operation and
+queries](youtube-bot.md).

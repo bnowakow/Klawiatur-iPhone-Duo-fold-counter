@@ -2,9 +2,10 @@
 
 # Rebuild code, reload .env, and replace application containers.
 docker-upgrade:
-	docker compose --profile youtube build supervisor official-data clothing-descriptions youtube-chat
+	docker compose --profile youtube build supervisor official-data clothing-descriptions youtube-chat youtube-bot
 	docker compose up -d --wait db
 	docker compose up -d --force-recreate --wait supervisor official-data clothing-descriptions
+	@if [ -n "$$(docker compose --profile youtube ps --status running -q youtube-bot)" ]; then docker compose --profile youtube up -d --no-deps --force-recreate --wait youtube-bot; fi
 
 # Compare published folds/minute with the current person's average.
 docker-compare:
@@ -47,3 +48,13 @@ youtube-preview-current:
 # Same live-data generator as docker-message; sending still requires explicit opt-in.
 youtube-send-current:
 	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py send-current --request-key $(call youtube-quote,$(REQUEST_KEY)) --expected-channel $(call youtube-quote,$(CHANNEL_ID)) --expected-chat $(call youtube-quote,$(CHAT_ID))
+
+.PHONY: youtube-bot-up youtube-bot-stop youtube-bot-stats youtube-bot-logs
+youtube-bot-up:
+	docker compose --profile youtube up -d --build --wait youtube-bot
+youtube-bot-stop:
+	docker compose --profile youtube stop youtube-bot
+youtube-bot-stats:
+	docker compose --profile youtube run --rm --no-deps youtube-chat python youtube_bot.py stats
+youtube-bot-logs:
+	docker compose --profile youtube logs --tail=100 youtube-bot

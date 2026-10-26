@@ -3,3 +3,5 @@ psycopg[binary]>=3.2,<4
 yt-dlp[default]>=2026.1.1
 google-auth>=2.0,<3
 google-auth-oauthlib>=1.2,<2
+grpcio>=1.70,<2
+grpcio-tools>=1.70,<2
