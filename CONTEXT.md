@@ -954,3 +954,12 @@ rejects structured appearance fields at public validation and transport before
 reservation/HTTP. The user corrected the initial routing concern: !pomoc event215
 received help, and separate !rekord event217 triggered the quoted record reply.
 No routing behavior change is needed. Preserve internal DB/Sheets descriptions.
+
+User-requested command cooldown trial: active per-(chat,command) cap is 60s, shared
+across viewers. youtube_command_policy.py monitors new POST rateLimitExceeded for
+the explicitly enabled posting channel and restores all command caps/disclaimers
+to 600s atomically, auditing request ID and emitting stdout ERROR
+`youtube_command_cooldown_changed`. State is in youtube_posting_policies under
+command_cooldown_adaptation:<channel>; fallback remains until explicit reenable.
+Account backpressure and same-posting-channel 60s response delay remain separate.
+Configuration changes do not alter presenter/folding measurements or Sheets data.

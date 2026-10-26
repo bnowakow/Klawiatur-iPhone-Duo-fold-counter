@@ -259,3 +259,9 @@ be an additional future improvement; it should not be inferred as a historical
 fact when the client was not recorded. Future comparisons should control the
 channel/chat, message content, cooldown and timing as far as practical, and
 recognize that changing Google clients/projects introduces additional variables.
+
+The user additionally enabled a one-minute **per-command** cooldown trial.
+On a new posting `rateLimitExceeded`, command cooldowns and public disclaimers
+revert atomically to ten minutes, persist across restarts and log the trigger.
+This is separate from the account's 10/20/40/60-minute posting backoff. See
+[adaptive command cooldowns](youtube-bot.md#one-minute-command-cooldown-trial-and-automatic-fallback).

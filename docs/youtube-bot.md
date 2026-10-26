@@ -377,3 +377,29 @@ policy and is not evidence that a one-minute gap will resolve YouTube restrictio
 `youtube_command_delay_integration_check.py` verifies owner-only scheduling,
 other viewers' immediate path, fresh text, durable scheduling, concurrent claim
 deduplication, expiry, account backoff and identity changes with simulated sends.
+
+## One-minute command cooldown trial and automatic fallback
+
+The user's active runtime policy sets each command's shared-chat cooldown to
+**60 seconds**. It remains per `(chat_id, command)`, shared by all viewers; it
+is not a single global cap across different commands. The independent 60-second
+reply delay for commands from the posting channel remains in effect.
+
+The live command rows and Polish disclaimers are updated together. If a new
+`liveChatMessages.insert` request from the monitored posting channel fails with
+`rateLimitExceeded`, `youtube_command_policy.py` atomically restores **600 seconds
+for all commands**, updates their disclaimers, extends affected command cooldowns,
+and records the triggering request. Normal account-wide backpressure still
+applies and may require a longer pause. It does not retry the rejected reply.
+
+`youtube_posting_policies` stores `command_cooldown_adaptation:<channel_id>` with
+the active interval and triggering request. Policy changes are retained in
+`youtube_operational_incidents`. A rollback emits flushed stdout JSON with
+`event=youtube_command_cooldown_changed`, `level=ERROR`, `cooldown_seconds=600`
+and the rejection request ID, visible in `make docker-logs-errors`.
+
+Once restored to ten minutes, the interval stays there across restarts and later
+successes. A new one-minute trial requires an explicit operator action. Seed
+values do not overwrite the persisted command rows. Test accounts without an
+explicit monitoring policy cannot change production cooldowns. The integration
+check uses temporary table copies to verify rollback without touching live policy.

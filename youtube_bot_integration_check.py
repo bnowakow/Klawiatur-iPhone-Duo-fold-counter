@@ -79,7 +79,7 @@ def main():
         usage=conn.execute("SELECT received,answered,throttled FROM youtube_bot_command_usage WHERE stream_url=%s AND command='!pomoc'",(stream,)).fetchone()
         assert usage==(2,1,1),usage
         policy=conn.execute("SELECT cooldown_seconds,description FROM youtube_bot_commands WHERE command='!pomoc'").fetchone()
-        assert policy[0]==600 and policy[1]
+        assert policy[0] in (60,600) and policy[1]
         cached=conn.execute("SELECT source_url,facts,cached_at FROM youtube_bot_command_cache WHERE command='!samsung'").fetchone()
         assert cached[0]==bot.SAMSUNG_SOURCE_URL and 'fbclid' not in cached[0]
         assert cached[1]['model']=='Samsung Galaxy Z Flip3' and cached[1]['final_folds']==418500
@@ -101,7 +101,7 @@ def main():
         assert bot.process_message(project,stream,target,enabled,item('link-other-user','!link'))['status']=='throttled'
         assert send.call_count == 1
     with quota.connect() as conn:
-        assert conn.execute("SELECT cooldown_seconds,max_message_age_seconds FROM youtube_bot_commands WHERE command='!link'").fetchone()==(600,120)
+        assert conn.execute("SELECT cooldown_seconds,max_message_age_seconds FROM youtube_bot_commands WHERE command='!link'").fetchone() in ((60,120),(600,120))
         assert conn.execute("SELECT received,answered,throttled FROM youtube_bot_command_usage WHERE stream_url=%s AND command='!link'",(stream,)).fetchone()==(2,1,1)
     assert '!link' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
     # Rank only completed folding stints of this stream, including winners
@@ -128,7 +128,7 @@ def main():
                              "VALUES (%s,%s,%s,'test',%s,'test',%s,'completed','Ubiór: czarna koszulka.')",
                              (sid,oid,enabled,Jsonb([]),b'fixture'))
     config=bot.command_config('!rekord')
-    assert config[2]==600 and config[4]==120
+    assert config[2] in (60,600) and config[4]==120
     text=bot.build_record_reply(stream,config)
     assert '3000 złożeń' in text and 'czarna koszulka' not in text and 'Ubiór:' not in text,text
     with patch.object(bot.chat,'send',side_effect=fake_send) as send:
@@ -141,7 +141,7 @@ def main():
     assert '3000 złożeń' in text and 'Opis osoby' not in text,text
     assert '!rekord' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
     source_config=bot.command_config('!kod-zródłowy')
-    assert source_config[2]==600 and source_config[4]==120
+    assert source_config[2] in (60,600) and source_config[4]==120
     with patch.object(bot.chat,'send',side_effect=fake_send) as send:
         source_item=item('source-code','!kod-zródłowy')
         assert bot.process_message(project,stream,target,enabled,source_item)['status']=='sent'
@@ -154,7 +154,7 @@ def main():
     timed_target=dict(target,actual_started_at=duration_start.isoformat(),actual_ended_at=None)
     bot.remember_state(stream,project,timed_target)
     duration_config=bot.command_config('!jak-długo')
-    assert duration_config[2]==600 and duration_config[4]==120
+    assert duration_config[2] in (60,600) and duration_config[4]==120
     text=bot.build_duration_reply(stream,duration_config)
     assert '2 dni, 3 godziny, 4 minuty' in text,text
     with patch.object(bot.chat,'send',side_effect=fake_send) as send:

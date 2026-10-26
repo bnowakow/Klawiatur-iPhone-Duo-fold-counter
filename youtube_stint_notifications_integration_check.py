@@ -50,7 +50,7 @@ def main():
             list(pool.map(lambda _:notifications.process_finished('fixture-project',stream),range(2)))
         assert len(sent)==2,len(sent)
         assert all(call[1]['source_kind']=='stint_finished' for call in sent)
-        assert all(call[0][2].endswith(bot.DISCLAIMER) for call in sent)
+        assert all(call[0][2].endswith(bot.command_config('!ile')[3]) for call in sent)
         assert notifications.process_finished('fixture-project',stream)==[]
     with quota.connect() as conn:
         rows=conn.execute('SELECT session_id,status FROM youtube_stint_notifications WHERE stream_url=%s',(stream,)).fetchall()
