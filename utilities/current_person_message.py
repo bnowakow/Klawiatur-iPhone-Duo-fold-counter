@@ -1,0 +1,64 @@
+"""Generate a message from our live stint, without fetching the public website."""
+from datetime import datetime, timezone
+from decimal import Decimal, ROUND_HALF_UP
+import os
+import sys
+
+
+class PaceUnavailable(ValueError):
+    pass
+
+
+def message_for_pace(pace):
+    pace = Decimal(str(pace))
+    if not pace.is_finite() or pace < 0:
+        raise PaceUnavailable('Nieprawidłowe tempo składania.')
+    displayed = format(pace.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), 'f')
+    displayed = displayed.rstrip('0').rstrip('.').replace('.', ',')
+    hourly = (pace * 60).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    return (f'dotychczasowe tempo składania: {displayed} złożeń/min, '
+            f'w tym tempie telefon powinien być złożony {hourly} razy w ciągu godziny')
+
+
+def current_pace(conn, stream, now=None):
+    now = now or datetime.now(timezone.utc)
+    row = conn.execute(
+        'SELECT folding_started_at,last_counter_at,folding_folds_per_hour / 60 '
+        'FROM presenter_session_rates WHERE stream_url=%s AND ended_at IS NULL '
+        'ORDER BY detected_at DESC LIMIT 1', (stream,)).fetchone()
+    if not row or row[0] is None or row[2] is None:
+        raise PaceUnavailable('Brak wystarczających danych o tempie obecnej osoby.')
+    latest = conn.execute(
+        'SELECT observed_at,status,clothing_status,details FROM observations '
+        'WHERE stream_url=%s ORDER BY observed_at DESC LIMIT 1', (stream,)).fetchone()
+    if not latest:
+        raise PaceUnavailable('Brak aktualnych odczytów licznika.')
+    observed, status, clothing, details = latest
+    if (status != 'analyzed' or details.get('presenter_attribution_review_required')
+            or details.get('presenter_candidate_id')
+            or clothing in ('change_pending', 'possible_handover_review_required',
+                            'camera_view_unknown_review_required', 'night_break_detected')):
+        raise PaceUnavailable('Trwa przerwa lub odczyty wymagają weryfikacji.')
+    interval = float(details.get('polling_interval_seconds', os.getenv('INTERVAL_SECONDS', 4)))
+    limit = max(60, interval * 2.5)
+    if any(not 0 <= (now - stamp).total_seconds() <= limit for stamp in (observed, row[1])):
+        raise PaceUnavailable('Odczyty obecnej osoby są nieaktualne.')
+    return row[2]
+
+
+def main():
+    import psycopg
+    stream = os.getenv('STREAM_URL', 'https://www.youtube.com/watch?v=vaiHWiExDXg')
+    try:
+        with psycopg.connect(os.getenv('DATABASE_URL', ''), connect_timeout=10) as conn:
+            conn.execute('SET TRANSACTION READ ONLY')
+            message = message_for_pace(current_pace(conn, stream))
+    except PaceUnavailable as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    print(message)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

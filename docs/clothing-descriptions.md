@@ -1,17 +1,16 @@
 # Clothing descriptions for folding stints
 
-Each confirmed anonymous presenter stint gets one short Polish clothing
+Each confirmed anonymous presenter stint gets a Polish appearance
 description after its first accepted counter increase. For example: “Biała koszulka z krótkim rękawem.” The local vision model describes visible garment colors
 and types; items outside the crop cannot be established. These descriptions are model estimates,
-not verified identity labels or additional person-detection evidence. The saved
-short text includes only recognized garment phrases; accessories and facial
-details occasionally added by the model are excluded. These torso crops support
+not verified identity labels or additional person-detection evidence. The clothing section includes recognized garment phrases. Hair, headwear, glasses,
+facial hair and accessories are collected separately by targeted questions. These torso crops support
 upper-body garments; model claims about hidden trousers or other lower-body
 clothing are excluded. The raw model response
-remains available in `response.raw_description` for auditing. If no garment phrase
+remains available in `response.raw_answers` (or `response.raw_description` for older clothing-only records) for auditing. If no garment phrase
 can be extracted, the result is marked uncertain.
 
-The supervisor selects the torso in the calibrated `presenter_main` or
+The supervisor selects the visible head and upper body in the calibrated `presenter_main` or
 `presenter_inset` view. Main-view crops mask the table-camera inset. Descriptions
 wait while attribution is uncertain, another presenter candidate is pending, the
 camera is unknown, or the scheduled break scene is visible. An already active
@@ -57,11 +56,11 @@ ORDER BY s.detected_at DESC;
 
 `docker compose up -d` starts the local Ollama server and the one-shot
 `vision-model` downloader, then starts the description worker after model setup.
-The default `CLOTHING_DESCRIPTION_MODEL=moondream:1.8b` downloads about 1.7 GB of
+The default `CLOTHING_DESCRIPTION_MODEL=llava-phi3:3.8b` downloads about 2.9 GB of
 weights into the persistent `vision_models` Docker volume. The Ollama container
 image consumes additional disk space. These runtime/model files are outside the
 20 GB image-file cap. Input crops are limited to 384 pixels on the longest side. The model is unloaded after each caption; the server is
-limited to two CPUs and 4 GB RAM. Initial setup requires network access, while
+limited to two CPUs and 6 GB RAM. Initial setup requires network access, while
 subsequent inference runs locally. Failed setup retries; ordinary frame capture
 continues independently.
 
@@ -69,7 +68,7 @@ continues independently.
 supervisor and website collector. Its dependencies ensure the model is available.
 Back up PostgreSQL for description history; model weights can be downloaded again.
 
-Sources: [Moondream model](https://ollama.com/library/moondream),
+Sources: [LLaVA-Phi3 model](https://ollama.com/library/llava-phi3),
 [Ollama generate API](https://github.com/ollama/ollama/blob/main/docs/api.md).
 
 ## Polish output
@@ -84,3 +83,41 @@ The worker converts existing English descriptions on startup without rerunning
 vision inference. The original caption and previous text remain in response
 metadata for provenance. Conversion is idempotent and stored descriptions have
 `description_language=pl`. Raw model diagnostics remain in their original language.
+
+## Detailed appearance descriptors (version 2)
+
+Descriptions now include the visible head and upper body: clothing, hair color,
+length and style, headwear, eyeglasses, facial hair, and visible accessories.
+The Polish sentence is stored in `description`; machine-readable attributes are
+stored in `appearance` JSONB. Each attribute has a `state`: `visible`,
+`not_visible`, or `unknown`. “Not visible” is limited to this image and does not
+prove that an item is absent. Unclear views are recorded as “nie można ocenić”.
+There is no inferred sex or gender-identity field. Unsolicited gender labels from
+the model are neutralized in diagnostic answers. The descriptors help compare
+anonymous stints; they do not establish that two stints belong to the same person.
+
+The local LLaVA-Phi3 model answers one structured JSON request covering all six
+appearance categories. The input fits within 384 pixels on the longest side.
+The model unloads after each descriptor. The previous smaller model returned
+empty answers for several appearance questions, so it is replaced for v2.
+Incomplete or malformed responses retry rather than fabricating attributes.
+
+`input_version=2` marks a head-and-upper-body crop. `prompt_version=2` marks the
+completed detailed descriptor. When upgrading a source image, the previous row
+snapshot and crop are archived in `presenter_description_revisions`. Repeated or
+older queued observations cannot overwrite a newer input. A completed descriptor
+remains visible with `pending` status while its richer replacement is generated.
+
+On startup the worker refreshes older inputs only from the original observation's
+full frame, if it remains in `data/frames`, `data/camera-review`, or
+`data/presenter-review`. Its data mount is read-only. An active stint can also
+queue one fresh portrait on its next unambiguous observation. Closed historical
+stints whose full frames have expired retain their old descriptions; no missing
+face or hair detail is inferred from the old torso-only crop.
+
+```sql
+SELECT session_id, description, description_language, appearance,
+       input_version, prompt_version, status
+FROM presenter_clothing_descriptions
+ORDER BY observed_at DESC;
+```

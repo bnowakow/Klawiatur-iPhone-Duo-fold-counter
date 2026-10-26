@@ -98,7 +98,7 @@ services:
   vision:
     image: ollama/ollama:latest
     cpus: 2.0
-    mem_limit: 4g
+    mem_limit: 6g
     environment:
       OLLAMA_MAX_LOADED_MODELS: 1
       OLLAMA_NUM_PARALLEL: 1
@@ -114,7 +114,7 @@ services:
     image: ollama/ollama:latest
     environment:
       OLLAMA_HOST: http://vision:11434
-    command: ["pull", "${CLOTHING_DESCRIPTION_MODEL:-moondream:1.8b}"]
+    command: ["pull", "${CLOTHING_DESCRIPTION_MODEL:-llava-phi3:3.8b}"]
     depends_on:
       vision:
         condition: service_started
@@ -124,6 +124,8 @@ services:
     env_file:
       - ./.env
     command: ["python", "clothing_descriptions.py"]
+    volumes:
+      - ./data:/data:ro
     environment:
       PGHOST: db
       PGDATABASE: folding
@@ -131,20 +133,43 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
       STREAM_URL: ${STREAM_URL:-https://www.youtube.com/watch?v=vaiHWiExDXg}
       CLOTHING_DESCRIPTION_URL: http://vision:11434
-      CLOTHING_DESCRIPTION_MODEL: ${CLOTHING_DESCRIPTION_MODEL:-moondream:1.8b}
+      CLOTHING_DESCRIPTION_MODEL: ${CLOTHING_DESCRIPTION_MODEL:-llava-phi3:3.8b}
     depends_on:
       db:
         condition: service_healthy
       vision-model:
         condition: service_completed_successfully
     init: true
-    stop_grace_period: 200s
+    stop_grace_period: 300s
     restart: unless-stopped
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
+
+  youtube-chat:
+    build: .
+    profiles: [youtube]
+    env_file:
+      - ./.env
+    command: ["python", "youtube_chat.py", "status"]
+    environment:
+      PGHOST: db
+      PGDATABASE: folding
+      PGUSER: folding
+      PGPASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
+      YOUTUBE_AUTH_DIR: /secrets/youtube
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - ./secrets/youtube:/secrets/youtube
+      - ./data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    init: true
+    restart: "no"
 
 volumes:
   postgres_data:

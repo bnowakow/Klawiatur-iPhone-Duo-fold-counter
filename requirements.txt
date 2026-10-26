@@ -1,3 +1,5 @@
 -r proof-of-concept/requirements.txt
 psycopg[binary]>=3.2,<4
 yt-dlp[default]>=2026.1.1
+google-auth>=2.0,<3
+google-auth-oauthlib>=1.2,<2

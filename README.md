@@ -81,6 +81,22 @@ stints; they have no participant names and do not override OCR validation.
 
 ## Current tester comparisons
 
+Generate a ready-to-copy Polish message using our current person's average:
+
+```sh
+make docker-message
+```
+
+It prints `dotychczasowe tempo składania: … złożeń/min, w tym tempie telefon
+powinien być złożony … razy w ciągu godziny` and copies it to the macOS clipboard
+using host `pbcopy`. If message generation fails, the clipboard stays unchanged.
+Without `pbcopy`, the message is printed for manual copying. The projection is the unrounded
+average since the recorded folding start multiplied by 60, rounded to a whole
+fold; it is that person's projected total for one full hour, not the phone's
+cumulative counter. The command reads PostgreSQL through the running supervisor
+and does not fetch website data or send the message anywhere. Missing, stale,
+break or uncertain-stint data produces an explanation instead (exit 2).
+
 `compare_current_tester.py` compares the site's current-tester folds/minute with
 our current stint and recent pace. The website collector saves a comparison
 after each refresh. PostgreSQL `tester_comparisons` retains source and stint
@@ -479,4 +495,8 @@ Captured images follow [anomaly-window retention](docs/frame-retention.md); data
 
 Licensed under the GNU General Public License v3.0; see [LICENSE](LICENSE).
 
-Each confirmed folding stint receives a short Polish clothing description (visible colors and garment types) from a local background vision worker, stored in PostgreSQL. See [clothing descriptions](docs/clothing-descriptions.md).
+Each confirmed folding stint receives a Polish appearance description (visible clothing, hair, headwear, glasses, facial hair and accessories) from a local background vision worker, stored in PostgreSQL. See [clothing descriptions](docs/clothing-descriptions.md).
+
+YouTube live-chat API policies and conservative PostgreSQL usage accounting are
+available through `youtube_quota.py`; see [YouTube quotas and OAuth setup](docs/youtube-live-chat.md).
+Google OAuth sign-in and automatic posting remain to be implemented.

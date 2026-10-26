@@ -54,10 +54,37 @@ def main():
             assert translated[0] == 'Biała koszulka z krótkim rękawem.'
             assert translated[1] == 'pl'
             assert translated[2]['previous_description'] == 'White short-sleeved T-shirt.'
+        # Replaying an already queued crop must not wait for long model inference.
+        with psycopg.connect() as busy:
+            busy.execute('SELECT session_id FROM presenter_clothing_descriptions FOR UPDATE')
+            with psycopg.connect() as replay:
+                replay.execute("SET LOCAL lock_timeout='200ms'")
+                clothing.save_job(replay,obs)
+        with psycopg.connect() as conn:
+            conn.execute('UPDATE presenter_clothing_descriptions SET input_version=1')
+            clothing.save_job(conn,obs)
+            clothing.save_job(conn,obs)
+            revision=conn.execute('SELECT snapshot FROM presenter_description_revisions').fetchall()
+            assert len(revision)==1
+            assert revision[0][0]['description']=='Biała koszulka z krótkim rękawem.'
+            old=dict(obs)
+            old['details']=dict(obs['details'])
+            old['details']['clothing_description_job']=dict(obs['details']['clothing_description_job'],input_version=1)
+            clothing.save_job(conn,old)
+            assert conn.execute('SELECT input_version FROM presenter_clothing_descriptions').fetchone()[0]==2
+        detail={'hair':{'state':'visible','color':'brązowe','length':'krótkie'},
+                'glasses':{'state':'visible','type':'okulary'}}
+        with patch('clothing_descriptions.generate',return_value=('Biała koszulka. Włosy: krótkie, brązowe. Okulary: widoczne.',{'appearance':detail})):
+            assert clothing.process_one()
+        with psycopg.connect() as conn:
+            stored=conn.execute('SELECT appearance,prompt_version,status FROM presenter_clothing_descriptions').fetchone()
+            assert stored==(detail,2,'completed')
         report = {'integration':'passed','schema':schema,'checks':[
             'one job per session','transactional database crop storage','outage retry',
             'completed description retained on replay','no repeated inference',
-            'Polish conversion and language marker','original description preserved','idempotent language migration'], 'result':result}
+            'Polish conversion and language marker','original description preserved','idempotent language migration',
+            'portrait upgrade archives original','stale crop replay cannot downgrade',
+            'replay does not block on inference row','structured appearance persisted'], 'result':result}
         root = Path('/data/test-evidence/clothing-descriptions')/schema
         root.mkdir(parents=True,exist_ok=True)
         (root/'result.json').write_text(json.dumps(report,indent=2)+'\n')

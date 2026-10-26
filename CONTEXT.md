@@ -591,3 +591,18 @@ Captured-frame retention is specified in `docs/frame-retention.md`: keep anomali
 Clothing descriptions: `clothing_descriptions.py` queues a torso crop once per confirmed stint after folding starts; a separate Compose worker uses local Ollama/Moondream and persists the caption, source image, model and retry details in `presenter_clothing_descriptions`. See `docs/clothing-descriptions.md`. `vision_models` is a separate persistent model volume.
 
 Clothing descriptions are stored in Polish (`description_language=pl`). `clothing_descriptions.py` localizes validated English garment phrases with Polish noun/adjective agreement and migrates existing English descriptions on worker startup, preserving originals in response metadata.
+
+## YouTube live chat quota foundation (2026-10-26)
+
+`youtube_quota.py` stores dated official policy snapshots in `youtube_api_policies`,
+project budgets in `youtube_quota_projects` and conservative attempted-request
+accounting in `youtube_api_requests`; `youtube_daily_usage` is the daily summary.
+Pacific midnight defines the quota day. Failed/uncertain requests remain counted.
+Authenticated API calls must use `tracked_request()` for local budget enforcement;
+video-frame extraction is separate. No OAuth browser flow, credentials or automatic
+posting are configured. See [setup, limitations and verification](docs/youtube-live-chat.md).
+`youtube_quota_integration_check.py` uses isolated projects and makes no Google calls.
+
+Detailed appearance descriptors v2: head-and-upper-body crops, one local structured visual request covering six appearance categories, Polish text and structured `appearance` JSONB (hair, headwear, glasses, facial hair, accessories and clothing). No sex/gender inference. Original inputs/descriptions are archived in `presenter_description_revisions` on portrait upgrades; historical refresh uses the original frame only.
+
+Detailed descriptors use local `llava-phi3:3.8b` (about 2.9 GB weights), with two CPUs and 6 GB memory maximum for the vision container.

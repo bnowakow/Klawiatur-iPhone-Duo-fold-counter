@@ -1,8 +1,8 @@
-.PHONY: docker-upgrade docker-compare codex-commit
+.PHONY: docker-upgrade docker-compare docker-message codex-commit
 
 # Rebuild code, reload .env, and replace application containers.
 docker-upgrade:
-	docker compose build supervisor official-data clothing-descriptions
+	docker compose --profile youtube build supervisor official-data clothing-descriptions youtube-chat
 	docker compose up -d --wait db
 	docker compose up -d --force-recreate --wait supervisor official-data clothing-descriptions
 
@@ -10,6 +10,30 @@ docker-upgrade:
 docker-compare:
 	@bash utilities/docker-compare.sh
 
+# Generate a Polish pace/projection message and copy it to the host clipboard.
+docker-message:
+	@bash utilities/docker-message.sh
+
 # Stage changes, generate a commit message with Codex, commit, then offer to push.
 codex-commit:
 	@utilities/codex-commit.sh
+
+.PHONY: youtube-auth youtube-status youtube-preview youtube-send youtube-disconnect youtube-deliveries
+youtube-auth:
+	docker compose --profile youtube run --rm --service-ports youtube-chat python youtube_chat.py connect
+
+youtube-status:
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py status
+
+# MESSAGE_FILE is a container path under /data; shell values are single-quoted.
+youtube-preview:
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py preview --message-file '$(MESSAGE_FILE)'
+
+youtube-send:
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py send --message-file '$(MESSAGE_FILE)' --request-key '$(REQUEST_KEY)' --expected-channel '$(CHANNEL_ID)' --expected-chat '$(CHAT_ID)'
+
+youtube-disconnect:
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py disconnect
+
+youtube-deliveries:
+	docker compose --profile youtube run --rm youtube-chat python youtube_chat.py deliveries

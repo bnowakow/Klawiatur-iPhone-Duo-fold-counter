@@ -12,7 +12,9 @@ from urllib.request import Request, urlopen
 
 from PIL import Image, ImageDraw
 
-MODEL = 'moondream:1.8b'
+import appearance_descriptions as appearance
+
+MODEL = 'llava-phi3:3.8b'
 UNCERTAIN = 'Ubiór nie jest wyraźnie widoczny.'
 PROMPT = 'What clothing is the person wearing? Describe the colors and garment types.'
 SCHEMA = """
@@ -28,6 +30,13 @@ CREATE TABLE IF NOT EXISTS presenter_clothing_descriptions (
 ALTER TABLE presenter_clothing_descriptions
  ADD COLUMN IF NOT EXISTS description_language text NOT NULL DEFAULT 'en';
 ALTER TABLE presenter_clothing_descriptions ALTER COLUMN description_language SET DEFAULT 'pl';
+ALTER TABLE presenter_clothing_descriptions ADD COLUMN IF NOT EXISTS input_version integer NOT NULL DEFAULT 1;
+ALTER TABLE presenter_clothing_descriptions ALTER COLUMN input_version SET DEFAULT 2;
+ALTER TABLE presenter_clothing_descriptions ADD COLUMN IF NOT EXISTS appearance jsonb;
+CREATE TABLE IF NOT EXISTS presenter_description_revisions (
+ id bigserial PRIMARY KEY, session_id uuid NOT NULL REFERENCES presenter_sessions(id),
+ archived_at timestamptz NOT NULL DEFAULT now(), snapshot jsonb NOT NULL, image bytea NOT NULL
+);
 """
 
 
@@ -37,12 +46,12 @@ def prepare(image, obs, sessions):
     details = obs['details']
     camera = details.get('camera_view', {})
     if (not current or not current.get('folding_started_at') or not current.get('confirmed_at')
-            or current.get('clothing_description_queued')
+            or current.get('appearance_description_queued_version',0) >= appearance.VERSION
             or sessions.get('candidate') or details.get('presenter_attribution_review_required')
             or camera.get('scene_kind') == 'scheduled_break'):
         return
-    rois = {'presenter_main': (.36, .35, .78, .83),
-            'presenter_inset': (.785, .775, .90, .925)}
+    rois = {'presenter_main': (.35, .04, .79, .84),
+            'presenter_inset': (.77, .70, .915, .94)}
     roi = rois.get(camera.get('view'))
     if roi is None:
         return
@@ -61,8 +70,9 @@ def prepare(image, obs, sessions):
         'session_id': current['id'], 'observation_id': obs['id'],
         'observed_at': obs['observed_at'], 'camera_view': camera['view'],
         'crop_roi': roi, 'image_sha256': hashlib.sha256(body).hexdigest(),
-        'image_base64': base64.b64encode(body).decode('ascii')}
+        'image_base64': base64.b64encode(body).decode('ascii'), 'input_version': appearance.VERSION}
     current['clothing_description_queued'] = True
+    current['appearance_description_queued_version'] = appearance.VERSION
 
 
 def public_details(obs):
@@ -78,11 +88,49 @@ def save_job(conn, obs):
     if not job:
         return
     from psycopg.types.json import Jsonb
+    previous = conn.execute('SELECT input_version FROM presenter_clothing_descriptions WHERE session_id=%s',
+                            (job['session_id'],)).fetchone()
+    version = job.get('input_version',1)
+    if previous and previous[0] >= version:
+        return
+    if previous:
+        previous=conn.execute('SELECT input_version FROM presenter_clothing_descriptions WHERE session_id=%s FOR UPDATE',
+                              (job['session_id'],)).fetchone()
+        if previous[0]>=version: return
+        conn.execute("INSERT INTO presenter_description_revisions(session_id,snapshot,image) "
+                     "SELECT session_id,to_jsonb(d)-'image',image FROM presenter_clothing_descriptions d WHERE session_id=%s",
+                     (job['session_id'],))
     conn.execute('INSERT INTO presenter_clothing_descriptions '
-                 '(session_id,observation_id,observed_at,camera_view,crop_roi,image_sha256,image) '
-                 'VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (session_id) DO NOTHING',
+                 '(session_id,observation_id,observed_at,camera_view,crop_roi,image_sha256,image,input_version) '
+                 'VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (session_id) DO UPDATE SET '
+                 'observation_id=EXCLUDED.observation_id,observed_at=EXCLUDED.observed_at,'
+                 'camera_view=EXCLUDED.camera_view,crop_roi=EXCLUDED.crop_roi,image_sha256=EXCLUDED.image_sha256,'
+                 "image=EXCLUDED.image,input_version=EXCLUDED.input_version,status='pending',response=NULL,"
+                 'retry_at=now(),last_error=NULL,appearance=NULL '
+                 'WHERE presenter_clothing_descriptions.input_version<EXCLUDED.input_version',
                  (job['session_id'], job['observation_id'], job['observed_at'], job['camera_view'],
-                  Jsonb(job['crop_roi']), job['image_sha256'], base64.b64decode(job['image_base64'], validate=True)))
+                  Jsonb(job['crop_roi']), job['image_sha256'], base64.b64decode(job['image_base64'], validate=True),version))
+
+
+def refresh_existing_inputs(conn, root):
+    """Reuse only the original observation's full frame for historical sessions."""
+    rows=conn.execute('SELECT d.session_id,d.observation_id,d.observed_at,d.camera_view,s.confirmed_at,s.folding_started_at '
+                      'FROM presenter_clothing_descriptions d JOIN presenter_sessions s ON s.id=d.session_id '
+                      'WHERE d.input_version<2 AND s.stream_url=%s',
+                      (os.getenv('STREAM_URL','https://www.youtube.com/watch?v=vaiHWiExDXg'),)).fetchall()
+    count=0
+    for session,observation,stamp,view,confirmed,started in rows:
+        for archive in ('frames','camera-review','presenter-review'):
+            path=Path(root)/archive/str(observation)/'frame.jpg'
+            if not path.is_file() or path.is_symlink(): continue
+            obs={'id':str(observation),'observed_at':stamp.isoformat(),
+                 'details':{'camera_view':{'view':view}}}
+            state={'current':{'id':str(session),'confirmed_at':confirmed,'folding_started_at':started}}
+            with Image.open(path) as image: prepare(image,obs,state)
+            if obs['details'].get('clothing_description_job'):
+                save_job(conn,obs);count+=1
+            break
+    return count
 
 
 # Keep only garment phrases: small models sometimes append watches or facial details.
@@ -189,7 +237,9 @@ def migrate_polish(conn):
     return len(rows)
 
 
-def generate(body, base_url, model):
+def generate(body, base_url, model, *, detailed=False):
+    if detailed:
+        return generate_detailed(body,base_url,model)
     payload = {'model':model, 'prompt':PROMPT, 'images':[base64.b64encode(body).decode('ascii')],
                'stream':False, 'keep_alive':0,
                'options':{'temperature':0, 'num_predict':80, 'num_thread':2, 'num_ctx':2048}}
@@ -205,6 +255,34 @@ def generate(body, base_url, model):
     return clothing_only(text), metadata
 
 
+def generate_detailed(body, base_url, model):
+    keys=list(appearance.QUESTIONS)
+    schema={'type':'object','properties':{key:{'type':'string','description':question}
+             for key,question in appearance.QUESTIONS.items()},'required':keys,'additionalProperties':False}
+    prompt=('Describe only directly visible appearance details in the image. Return a JSON object '
+            'with clothing, hair, headwear, glasses, facial_hair, and accessories. '
+            'Use short English phrases with visible colors, garment types and patterns, hair length '
+            'and style, visible headwear, eyeglasses, beard or moustache, and accessories. '
+            'Say unknown if a detail cannot be assessed, or none visible if clearly not visible. '
+            'Do not infer sex, gender identity, ethnicity, identity, or hidden features.')
+    payload={'model':model,'prompt':prompt,'images':[base64.b64encode(body).decode('ascii')],
+             'format':schema,'stream':False,'keep_alive':0,
+             'options':{'temperature':0,'num_predict':450,'num_thread':2,'num_ctx':2048}}
+    request=Request(base_url.rstrip('/')+'/api/generate',data=json.dumps(payload).encode(),
+                    headers={'Content-Type':'application/json'})
+    with urlopen(request,timeout=240) as result: response=json.load(result)
+    if not response.get('done') or response.get('done_reason')=='length':
+        raise ValueError('Incomplete structured appearance response')
+    raw=json.loads(response.get('response',''))
+    if not isinstance(raw,dict) or set(raw)!=set(keys) or any(not isinstance(v,str) or len(v)>600 for v in raw.values()):
+        raise ValueError('Invalid structured appearance response')
+    answers={key:appearance.neutralize(value) for key,value in raw.items()}
+    text,features=appearance.summarize(answers)
+    return text,{'raw_answers':answers,'appearance':features,
+                 'inference':{key:response.get(key) for key in ('total_duration','eval_count','done_reason')},
+                 'description_language':'pl','localization_version':2,'descriptor_version':appearance.VERSION}
+
+
 def process_one():
     import psycopg
     from psycopg.types.json import Jsonb
@@ -212,18 +290,21 @@ def process_one():
         # A dedicated row lock prevents duplicate workers. No supervisor row is locked.
         row = conn.execute('SELECT d.session_id,d.image FROM presenter_clothing_descriptions d '
                            'JOIN presenter_sessions s ON s.id=d.session_id '
-                           "WHERE d.status IN ('pending','retry') AND d.retry_at<=now() AND s.stream_url=%s "
+                           "WHERE d.status IN ('pending','retry') AND d.retry_at<=now() AND d.input_version>=2 AND s.stream_url=%s "
                            'ORDER BY d.observed_at FOR UPDATE OF d SKIP LOCKED LIMIT 1',
                            (os.getenv('STREAM_URL','https://www.youtube.com/watch?v=vaiHWiExDXg'),)).fetchone()
         if row is None:
             return False
         model = os.getenv('CLOTHING_DESCRIPTION_MODEL',MODEL)
         try:
-            text, response = generate(bytes(row[1]), os.getenv('CLOTHING_DESCRIPTION_URL','http://vision:11434'), model)
-            status = 'uncertain' if text == UNCERTAIN else 'completed'
+            text, response = generate(bytes(row[1]), os.getenv('CLOTHING_DESCRIPTION_URL','http://vision:11434'), model, detailed=True)
+            features=response.get('appearance',{})
+            any_detail=any(v.get('state')=='visible' for v in features.values())
+            clothing_unclear=text==UNCERTAIN or text.startswith('Ubiór: '+UNCERTAIN[0].lower()+UNCERTAIN[1:])
+            status='uncertain' if clothing_unclear and not any_detail else 'completed'
             conn.execute('UPDATE presenter_clothing_descriptions SET description=%s,status=%s,model=%s,'
-                         "response=%s,description_language='pl',generated_at=now(),attempts=attempts+1,last_error=NULL WHERE session_id=%s",
-                         (text,status,model,Jsonb(response),row[0]))
+                         "response=%s,appearance=%s,prompt_version=2,description_language='pl',generated_at=now(),attempts=attempts+1,last_error=NULL WHERE session_id=%s",
+                         (text,status,model,Jsonb(response),Jsonb(response.get('appearance',{})),row[0]))
             logging.info('Clothing description stored for session %s: %s',row[0],text)
         except Exception as exc:
             error = f'{type(exc).__name__}: {exc}'[:1000]
@@ -241,6 +322,7 @@ def main():
     with psycopg.connect(os.getenv('DATABASE_URL',''),connect_timeout=10) as conn:
         supervisor.ensure_schema(conn)
         logging.info("Existing descriptions converted to Polish: %s", migrate_polish(conn))
+        logging.info("Historical full-frame inputs refreshed: %s",refresh_existing_inputs(conn,os.getenv("DATA_DIR","/data")))
     while True:
         try:
             if not process_one():

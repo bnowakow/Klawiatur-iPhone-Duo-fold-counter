@@ -58,6 +58,8 @@ CREATE INDEX IF NOT EXISTS youtube_api_requests_project_day
  ON youtube_api_requests(project_id,api_day);
 CREATE INDEX IF NOT EXISTS youtube_api_requests_account_time
  ON youtube_api_requests(account_channel_id,requested_at);
+ALTER TABLE youtube_api_requests ADD COLUMN IF NOT EXISTS delivery_id uuid;
+CREATE INDEX IF NOT EXISTS youtube_api_requests_delivery ON youtube_api_requests(delivery_id);
 CREATE OR REPLACE VIEW youtube_daily_usage AS
  SELECT project_id,api_day,count(*) AS attempts,sum(estimated_units) AS estimated_units,
  count(*) FILTER (WHERE status='succeeded') AS succeeded,
@@ -76,7 +78,10 @@ class ChatRateLimited(RuntimeError):
 
 
 class YouTubeRequestFailed(RuntimeError):
-    pass
+    def __init__(self, message, *, definitive=False, reason='network_or_response_failure'):
+        super().__init__(message)
+        self.definitive = definitive
+        self.reason = reason
 
 
 def connect():
@@ -86,6 +91,7 @@ def connect():
 
 def ensure_schema(conn):
     from psycopg.types.json import Jsonb
+    conn.execute("SELECT pg_advisory_xact_lock(hashtext('youtube-schema'))")
     conn.execute(SCHEMA)
     for key,(value,source) in POLICIES.items():
         conn.execute('INSERT INTO youtube_api_policies VALUES (%s,%s,%s,%s) '
@@ -103,7 +109,7 @@ def reset_at(now):
 
 
 def configure(project_id, daily_limit=10000):
-    if not project_id.strip() or len(project_id)>128 or daily_limit<1:
+    if not project_id.strip() or len(project_id)>128 or type(daily_limit) is not int or daily_limit<1:
         raise ValueError('A project ID and positive daily quota are required')
     with connect() as conn:
         ensure_schema(conn)
@@ -113,7 +119,7 @@ def configure(project_id, daily_limit=10000):
                      (project_id,daily_limit))
 
 
-def reserve(project_id, method, account_channel_id=None, now=None):
+def reserve(project_id, method, account_channel_id=None, now=None, delivery_id=None):
     """Commit budget reservation before network I/O. No implicit refunds."""
     now = now or datetime.now(timezone.utc)
     day=api_day(now)
@@ -142,9 +148,9 @@ def reserve(project_id, method, account_channel_id=None, now=None):
             if attempts>=11:
                 raise ChatRateLimited('Local account guard: 11 posting attempts in 30 seconds')
         conn.execute('INSERT INTO youtube_api_requests '
-                     '(id,project_id,method,api_day,requested_at,estimated_units,status,account_channel_id) '
-                     "VALUES (%s,%s,%s,%s,%s,%s,'reserved',%s)",
-                     (request_id,project_id,method,day,now,cost[0],account_channel_id))
+                     '(id,project_id,method,api_day,requested_at,estimated_units,status,account_channel_id,delivery_id) '
+                     "VALUES (%s,%s,%s,%s,%s,%s,'reserved',%s,%s)",
+                     (request_id,project_id,method,day,now,cost[0],account_channel_id,delivery_id))
     return request_id
 
 
@@ -157,7 +163,7 @@ def finish(request_id, status, http_status=None, error_reason=None, response_id=
                      (status,http_status,error_reason,response_id,request_id))
 
 
-def tracked_request(project_id, method, access_token, params=None, body=None, account_channel_id=None):
+def tracked_request(project_id, method, access_token, params=None, body=None, account_channel_id=None, delivery_id=None):
     """Official API transport for a future OAuth client; never log credentials.
 
     No automatic retries: a timed-out POST may already have published a message.
@@ -177,13 +183,17 @@ def tracked_request(project_id, method, access_token, params=None, body=None, ac
     request=Request('https://www.googleapis.com/youtube/v3/'+path+'?'+urlencode(params or {}),
                     data=data,method=verb,headers={'Authorization':'Bearer '+access_token,
                                                   'Content-Type':'application/json'})
-    request_id=reserve(project_id,method,account_channel_id)
+    request_id=reserve(project_id,method,account_channel_id,delivery_id=delivery_id)
     try:
         with urlopen(request,timeout=30) as response:
             raw=response.read(2*1024*1024+1)
             if len(raw)>2*1024*1024:
                 raise ValueError('API response too large')
             result=json.loads(raw)
+            if not isinstance(result,dict):
+                raise ValueError('Expected a JSON object')
+            if method=='liveChatMessages.insert' and not result.get('id'):
+                raise ValueError('Posting response has no message ID')
             http_status=response.status
     except HTTPError as error:
         reason='http_error'
@@ -194,7 +204,8 @@ def tracked_request(project_id, method, access_token, params=None, body=None, ac
         except (ValueError,KeyError,IndexError,TypeError):
             pass
         finish(request_id,'failed',error.code,reason)
-        raise YouTubeRequestFailed(f'YouTube returned HTTP {error.code}: {reason}; request {request_id}') from None
+        raise YouTubeRequestFailed(f'YouTube returned HTTP {error.code}: {reason}; request {request_id}',
+                                   definitive=400<=error.code<500, reason=reason) from None
     except Exception:
         finish(request_id,'unknown',error_reason='network_or_response_failure')
         raise YouTubeRequestFailed(f'Request outcome unknown; do not blindly retry a POST: {request_id}') from None
@@ -210,7 +221,7 @@ def report(project_id=None, now=None):
             'policy_verified_on':VERIFIED_ON.isoformat(),
             'documented_limits':{k:v[0] for k,v in POLICIES.items()},
             'project_id':project_id,'accounting':'local conservative estimate; Google Cloud is authoritative',
-            'oauth_connected':False}
+            'oauth_authorization_flow_implemented':True}
     with connect() as conn:
         ensure_schema(conn)
         if project_id:

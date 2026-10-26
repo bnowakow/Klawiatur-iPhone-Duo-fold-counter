@@ -5,9 +5,11 @@ WORKDIR /app
 COPY requirements.txt ./
 COPY proof-of-concept/requirements.txt proof-of-concept/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-COPY supervisor.py clothing_descriptions.py clothing_description_integration_check.py frame_retention.py polling.py polling_integration_check.py presenter_sessions.py benchmark_frame_intervals.py compare_current_tester.py comparison_integration_check.py official_data.py integration_check.py session_integration_check.py official_data_integration_check.py night_stop_integration_check.py ./
+COPY supervisor.py appearance_descriptions.py clothing_descriptions.py clothing_description_integration_check.py frame_retention.py polling.py polling_integration_check.py presenter_sessions.py benchmark_frame_intervals.py compare_current_tester.py comparison_integration_check.py official_data.py integration_check.py session_integration_check.py official_data_integration_check.py night_stop_integration_check.py ./
 COPY proof-of-concept/*.py proof-of-concept/
 COPY break_scene_integration_check.py ./
+COPY youtube_quota.py youtube_quota_integration_check.py ./
+COPY youtube_auth.py youtube_chat.py youtube_chat_integration_check.py ./
 COPY refine_break_endpoint.py ./
 COPY proof-of-concept/test-data/2026-10-25-night-break/ proof-of-concept/test-data/2026-10-25-night-break/
 COPY proof-of-concept/camera-profiles/ proof-of-concept/camera-profiles/
@@ -18,5 +20,6 @@ COPY proof-of-concept/test-data/2026-10-25-official-site/ proof-of-concept/test-
 COPY proof-of-concept/test-data/2026-10-25-brief-appearances/ proof-of-concept/test-data/2026-10-25-brief-appearances/
 COPY proof-of-concept/test-data/2026-10-25-rate-range/ proof-of-concept/test-data/2026-10-25-rate-range/
 ENV PYTHONUNBUFFERED=1 DATA_DIR=/data
+COPY utilities/current_person_message.py utilities/current_person_message.py
 COPY proof-of-concept/test-data/2026-10-26-morning-resumption/ proof-of-concept/test-data/2026-10-26-morning-resumption/
 CMD ["python", "supervisor.py"]

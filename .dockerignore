@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.sample
+secrets/
 .venv
 data
 **/__pycache__
