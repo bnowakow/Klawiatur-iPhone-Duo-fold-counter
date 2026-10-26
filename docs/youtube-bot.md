@@ -279,6 +279,8 @@ to stop following. No Docker rebuild is required for this Make target.
 for the configured project when the bot container is running, then follows Compose
 errors. The initial row is explicitly marked `historical: true`; it includes the
 original error time, posting deadline and current local pause flag in Warsaw time.
+It also includes `retry_in_seconds` and `retry_in` (`HH:MM:SS`), computed when
+you start the command; timestamped live entries show the wait at their log time.
 This keeps rate-limit context visible after container recreation removes its old
 Compose logs. `local_pause_active: false` means the app's pause expired, not that
 Google has confirmed recovery. The display utility is passed to the container on
