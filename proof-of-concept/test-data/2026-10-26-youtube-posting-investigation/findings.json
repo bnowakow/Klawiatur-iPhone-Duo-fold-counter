@@ -1,0 +1,75 @@
+{
+  "checked_at": "2026-10-26T07:54:53.008381+00:00",
+  "project_id": "klawiatur-iphoneduo-fold-count",
+  "posting_history": [
+    {
+      "attempted_at": "2026-10-26T05:48:53.265901+00:00",
+      "status": "succeeded",
+      "http_status": 200,
+      "error_reason": null,
+      "minutes_since_prior_attempt": null
+    },
+    {
+      "attempted_at": "2026-10-26T06:04:11.980280+00:00",
+      "status": "failed",
+      "http_status": 403,
+      "error_reason": "rateLimitExceeded",
+      "minutes_since_prior_attempt": 15.311906316666667
+    },
+    {
+      "attempted_at": "2026-10-26T06:16:06.632128+00:00",
+      "status": "failed",
+      "http_status": 403,
+      "error_reason": "rateLimitExceeded",
+      "minutes_since_prior_attempt": 11.910864133333334
+    },
+    {
+      "attempted_at": "2026-10-26T06:55:05.742357+00:00",
+      "status": "failed",
+      "http_status": 403,
+      "error_reason": "rateLimitExceeded",
+      "minutes_since_prior_attempt": 38.985170483333334
+    },
+    {
+      "attempted_at": "2026-10-26T07:38:44.024630+00:00",
+      "status": "failed",
+      "http_status": 403,
+      "error_reason": "rateLimitExceeded",
+      "minutes_since_prior_attempt": 43.63803788333333
+    }
+  ],
+  "published_viewer_limit": {
+    "messages": 11,
+    "seconds": 30,
+    "guaranteed_api_allowance": false
+  },
+  "published_numeric_api_posting_interval_found": false,
+  "guaranteed_recovery_duration_found": false,
+  "request_audit": {
+    "running_container": true,
+    "method": "POST",
+    "url": "https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet",
+    "content_type": "application/json",
+    "authorization": "OAuth Bearer; fake token used for audit",
+    "scope": "https://www.googleapis.com/auth/youtube.force-ssl",
+    "body_type": "textMessageEvent",
+    "fields": [
+      "snippet.liveChatId",
+      "snippet.type",
+      "snippet.textMessageDetails.messageText"
+    ],
+    "polish_text_serialization": "passed",
+    "simulated_http_calls": 1,
+    "real_google_calls": 0,
+    "request_format_matches_documentation": true
+  },
+  "conclusion": "No safe posting interval established. Sparse attempts still failed. Account restriction or API-side issue unproven; exact trigger unknown.",
+  "next_diagnostic": "After pause, manually test same bot channel in YouTube interface and compare Cloud Console limits; not performed by this investigation.",
+  "old_messages_must_not_be_resent": true,
+  "sources": [
+    "https://developers.google.com/youtube/data/live/reference/rest/v3/liveChatMessages/insert",
+    "https://support.google.com/youtube/answer/15270973?hl=en",
+    "https://support.google.com/youtube/answer/9826490?hl=en",
+    "https://developers.google.com/youtube/data/determine_quota_cost"
+  ]
+}

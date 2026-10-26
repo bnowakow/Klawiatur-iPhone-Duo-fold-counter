@@ -1,0 +1,13 @@
+{
+  "verified_at": "2026-10-26T08:09:13.690856+00:00",
+  "messages_examined": 73,
+  "matched_messages": [
+    {
+      "id": "LCC.EhwKGkNJMkpuNjZkMTVjREZkQllxd0lkWmQ4bmNB",
+      "published_at": "2026-10-26T08:08:28.871467+00:00",
+      "text": "Komendy: !ile, !link, !pomoc, !rekord, !samsung. zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut"
+    }
+  ],
+  "new_post_attempts": 0,
+  "status": "sent_and_verified"
+}

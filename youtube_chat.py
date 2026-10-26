@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlsplit
 import uuid
 import youtube_auth as auth
 import youtube_quota as quota
+from youtube_public_text import validate_public_message
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS youtube_chat_deliveries (
@@ -43,9 +44,7 @@ def video_id(url):
 
 
 def validate_message(text):
-    if not isinstance(text, str) or not text.strip() or len(text) > 200:
-        raise ValueError('Message must contain 1–200 characters')
-    return text
+    return validate_public_message(text)
 
 
 def identify(project, access_token):
@@ -75,7 +74,10 @@ def context(project, stream):
     chat = items[0].get('liveStreamingDetails', {}).get('activeLiveChatId') if len(items) == 1 else None
     if not chat:
         raise ValueError('The configured video has no active live chat')
-    return {'project_id': project, 'channel': channel, 'video_id': video, 'chat_id': chat}
+    details = items[0].get('liveStreamingDetails', {})
+    return {'project_id': project, 'channel': channel, 'video_id': video, 'chat_id': chat,
+            'actual_started_at': details.get('actualStartTime'),
+            'actual_ended_at': details.get('actualEndTime')}
 
 
 def deliveries(limit=20):

@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 
 SCOPE = 'https://www.googleapis.com/auth/spreadsheets'
 REDIRECT_URI = 'http://localhost:8765/oauth/callback'
+CONSENT_TIMEOUT_SECONDS = 1800
 
 
 class AuthorizationRequired(RuntimeError):
@@ -144,7 +145,7 @@ def authorize(project_id):
     with CallbackServer(('0.0.0.0', 8765), Callback) as server:
         server.timeout = 1
         print('Open this URL in your browser:\n'+url, flush=True)
-        deadline = time.monotonic()+300
+        deadline = time.monotonic()+CONSENT_TIMEOUT_SECONDS
         while not outcome and time.monotonic() < deadline:
             server.handle_request()
     if 'code' not in outcome:

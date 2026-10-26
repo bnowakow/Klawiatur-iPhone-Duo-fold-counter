@@ -1,0 +1,15 @@
+{
+  "deployed_at": "2026-10-26T08:14:48.545022+00:00",
+  "posting_transport": "requests.Session",
+  "transport_file_sha256": "f7e18a9fc47ea4ef2a40c09d7136064d9db7bec32729011cd9b2584ed7d83381",
+  "requests_version": "2.34.2",
+  "automatic_retries": 0,
+  "follow_redirects": false,
+  "compressed_responses": "explicit decode_content=True; bounded",
+  "diagnostic_posts": 1,
+  "diagnostic_verified": "sent; user screenshot and readback",
+  "preserved_not_before_warsaw": "2026-10-26T09:40:04.396036+01:00",
+  "consecutive_rejections": 0,
+  "last_success_at": "2026-10-26T08:08:28.651857+00:00",
+  "new_public_posts_during_implementation": 0
+}

@@ -1,0 +1,28 @@
+{
+  "result": {
+    "authorization": "Explicit human approval for exactly one cooldown override",
+    "transport": "requests.Session; HTTPAdapter(max_retries=0); redirects disabled",
+    "api_explorer_used": false,
+    "same_project_and_credentials": true,
+    "fresh_text": "Komendy: !ile, !link, !pomoc, !rekord, !samsung. zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut",
+    "prepared_at": "2026-10-26T08:08:28.651857+00:00",
+    "expires_at": "2026-10-26T08:10:28.651857+00:00",
+    "delivery_id": "775b9847-a275-4380-849f-c0486182a902",
+    "automatic_retry": false,
+    "request_key": "authorized-independent-help-diagnostic-2026-10-26-01",
+    "overridden_not_before": "2026-10-26T08:40:04.396036+00:00",
+    "exception_type": "UnicodeDecodeError",
+    "status": "unknown",
+    "reason": "diagnostic_outcome_unknown",
+    "http_status": 200,
+    "response_id": null,
+    "request_id": "693c9298-4933-46e4-a5d3-a5c20acee21e",
+    "finished_at": "2026-10-26T08:08:29.647373+00:00"
+  },
+  "account_state": [
+    "2026-10-26 08:40:04.396036+00:00",
+    4
+  ],
+  "post_attempts": 1,
+  "automatic_retries": 0
+}

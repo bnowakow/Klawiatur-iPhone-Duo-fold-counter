@@ -8,11 +8,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY supervisor.py appearance_descriptions.py clothing_descriptions.py clothing_description_integration_check.py frame_retention.py polling.py polling_integration_check.py presenter_sessions.py benchmark_frame_intervals.py compare_current_tester.py comparison_integration_check.py ipduotest_pl.py integration_check.py session_integration_check.py ipduotest_pl_integration_check.py night_stop_integration_check.py ./
 COPY proof-of-concept/*.py proof-of-concept/
 COPY break_scene_integration_check.py ./
-COPY youtube_rate_limits.py youtube_rate_limits_integration_check.py youtube_quota.py youtube_quota_integration_check.py ./
+COPY youtube_command_policy.py youtube_command_policy_integration_check.py youtube_public_text.py youtube_http.py youtube_rate_limits.py youtube_rate_limits_integration_check.py youtube_quota.py youtube_quota_integration_check.py ./
 COPY youtube_auth.py youtube_chat.py youtube_chat_integration_check.py ./
 COPY youtube_commands.py ./
 COPY youtube_posting_pause_integration_check.py ./
-COPY youtube_bot.py youtube_stream.py youtube_bot_integration_check.py youtube_stream.proto ./
+COPY youtube_command_delay_integration_check.py youtube_bot.py youtube_stream.py youtube_bot_integration_check.py youtube_stream.proto ./
 COPY youtube_stint_notifications.py youtube_stint_notifications_integration_check.py ./
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. youtube_stream.proto
 COPY refine_break_endpoint.py ./
@@ -31,6 +31,9 @@ COPY repair_presenter_review.py presenter_review_resolution_integration_check.py
 COPY proof-of-concept/test-data/2026-10-26-clothing-occlusion/ proof-of-concept/test-data/2026-10-26-clothing-occlusion/
 COPY proof-of-concept/test-data/2026-10-26-dark-clothing-handover/ proof-of-concept/test-data/2026-10-26-dark-clothing-handover/
 COPY utilities/current_person_message.py utilities/current_person_message.py
-COPY sheets_auth.py sheets_export.py ./
+COPY sheets_auth.py sheets_export.py sheets_jobs.py ./
+COPY sheets_jobs_integration_check.py ./
 COPY proof-of-concept/test-data/2026-10-26-morning-resumption/ proof-of-concept/test-data/2026-10-26-morning-resumption/
 CMD ["python", "supervisor.py"]
+COPY folding_pause.py folding_pause_integration_check.py ./
+COPY proof-of-concept/test-data/2026-10-26-freeze-test/ proof-of-concept/test-data/2026-10-26-freeze-test/

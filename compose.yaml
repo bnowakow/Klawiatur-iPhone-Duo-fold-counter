@@ -228,6 +228,19 @@ services:
     init: true
     restart: "no"
 
+  sheets-worker:
+    extends:
+      service: sheets-export
+    command: ["python", "sheets_jobs.py", "run"]
+    ports: !reset []
+    stop_grace_period: 190s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres_data:
   vision_models:

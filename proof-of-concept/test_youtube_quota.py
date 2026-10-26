@@ -30,14 +30,14 @@ class QuotaTests(unittest.TestCase):
         response = MagicMock()
         response.__enter__.return_value.read.return_value = b'{"id":"message-id"}'
         response.__enter__.return_value.status = 200
-        with patch.object(q, 'reserve', return_value='request-id'), patch.object(q, 'finish') as finish, patch.object(q, 'urlopen', return_value=response):
+        with patch.object(q, 'reserve', return_value='request-id'), patch.object(q, 'finish') as finish, patch.object(q, 'open_request', return_value=response):
             self.assertEqual(q.tracked_request('p', 'videos.list', 'secret')['id'], 'message-id')
             finish.assert_called_once_with('request-id', 'succeeded', 200, response_id='message-id')
 
     def test_http_failure_and_ambiguous_outcome_no_retry(self):
         errors = [HTTPError('url', 403, 'error', {}, io.BytesIO(b'{"error":{"errors":[{"reason":"quotaExceeded"}]}}')), TimeoutError('secret')]
         for error, state in zip(errors, ['failed', 'unknown']):
-            with self.subTest(state=state), patch.object(q, 'reserve', return_value='request-id'), patch.object(q, 'finish') as finish, patch.object(q, 'urlopen', side_effect=error) as send:
+            with self.subTest(state=state), patch.object(q, 'reserve', return_value='request-id'), patch.object(q, 'finish') as finish, patch.object(q, 'open_request', side_effect=error) as send:
                 with self.assertRaises(q.YouTubeRequestFailed) as raised:
                     q.tracked_request('p', 'videos.list', 'secret')
                 self.assertNotIn('secret', str(raised.exception))

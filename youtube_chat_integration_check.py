@@ -31,7 +31,7 @@ def main():
                          source_kind='command', source_id='incoming:'+key)
     checks = []
     with patch.dict(os.environ, {'YOUTUBE_CHAT_ENABLED': 'true'}), patch.object(chat, 'context', return_value=target), patch.object(chat.auth, 'token', return_value='fake-token'):
-        with patch.object(quota, 'urlopen', return_value=response('simulated-message')) as network:
+        with patch.object(quota, 'open_request', return_value=response('simulated-message')) as network:
             with ThreadPoolExecutor(max_workers=2) as pool:
                 results = list(pool.map(lambda _: send('same'), range(2)))
             assert network.call_count == 1
@@ -48,13 +48,13 @@ def main():
             ('timeout', TimeoutError('fake-secret'), 'unknown'),
             ('server', HTTPError('url', 503, 'Unavailable', {}, io.BytesIO(b'{}')), 'unknown'),
         ]:
-            with patch.object(quota, 'urlopen', side_effect=error) as network:
+            with patch.object(quota, 'open_request', side_effect=error) as network:
                 result = send(key)
                 assert result['status'] == expected, result
                 assert send(key)['status'] == expected
                 assert network.call_count == 1
         checks.append('HTTP errors and ambiguous responses retained without resend')
-        with patch.dict(os.environ, {'YOUTUBE_CHAT_ENABLED': 'false'}), patch.object(quota, 'urlopen') as network:
+        with patch.dict(os.environ, {'YOUTUBE_CHAT_ENABLED': 'false'}), patch.object(quota, 'open_request') as network:
             try:
                 send('disabled')
                 raise AssertionError('Disabled sending accepted')
@@ -63,7 +63,7 @@ def main():
             network.assert_not_called()
         checks.append('send opt-in enforced')
         # Simulate a crash after Google success was recorded but before delivery completion.
-        with patch.object(quota, 'urlopen', return_value=response('recovery-id')):
+        with patch.object(quota, 'open_request', return_value=response('recovery-id')):
             result = send('recovery')
         with quota.connect() as conn:
             conn.execute("UPDATE youtube_chat_deliveries SET status='sending',response_id=NULL,completed_at=NULL,created_at=now()-interval '10 minutes' WHERE id=%s", (result['id'],))

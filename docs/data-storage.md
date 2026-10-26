@@ -153,3 +153,33 @@ monitor state, affected observation snapshots and appearance rows before correct
 The repair keeps the stint UUID/baseline and replays accepted counter readings;
 historical observations receive resolution annotations and preserve original flags.
 No new stint or automatic finish notification is created by such a resolution.
+
+`sheets_export_jobs` retains the dedicated Sheets destination's successful
+snapshot fingerprint, next full-hour deadline, attempt timestamp and retry
+status. The Sheets worker checks for recorded stint finishes every 10 seconds.
+It advances the checkpoint only after successful export and shares a PostgreSQL
+advisory lock with manual exports. See [Sheets job operation](google-sheets.md#automatic-hourly-and-stint-finish-job).
+
+
+Confirmed daytime freeze tests are recorded by `folding_pause.py` (preview by
+default, explicit `--apply`). `folding_pause_resolutions` backs up the original
+monitor state and endpoint/confirmation observations. The same session is closed
+with `confirmed_freeze_test_pause` at its last accepted counter increase, marked
+as an estimate with the preceding sample as its lower bound. Counts and original
+start times remain unchanged. `presenter_session_ends` retains the evidence and
+`monitor_state.presenters.activity_pause` persists the non-folding phase across
+restarts. Missing/unreadable counters alone never confirm a pause.
+
+During the confirmed pause, camera/OCR observations continue, clothing candidates
+are suppressed, and no current folding stint exists. Resumption requires two
+fresh accepted readings above the final counter, increasing within a recognized
+view; unknown views and unreadable readings interrupt confirmation. A separate
+stint starts from those new samples, without assigning the intervening gap.
+The explicit correction does not replay an old automatic live-chat summary.
+
+Commands from the posting channel itself have a user-requested 60-second delay.
+`youtube_bot_command_events.reply_not_before`, `reply_delay_seconds` and
+`delay_claimed_at` retain its schedule and claim, with `status=delayed` while
+waiting. This queues a fresh, bounded-age instruction, not precomputed reply text.
+Rejected/unknown/expired commands are never rescheduled. See
+[the command delay policy](youtube-bot.md#one-minute-delay-for-commands-from-the-posting-channel).

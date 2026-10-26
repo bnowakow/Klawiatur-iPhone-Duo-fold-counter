@@ -44,6 +44,16 @@ class ChatTests(unittest.TestCase):
             self.assertEqual(result['chat_id'], 'chat')
             self.assertEqual([call.args[1] for call in api.call_args_list], ['channels.list', 'videos.list'])
 
+    def test_context_preserves_actual_broadcast_times_not_scheduled_start(self):
+        details={'activeLiveChatId':'chat','actualStartTime':'2026-10-24T11:51:18Z',
+                 'scheduledStartTime':'2026-10-24T12:00:00Z'}
+        with patch.object(chat.auth,'token',return_value='private'), \
+                patch.object(chat,'identify',return_value={'id':'channel'}), \
+                patch.object(chat.quota,'tracked_request',return_value={'items':[{'liveStreamingDetails':details}]}):
+            result=chat.context('p','https://youtu.be/vaiHWiExDXg')
+        self.assertEqual(result['actual_started_at'],details['actualStartTime'])
+        self.assertIsNone(result['actual_ended_at'])
+
 
 if __name__ == '__main__':
     unittest.main()

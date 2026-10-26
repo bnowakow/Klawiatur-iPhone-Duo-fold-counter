@@ -251,8 +251,35 @@ def advance_sessions(state, obs, manual_reset=False, night_config=None):
     state = json.loads(json.dumps(state))
     updates = []
     if manual_reset:
+        state.pop("activity_pause", None)
+        state.pop("pause_resume_candidate", None)
         state.pop("night_closed", None)
         state.pop("night_activity", None)
+    elif state.get('activity_pause'):
+        # Explicitly confirmed daytime tests are not night breaks. Missing OCR,
+        # a returning camera or a stationary counter cannot restart folding.
+        pause = state['activity_pause']
+        camera = obs['details'].get('camera_view', {})
+        value = obs.get('accepted_counter')
+        known = camera.get('view') is not None and camera.get('scene_kind') != 'scheduled_break'
+        if not known or camera.get('baseline_review_required') or value is None or value <= pause['counter']:
+            state.pop('pause_resume_candidate', None)
+            return state, [], False
+        candidate = state.get('pause_resume_candidate')
+        elapsed = (datetime.fromisoformat(obs['observed_at'])-datetime.fromisoformat(candidate['version_at'])).total_seconds() if candidate else None
+        if candidate is None or not 0 < elapsed <= (night_config or {}).get('max_gap', 25):
+            candidate = new_session(obs, obs['observed_at'], 'activity_resumed_after_confirmed_pause')
+            counter_sample(candidate, obs)
+            state['pause_resume_candidate'] = candidate
+            return state, [], False
+        if value <= candidate['last_counter']:
+            return state, [], False
+        counter_sample(candidate, obs)
+        candidate['confirmed_at'] = obs['observed_at']
+        state['current'] = candidate
+        state.pop('activity_pause')
+        state.pop('pause_resume_candidate', None)
+        return state, [candidate], True
     elif night_config:
         closed = night_stop(state, obs, night_config)
         if closed:

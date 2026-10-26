@@ -761,8 +761,10 @@ The user enabled Sheets API and requested application writes only to
 `Ranking` as the format reference and human verification after posting.
 `sheets_export.py` pins spreadsheet `1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM`
 and tab ID `2091633028`; Ranking's original ID 0 is never a write destination.
-A:E match Ranking's headers; F:N add boundary times, baseline counter, UUID,
-review links and measurement timestamp. O onward are reserved for human review
+Row 1 contains the static source GitHub link and row 2 contains headers.
+A:E match Ranking's headers; F:O add boundary times, baseline counter, UUID,
+review links, measurement timestamp and the stored Polish appearance description.
+P onward are reserved for human review
 and never written by the exporter. Rows are upserted by UUID without sorting
 or deletion. Counts use last accepted counter minus accepted baseline; durations
 use real baseline-to-last-reading time rather than planned hourly slots.
@@ -772,8 +774,14 @@ credentials under `secrets/sheets/`. Commands: `make sheets-build`, `sheets-auth
 `sheets-preview`, `sheets-status`, `sheets-sync`, `sheets-disconnect`. Sync is
 manual, with no recurring worker. See `docs/google-sheets.md`. Fifteen unit tests
 pass, the Docker image builds, and a read-only preview returned five production
-stints. Browser consent and a first real write still need confirmation; do not
-claim data was posted based on the preview alone.
+stints. Browser consent completed successfully on 2026-10-26 at about 08:54
+Warsaw. At about 08:55 the first real sync posted all five production stints;
+API readback matched every exported value, and both Ranking's values and the
+human-review columns were unchanged. The previous completed stint has 3,843
+folds; the active row remains explicitly partial. Sync is still manual.
+The original five-minute OAuth listener expired before consent; Sheets auth now
+waits 30 minutes, documented in `docs/google-sheets.md`. Never replay an old
+callback against a new flow; state and PKCE are session-specific.
 
 
 ### Raised-arm attribution repair (2026-10-26, 08:48 Warsaw)
@@ -802,3 +810,147 @@ Post-deployment observations at 08:49:11, 08:49:25 and 08:49:32 Warsaw retained 
 same stint and review=false; the original shoulder baseline was hydrated from its
 saved frame. One intervening unknown-layout observation remained conservatively
 blocked and the following recognized frame resumed attribution normally.
+
+### Sheets source row, descriptions and integer display (2026-10-26, 09:06 Warsaw)
+
+Added the requested static GitHub source row above the headers and column O
+`opis osoby składającej`, populated only from completed Polish stored descriptions.
+An atomic migration inserted row 1 and column O, preserving reviewer cells as
+they moved to P onward. Numeric patterns now use `0` for counters/folds and
+`0.00` for minutes/pace; the previous `0.##` displayed dangling commas in pl_PL.
+Eighteen exporter tests pass, including migration preservation and repeat-sync
+idempotency. Real sync/readback verified six stints, four stored descriptions
+and two blank missing descriptions; source row, plain integer display, reviewer
+columns and unchanged Ranking were checked.
+
+On 2026-10-26 at 09:08 Warsaw, one explicitly authorized independent Requests
+POST sent a fresh !pomoc reply successfully; read-only chat lookup and the user's
+screenshot confirmed it. The diagnostic bypassed the pause once with explicit
+approval and was not retried. Its raw compressed JSON decoding error was resolved
+by readback, not reposting. Production POST transport now uses youtube_http.py
+(requests.Session, max_retries=0, no redirects, explicit bounded decompression).
+Read-only calls retain urllib. All ordinary quota/cooldown/expiry/idempotency
+checks remain. Success does not prove urllib was the earlier failure's cause.
+
+### Complete-run-only Sheets results (2026-10-26, 09:20 Warsaw)
+
+The user clarified that visible spreadsheet results must cover a full stint,
+with captured folding start and finish; the initial 328 was a mid-run capture.
+Exporter eligibility now requires an observed/reviewed handover start, a valid
+folding start, an accepted counter at the detected starting boundary, a valid
+closed end and consistent counters/times. Initial observations, morning
+resumption first frames, manual resets, late baselines and active stints are
+excluded. Partial source data stays in PostgreSQL; existing excluded sheet
+rows are hidden in place, preserving review notes and UUID row attachment.
+A qualifying closed stint is unhidden on subsequent sync. Twenty tests pass.
+
+### Include completed handovers with partial counters
+
+The user asked to include the tester finishing around 09:00 despite the delayed
+baseline. Supersedes the strict baseline-at-boundary visibility rule above:
+completed stints with captured/reviewed handovers and finishes are shown, and a
+late baseline produces `WYNIK CZĘŚCIOWY` plus delay seconds in status I. Counters
+are not extrapolated. The 08:00 stint has 2,957 recorded folds and a 105-second
+start gap. Ongoing stints, initial mid-run observations and unobserved resumption
+starts remain hidden. Twenty-one exporter tests pass.
+
+Future consideration (user request, 2026-10-26): document alternate HTTP sender
+fallback and per-attempt transport/outcome auditing in docs/youtube-rate-limits.md.
+This is not an enabled automatic fallback. A Requests !pomoc diagnostic succeeded
+at 09:08, but production Requests !ile was rate-limited at 09:18, so a client-only
+cause is unproven. Never fallback/repost after rate limits or ambiguous dispatch;
+consider only provably undispatched attempts under a future explicit policy.
+
+## Hourly and finish-triggered Sheets worker (2026-10-26, 09:39 Warsaw)
+
+The user requested a job that syncs hourly and after each folding finish, with
+one job at a time and a sensible timeout. `sheets_jobs.py` runs the worker and
+shares a destination-scoped PostgreSQL advisory job lock with manual
+`sheets_export.py sync`. A separate lock permits one worker loop. The worker
+checks closed-session fingerprints every 10 seconds, syncs on each full hour,
+and preserves pending finishes across failures/restart via `sheets_export_jobs`.
+All syncs use a child process capped at 180 seconds; timeout kills/reaps it and
+releases DB/file locks. Failures back off 60,120,240,480,900 seconds. A successful
+finish-triggered/manual sync does not postpone the next clock-hour deadline.
+
+The `sheets-worker` Compose service is running (restart unless-stopped, 190s
+shutdown grace, no published callback port). Initial real export succeeded at
+09:39:43 Warsaw; next hourly deadline was 10:00 Warsaw, no stored errors.
+Twenty-six Sheets tests pass. The isolated database integration check passed
+mutual exclusion, finish detection, preserved hourly deadline, failure backoff
+and actual lock release after a timed-out child, with no Google test writes.
+Commands: `make sheets-job-up`, `sheets-job-stop`, `sheets-job-status`,
+`sheets-job-logs`. The existing `docker-upgrade` also refreshes an already running
+worker. Destination restrictions, partial-result warnings and human notes remain
+as before. This supersedes older statements that Sheets sync is manual-only.
+
+### Hourly Sheets schedule offset
+
+The user moved the hourly export from :00 to :01 to allow time for handovers.
+`sheets_jobs.next_hour` now selects the next minute-one boundary, including the
+current hour when called before :01. Initialization migrates existing :00
+deadlines forward one minute exactly once. Finish triggers, singleton locking,
+180-second timeout and retry behavior remain unchanged.
+
+
+### Confirmed freeze-test pause (2026-10-26, 09:57 Warsaw)
+
+The plaid-shirt stint `bcec84c2-0a6a-4ab2-a779-58fdd2058f6d` reached 75000 at
+09:49:43.410 Warsaw, before its hour ended. Automatic handling recorded the last
+increase but did not close it: only the night inactivity rule existed, and the
+ice scene/counter removal yielded unknown camera + unreadable counter. The user
+explicitly confirmed folding had ended and a freeze test was taking place.
+`folding_pause.py` now previews/applies this explicit confirmation under the
+stream lock/outbox guard. Audit `3f7491c6-7383-4f9c-8117-667c7f253355` backs up
+state and endpoint/confirmation observations. Closed that same stint at the last
+increase (estimated receipt time, lower bound 09:49:36.891); final counter 75000,
+2131 folds from baseline 72869, final pace approximately 42.75/min. The prior
+stationary sample timestamp 09:50:09 no longer inflates its pace denominator.
+
+`presenters.activity_pause` persists the freeze-test phase with no open stint;
+new frames continue OCR/camera analysis without creating appearance candidates.
+Missing OCR alone does not infer a freeze test. Resume needs two fresh accepted
+counter values above the final value, increasing in known camera views within
+the continuity bound. Gaps/unreadable frames/unknown views interrupt confirmation.
+This creates a separate anonymous stint and resets clothing comparison baselines,
+without assigning the unobserved pause interval to either stint.
+
+The supervisor is rebuilt/deployed. `make docker-message` now explains
+`Trwa potwierdzona przerwa w składaniu: test mrożenia.` (exit 2, no pace message).
+41 relevant unit/regression checks and an isolated PostgreSQL/supervisor pause
+integration check passed. The explicit historical closure is excluded from
+live-chat finish-notification reasons to avoid posting a late summary. No
+YouTube message was sent manually for this correction.
+
+
+### Freeze-finish Sheets export correction (2026-10-26, 10:07 Warsaw)
+
+The corrected 75000 endpoint was in PostgreSQL, but Sheets row 8 still showed its
+09:14:21 in-progress snapshot (73417). `sheets_export.captured_run` did not accept
+`confirmed_freeze_test_pause`, so successful later worker runs excluded that
+completed stint and retained its old row. Added this explicitly confirmed finish
+to qualifying reasons, with a regression covering the existing UUID row update.
+28 Sheets/export-job tests passed. Built both Sheets images, ran `make sheets-sync`
+successfully at 10:07:34 Warsaw, and recreated the running Sheets worker. A remote
+read verified the same row 8 now contains 75000, 2131 folds and finish 09:49:43.
+Partial-baseline and attribution-review warnings remain visible; reviewer columns
+are preserved. This closes the missed export path from the earlier DB correction.
+
+User-requested same-channel command delay (2026-10-26): compare incoming
+`author_channel_id` with the current bot posting channel ID. Only a match waits
+60 seconds after receipt. Other viewers retain the immediate path. Event columns
+reply_not_before/reply_delay_seconds/delay_claimed_at persist timing; status delayed
+and a dedicated thread avoid blocking the chat reader. Generate fresh text at due
+time, retain original <=120-second age limit and normal cooldowns, claim once,
+and never revive failed/throttled historical commands. A new account pause during
+the wait suppresses the command rather than deferring it to recovery. Exact
+channel-ID equality was confirmed for the user's real command events 23/89/131/
+155/156. Delay efficacy against the provider restriction is still a hypothesis.
+
+User privacy requirement (2026-10-26): clothing/appearance descriptions are ONLY
+for internal use, PostgreSQL and Google Sheets, NEVER public chat. !rekord now
+reads only fold totals, with no appearance-table join. youtube_public_text.py
+rejects structured appearance fields at public validation and transport before
+reservation/HTTP. The user corrected the initial routing concern: !pomoc event215
+received help, and separate !rekord event217 triggered the quoted record reply.
+No routing behavior change is needed. Preserve internal DB/Sheets descriptions.

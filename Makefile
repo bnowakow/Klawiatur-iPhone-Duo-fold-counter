@@ -8,11 +8,12 @@ docker-logs-errors:
 
 # Rebuild code, reload .env, and replace application containers.
 docker-upgrade:
-	docker compose --profile youtube build supervisor ipduotest-pl clothing-descriptions youtube-chat youtube-bot
+	docker compose --profile youtube --profile sheets build supervisor ipduotest-pl clothing-descriptions youtube-chat youtube-bot sheets-export sheets-worker
 	@bash utilities/stop-legacy-ipduotest-pl.sh
 	docker compose up -d --wait db
 	docker compose up -d --force-recreate --wait supervisor ipduotest-pl clothing-descriptions
 	@if [ -n "$$(docker compose --profile youtube ps --status running -q youtube-bot)" ]; then docker compose --profile youtube up -d --no-deps --force-recreate --wait youtube-bot; fi
+	@if [ -n "$$(docker compose --profile sheets ps --status running -q sheets-worker)" ]; then docker compose --profile sheets up -d --no-deps --force-recreate --wait sheets-worker; fi
 
 # Compare published folds/minute with the current person's average.
 docker-compare:
@@ -73,7 +74,7 @@ youtube-bot-logs:
 
 .PHONY: sheets-build sheets-auth sheets-status sheets-preview sheets-sync sheets-disconnect
 sheets-build:
-	docker compose --profile sheets build sheets-export
+	docker compose --profile sheets build sheets-export sheets-worker
 sheets-auth:
 	docker compose --profile sheets run --rm --no-deps --service-ports sheets-export python sheets_export.py connect
 sheets-status:
@@ -84,3 +85,13 @@ sheets-sync:
 	docker compose --profile sheets run --rm --no-deps sheets-export python sheets_export.py sync
 sheets-disconnect:
 	docker compose --profile sheets run --rm --no-deps sheets-export python sheets_export.py disconnect
+
+.PHONY: sheets-job-up sheets-job-stop sheets-job-status sheets-job-logs
+sheets-job-up:
+	docker compose --profile sheets up -d --build sheets-worker
+sheets-job-stop:
+	docker compose --profile sheets stop sheets-worker
+sheets-job-status:
+	docker compose --profile sheets run --rm --no-deps sheets-export python sheets_jobs.py status
+sheets-job-logs:
+	docker compose --profile sheets logs --tail=50 sheets-worker

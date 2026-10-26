@@ -16,6 +16,10 @@ DISCLAIMER = 'zapytanie !ile może być użyte nie częściej niż raz na 10 min
 HELP_DISCLAIMER = 'zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut'
 LINK_REPLY = 'ipduotest kropka pl'
 LINK_DISCLAIMER = 'zapytanie !link może być użyte nie częściej niż raz na 10 minut'
+RECORD_DISCLAIMER = 'zapytanie !rekord może być użyte nie częściej niż raz na 10 minut'
+SOURCE_URL = 'https://github.com/bnowakow/Klawiatur-iPhone-Duo-fold-counter'
+SOURCE_DISCLAIMER = 'zapytanie !kod-zródłowy może być użyte nie częściej niż raz na 10 minut'
+DURATION_DISCLAIMER = 'zapytanie !jak-długo może być użyte nie częściej niż raz na 10 minut'
 SAMSUNG_SOURCE_URL = 'https://cyfrowa.rp.pl/smartfony/art36496851-ile-faktycznie-wytrzyma-smartfon-polski-youtuber-postanowil-sprawdzic'
 SAMSUNG_SUMMARY = ('Samsung Galaxy Z Flip3: 418 500 złożeń. Nadal działał, '
                    'ale nie domykał się. Źródło: cyfrowa.rp.pl.')
@@ -64,7 +68,8 @@ CREATE OR REPLACE VIEW youtube_bot_command_usage AS
  count(*) FILTER(WHERE status='rejected') AS rejected,
  count(*) FILTER(WHERE status='unknown') AS unknown,
  count(*) FILTER(WHERE status='processing') AS processing,
- min(received_at) AS first_received_at,max(received_at) AS last_received_at
+ min(received_at) AS first_received_at,max(received_at) AS last_received_at,
+ count(*) FILTER(WHERE status='delayed') AS delayed
  FROM youtube_bot_command_events GROUP BY stream_url,chat_id,command;
 CREATE OR REPLACE VIEW youtube_bot_command_daily_usage AS
  SELECT stream_url,chat_id,command,(received_at AT TIME ZONE 'Europe/Warsaw')::date AS usage_day,
@@ -73,8 +78,19 @@ CREATE OR REPLACE VIEW youtube_bot_command_daily_usage AS
  count(*) FILTER(WHERE status='throttled') AS throttled,
  count(*) FILTER(WHERE status='stale') AS stale,
  count(*) FILTER(WHERE status='unavailable') AS unavailable,
- count(*) FILTER(WHERE status IN ('rejected','unknown')) AS failed_or_uncertain
+ count(*) FILTER(WHERE status IN ('rejected','unknown')) AS failed_or_uncertain,
+ count(*) FILTER(WHERE status='delayed') AS delayed
  FROM youtube_bot_command_events GROUP BY stream_url,chat_id,command,usage_day;
+"""
+
+SCHEMA += """
+ALTER TABLE youtube_bot_command_events ADD COLUMN IF NOT EXISTS reply_not_before timestamptz;
+ALTER TABLE youtube_bot_command_events ADD COLUMN IF NOT EXISTS reply_delay_seconds integer NOT NULL DEFAULT 0;
+ALTER TABLE youtube_bot_command_events ADD COLUMN IF NOT EXISTS delay_claimed_at timestamptz;
+CREATE INDEX IF NOT EXISTS youtube_bot_delayed_due ON youtube_bot_command_events(stream_url,reply_not_before)
+ WHERE status='delayed';
+ALTER TABLE youtube_bot_state ADD COLUMN IF NOT EXISTS actual_started_at timestamptz;
+ALTER TABLE youtube_bot_state ADD COLUMN IF NOT EXISTS actual_ended_at timestamptz;
 """
 
 
@@ -90,6 +106,12 @@ def initialize():
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
                      "VALUES ('!link','static_link',600,%s) ON CONFLICT DO NOTHING", (LINK_DISCLAIMER,))
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
+                     "VALUES ('!rekord','completed_record',600,%s) ON CONFLICT DO NOTHING", (RECORD_DISCLAIMER,))
+        conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
+                     "VALUES ('!kod-zródłowy','source_code',600,%s) ON CONFLICT DO NOTHING", (SOURCE_DISCLAIMER,))
+        conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
+                     "VALUES ('!jak-długo','stream_duration',600,%s) ON CONFLICT DO NOTHING", (DURATION_DISCLAIMER,))
+        conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
                      "VALUES ('!samsung','cached_samsung',600,%s) ON CONFLICT DO NOTHING", (SAMSUNG_DISCLAIMER,))
         from psycopg.types.json import Jsonb
         conn.execute('INSERT INTO youtube_bot_command_cache '
@@ -100,7 +122,10 @@ def initialize():
                              'still_working_at_end':True,'could_close_fully_at_end':False,
                              'sand_added_after_folds':333333}), '2026-10-26'))
         for command,description in (('!ile','liczba złożeń i tempo'),('!pomoc','lista komend'),
-                                    ('!samsung','wynik testu Samsunga'),('!link','adres strony testu')):
+                                    ('!samsung','wynik testu Samsunga'),('!link','adres strony testu'),
+                                    ('!rekord','najlepsza zakończona zmiana'),
+                                    ('!kod-zródłowy','repozytorium na GitHubie'),
+                                    ('!jak-długo','czas trwania transmisji')):
             conn.execute("UPDATE youtube_bot_commands SET description=%s WHERE command=%s AND description=''",
                          (description,command))
 
@@ -146,8 +171,57 @@ def build_link_reply(stream, config):
     return chat.validate_message(LINK_REPLY)
 
 
+def build_source_reply(stream, config):
+    return chat.validate_message('Kod źródłowy: '+SOURCE_URL+' '+config[3])
+
+
+def polish_duration(seconds):
+    if seconds < 0:
+        raise ValueError('Broadcast start is in the future')
+    days, remaining = divmod(int(seconds),86400)
+    hours, remaining = divmod(remaining,3600)
+    minutes = remaining//60
+    parts=[]
+    for count, forms in [(days,('dzień','dni','dni')),
+                         (hours,('godzina','godziny','godzin')),
+                         (minutes,('minuta','minuty','minut'))]:
+        if count:
+            form=forms[0] if count==1 else forms[1] if count%10 in (2,3,4) and count%100 not in (12,13,14) else forms[2]
+            parts.append(f'{count} {form}')
+    return ', '.join(parts) if parts else 'poniżej minuty'
+
+
+def build_duration_reply(stream, config):
+    with quota.connect() as conn:
+        row=conn.execute('SELECT actual_started_at,actual_ended_at FROM youtube_bot_state WHERE stream_url=%s',
+                         (stream,)).fetchone()
+    if not row or row[0] is None:
+        return chat.validate_message('Brak potwierdzonego czasu rozpoczęcia transmisji. '+config[3])
+    now=datetime.now(timezone.utc)
+    end=row[1] or now
+    elapsed=(end.astimezone(timezone.utc)-row[0].astimezone(timezone.utc)).total_seconds()
+    label='Łączny czas zakończonej transmisji: ' if row[1] else 'Czas trwania transmisji: '
+    return chat.validate_message(label+polish_duration(elapsed)+'. '+config[3])
+
+
+def build_record_reply(stream, config):
+    with quota.connect() as conn:
+        row = conn.execute('SELECT s.last_counter-s.baseline_counter '
+                           'FROM presenter_sessions s '
+                           'WHERE s.stream_url=%s AND s.ended_at IS NOT NULL '
+                           'AND s.folding_started_at IS NOT NULL AND s.ended_at>=s.folding_started_at '
+                           "AND s.end_reason IS DISTINCT FROM 'manual_baseline_reset' "
+                           'AND s.last_counter>s.baseline_counter '
+                           'ORDER BY (s.last_counter-s.baseline_counter) DESC,s.ended_at,s.id LIMIT 1',
+                           (stream,)).fetchone()
+    if not row:
+        return chat.validate_message('Brak zapisanej zakończonej zmiany ze złożeniami. '+config[3])
+    return chat.validate_message(f'Rekord zakończonej zmiany: {row[0]} złożeń. '+config[3])
+
+
 HANDLERS = {'current_person': build_reply, 'help': build_help_reply, 'cached_samsung': build_samsung_reply,
-            'static_link': build_link_reply}
+            'static_link': build_link_reply, 'completed_record': build_record_reply,
+            'source_code': build_source_reply, 'stream_duration': build_duration_reply}
 
 
 def parsed_command(item):
@@ -159,15 +233,17 @@ def parsed_command(item):
 
 def remember_state(stream, project, target):
     with quota.connect() as conn:
-        conn.execute('INSERT INTO youtube_bot_state(stream_url,project_id,channel_id,chat_id,enabled_at) '
-                     'VALUES (%s,%s,%s,%s,now()) ON CONFLICT(stream_url) DO UPDATE SET '
+        conn.execute('INSERT INTO youtube_bot_state(stream_url,project_id,channel_id,chat_id,enabled_at,actual_started_at,actual_ended_at) '
+                     'VALUES (%s,%s,%s,%s,now(),%s,%s) ON CONFLICT(stream_url) DO UPDATE SET '
                      'project_id=EXCLUDED.project_id,channel_id=EXCLUDED.channel_id, '
+                     'actual_started_at=EXCLUDED.actual_started_at,actual_ended_at=EXCLUDED.actual_ended_at, '
                      'page_token=CASE WHEN youtube_bot_state.chat_id=EXCLUDED.chat_id '
                      'AND youtube_bot_state.channel_id=EXCLUDED.channel_id THEN youtube_bot_state.page_token ELSE NULL END, '
                      'enabled_at=CASE WHEN youtube_bot_state.chat_id=EXCLUDED.chat_id '
                      'AND youtube_bot_state.channel_id=EXCLUDED.channel_id THEN youtube_bot_state.enabled_at ELSE now() END, '
                      "chat_id=EXCLUDED.chat_id,connection_status='starting',heartbeat_at=now(),error_reason=NULL",
-                     (stream,project,target['channel']['id'],target['chat_id']))
+                     (stream,project,target['channel']['id'],target['chat_id'],
+                      target.get('actual_started_at'),target.get('actual_ended_at')))
         row = conn.execute('SELECT enabled_at,page_token FROM youtube_bot_state WHERE stream_url=%s', (stream,)).fetchone()
     return row
 
@@ -204,6 +280,11 @@ def process_message(project, stream, target, enabled_at, item, now=None):
     if not event:
         return {'status': 'duplicate'}
     event_id = event[0]
+    return process_claimed_command(project,stream,target,item,published,now,command,config,event_id)
+
+
+def process_claimed_command(project,stream,target,item,published,now,command,config,event_id,allow_delay=True):
+    chat_id=target['chat_id']
     def complete(status, reason=None, reply=None, delivery_id=None):
         with quota.connect() as conn:
             conn.execute('UPDATE youtube_bot_command_events SET status=%s,error_reason=%s,reply_text=COALESCE(%s,reply_text), '
@@ -222,6 +303,13 @@ def process_message(project, stream, target, enabled_at, item, now=None):
         cooldown = conn.execute('SELECT available_at FROM youtube_bot_cooldowns WHERE chat_id=%s AND command=%s', (chat_id,command)).fetchone()
     if cooldown and now < cooldown[0]:
         return complete('throttled')
+    if allow_delay and item['author_channel_id']==target['channel']['id']:
+        due=now+timedelta(seconds=60)
+        with quota.connect() as conn:
+            conn.execute("UPDATE youtube_bot_command_events SET status='delayed',reply_not_before=%s,"
+                         'reply_delay_seconds=60 WHERE id=%s',(due,event_id))
+        return {'event_id':event_id,'command':command,'status':'delayed',
+                'reason':'same_posting_channel','reply_not_before':due.isoformat(),'delay_seconds':60}
     handler = HANDLERS.get(config[0])
     if handler is None:
         return complete('unavailable', 'unknown_handler')
@@ -265,6 +353,48 @@ def process_message(project, stream, target, enabled_at, item, now=None):
                      'WHERE chat_id=%s AND command=%s AND last_event_id=%s',
                      (datetime.now(timezone.utc)+timedelta(seconds=policy[1]),chat_id,command,event_id))
     return outcome
+
+
+def process_delayed_commands(project,stream,now=None):
+    """Claim due instructions once; generate replies fresh, never retry a send."""
+    now=now or datetime.now(timezone.utc)
+    outcomes=[]
+    for _ in range(20):
+        with quota.connect() as conn:
+            row=conn.execute('SELECT e.id,e.command,e.message_id,e.author_channel_id,e.published_at,'
+                             'e.chat_id,b.channel_id,b.chat_id FROM youtube_bot_command_events e '
+                             'LEFT JOIN youtube_bot_state b ON b.stream_url=e.stream_url AND b.project_id=%s '
+                             "WHERE e.stream_url=%s AND e.status='delayed' AND e.reply_not_before<=%s "
+                             'ORDER BY e.reply_not_before,e.id LIMIT 1 FOR UPDATE OF e SKIP LOCKED',
+                             (project,stream,now)).fetchone()
+            if not row:break
+            event_id,command,message_id,author,published,chat_id,channel,current_chat=row
+            conn.execute("UPDATE youtube_bot_command_events SET status='processing',delay_claimed_at=%s WHERE id=%s",(now,event_id))
+        config=command_config(command)
+        if not config or not channel or author!=channel or chat_id!=current_chat:
+            with quota.connect() as conn:
+                conn.execute("UPDATE youtube_bot_command_events SET status='disabled',error_reason='delayed_target_changed',completed_at=now() WHERE id=%s",(event_id,))
+            outcomes.append({'event_id':event_id,'status':'disabled','error_reason':'delayed_target_changed'})
+            continue
+        item={'id':message_id,'author_channel_id':author}
+        outcome=process_claimed_command(project,stream,{'channel':{'id':channel},'chat_id':chat_id},
+                                       item,published,now,command,config,event_id,allow_delay=False)
+        outcomes.append(outcome)
+    return outcomes
+
+
+def start_delayed_commands(project,stream,stop):
+    def worker():
+        while not stop.is_set():
+            try:
+                for result in process_delayed_commands(project,stream):
+                    print(json.dumps(dict(result,event='delayed_command_completed')),flush=True)
+            except Exception as error:
+                print(json.dumps({'event':'delayed_command_error','level':'ERROR','reason':type(error).__name__}),flush=True)
+            stop.wait(1)
+    thread=threading.Thread(target=worker,name='youtube-delayed-commands',daemon=True)
+    thread.start()
+    return thread
 
 
 def reconcile():
@@ -330,6 +460,7 @@ def run():
                                             restored_history_rows=restored)
         from youtube_stint_notifications import start as start_notifications
         notification_thread = start_notifications(project,stream,stop)
+        delayed_thread = start_delayed_commands(project,stream,stop)
         backoff = 5
         while not stop.is_set():
             try:
@@ -375,6 +506,7 @@ def run():
                 backoff = min(300,backoff*2)
         heartbeat(stream,'stopped')
         notification_thread.join(timeout=35)
+        delayed_thread.join(timeout=35)
 
 
 def main():

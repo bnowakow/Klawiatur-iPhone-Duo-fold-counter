@@ -208,6 +208,51 @@ disabled/unimplemented commands are excluded. Very long descriptions fall back
 to the complete command-name list to fit the 200-character limit. Seeding preserves
 operator policy changes and custom nonempty descriptions across restarts.
 
+## !jak-długo stream duration
+
+`!jak-długo` replies in Polish, for example: `Czas trwania transmisji: 1 dzień,
+21 godzin, 4 minuty.`, followed by its cooldown disclaimer. It measures elapsed
+UTC time from YouTube API `liveStreamingDetails.actualStartTime`, including
+folding/night pauses and handling Warsaw daylight-saving changes correctly.
+It does not use the scheduled start or the bot's uptime. Days, hours and whole
+minutes use Polish plural forms. Streams shorter than one minute say
+`poniżej minuty`; missing actual-start data is reported explicitly.
+
+The existing API discovery read stores `actual_started_at`/`actual_ended_at` in
+`youtube_bot_state` on startup/reconnection, so replies require no additional API
+request. If an actual endpoint is available, the duration stops at that endpoint
+and is described as a finished transmission. The command uses the standard
+600-second shared-chat cooldown, 120-second message-age limit, deduplication and
+posting protections, and appears in `!pomoc`.
+
+## !kod-zródłowy source repository
+
+`!kod-zródłowy` returns the project's GitHub repository:
+`https://github.com/bnowakow/Klawiatur-iPhone-Duo-fold-counter`, followed by its
+Polish cooldown disclaimer. The command spelling matches the requested
+`!kod-zródłowy`. It uses the same 600-second shared-chat command cooldown,
+120-second message-age limit, deduplication and account-wide posting protections.
+The reply uses a static URL and does not fetch GitHub or folding measurements.
+`!pomoc` includes it in the available-command list.
+
+## !rekord completed-stint record
+
+`!rekord` reports the largest accepted counter increase (`last_counter -
+baseline_counter`) among ended stints with folding-start evidence for the
+configured stream. Public replies include only the fold count and cooldown disclaimer.
+Active stints, other streams and technical `manual_baseline_reset` closures are
+excluded. Ties prefer the earliest endpoint, then UUID. It reports the best
+recorded stint, not a verified all-time result or a named person's aggregate.
+
+The handler does not read appearance descriptions. They are restricted to internal
+use, PostgreSQL and Google Sheets. Public message validation and the API transport
+reject structured appearance fields (clothing, hair, glasses, facial hair, headwear
+and accessories), including labels with invisible formatting characters. This
+extra check protects against accidental reuse of internal description text by
+other send paths. If no eligible completed stint exists, the bot says so. It uses the same 600-second
+shared-chat command cooldown, 120-second age limit, account posting protections
+and delivery history. `!pomoc` includes it automatically.
+
 ## !link static website address
 
 `!link` replies with exactly `ipduotest kropka pl`. It uses the standard delivery,
@@ -299,3 +344,36 @@ stdin, so this Make change requires no image rebuild.
 Monitor with `docker compose logs -f youtube-bot`. Startup also logs the remaining
 wait for an already active pause. Deadlines indicate when a fresh attempt is
 allowed locally; YouTube may still reject it. No old replies are retried.
+
+Outgoing messages use `youtube_http.py` with `requests.Session`, matching the
+successful authorized diagnostic. Responses (including provider errors) are
+explicitly decompressed before bounded JSON parsing. Redirects and automatic POST
+retries are disabled. Shared quota/cooldown/expiry and deduplication checks remain
+in the normal send path; the diagnostic's cooldown override is not a bot feature.
+
+## One-minute delay for commands from the posting channel
+
+At the user's request, commands whose `author_channel_id` equals the current
+posting channel's ID wait **60 seconds after receipt** before reply processing.
+This compares stable channel IDs; it does not rely on names, hardcoded owner IDs,
+or the viewer's Google account email. Other viewers use the existing immediate
+path and normal shared command/account cooldowns.
+
+A separate worker claims due commands, so waiting does not block reading chat.
+The existing command event stores `status=delayed`, `reply_delay_seconds=60` and
+`reply_not_before`; `delay_claimed_at` records its one-time claim. Usage views
+include a `delayed` count. Pending instructions persist across restarts, but
+claimed/failed/unknown sends are never retried. The reply text is generated fresh
+only when due; measurements are not prepared and queued for a minute.
+
+The worker rechecks command enablement, original publication-age limit (at most
+120 seconds), active chat/posting identity and all normal cooldowns. A stale
+instruction expires. A newly active account pause suppresses it permanently;
+it is not held until the pause expires. A changed posting identity/chat disables
+it. No historical rejected/throttled commands are revived by enabling this rule.
+This deliberate user-requested short delay does not change the no-stale-reply
+policy and is not evidence that a one-minute gap will resolve YouTube restrictions.
+
+`youtube_command_delay_integration_check.py` verifies owner-only scheduling,
+other viewers' immediate path, fresh text, durable scheduling, concurrent claim
+deduplication, expiry, account backoff and identity changes with simulated sends.

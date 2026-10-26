@@ -1,0 +1,6 @@
+{
+  "observation_id": "592da06d-34d4-407f-b84c-d2ce66d475d8",
+  "observed_at": "2026-10-26T08:52:57.592608+00:00",
+  "sha256": "61f0a8526154094120189fb66d73036fc03f3e882ed0ddaad5fa0f3666f4fb90",
+  "description": "User-confirmed freeze test: phone on ice, counter absent, no folding. Counter disappearance alone does not automatically confirm a pause."
+}

@@ -131,3 +131,12 @@ Schema setup checks whether descriptor migrations are already applied before
 issuing ALTER TABLE, avoiding startup waits behind a long descriptor transaction.
 This is covered by an integration check holding an inference row lock with a
 200 ms lock timeout on concurrent schema setup.
+
+## Internal-only appearance data
+
+The user requires all clothing and appearance descriptions to remain internal,
+in PostgreSQL and in Google Sheets. They must never be included in public chat.
+The YouTube `!rekord` command therefore reads only the numeric record; it never
+queries the description table. Public send validation also rejects structured
+appearance fields before quota reservation or HTTP. Existing internal descriptions
+and Sheets export remain available; no source records are deleted by this change.

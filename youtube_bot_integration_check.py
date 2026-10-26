@@ -104,6 +104,67 @@ def main():
         assert conn.execute("SELECT cooldown_seconds,max_message_age_seconds FROM youtube_bot_commands WHERE command='!link'").fetchone()==(600,120)
         assert conn.execute("SELECT received,answered,throttled FROM youtube_bot_command_usage WHERE stream_url=%s AND command='!link'",(stream,)).fetchone()==(2,1,1)
     assert '!link' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
+    # Rank only completed folding stints of this stream, including winners
+    # without descriptions; an active high score or technical reset cannot win.
+    import supervisor
+    from psycopg.types.json import Jsonb
+    with quota.connect() as conn:
+        supervisor.ensure_schema(conn)
+        for score,ended,reason,source in [(1500,True,'sustained_clothing_change',stream),
+                (3000,True,'sustained_clothing_change',stream),
+                (9999,False,None,stream),(10000,True,'sustained_clothing_change',stream+':other'),
+                (5000,True,'manual_baseline_reset',stream)]:
+            sid,oid=str(uuid.uuid4()),str(uuid.uuid4())
+            conn.execute('INSERT INTO presenter_sessions '
+                         '(id,stream_url,detected_at,confirmed_at,detection_reason,first_observation_id,'
+                         'folding_started_at,baseline_counter,last_counter,ended_at,end_reason,version_at) '
+                         'VALUES (%s,%s,%s,%s,%s,%s,%s,1000,%s,%s,%s,%s)',
+                         (sid,source,enabled,enabled,'test',oid,enabled,1000+score,
+                          now if ended else None,reason,now))
+            if score==3000:
+                winner=sid
+                conn.execute('INSERT INTO presenter_clothing_descriptions '
+                             '(session_id,observation_id,observed_at,camera_view,crop_roi,image_sha256,image,status,description) '
+                             "VALUES (%s,%s,%s,'test',%s,'test',%s,'completed','Ubiór: czarna koszulka.')",
+                             (sid,oid,enabled,Jsonb([]),b'fixture'))
+    config=bot.command_config('!rekord')
+    assert config[2]==600 and config[4]==120
+    text=bot.build_record_reply(stream,config)
+    assert '3000 złożeń' in text and 'czarna koszulka' not in text and 'Ubiór:' not in text,text
+    with patch.object(bot.chat,'send',side_effect=fake_send) as send:
+        assert bot.process_message(project,stream,target,enabled,item('record','!rekord'))['status']=='sent'
+        assert bot.process_message(project,stream,target,enabled,item('record-throttled','!rekord'))['status']=='throttled'
+        assert send.call_count==1
+    with quota.connect() as conn:
+        conn.execute('DELETE FROM presenter_clothing_descriptions WHERE session_id=%s',(winner,))
+    text=bot.build_record_reply(stream,config)
+    assert '3000 złożeń' in text and 'Opis osoby' not in text,text
+    assert '!rekord' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
+    source_config=bot.command_config('!kod-zródłowy')
+    assert source_config[2]==600 and source_config[4]==120
+    with patch.object(bot.chat,'send',side_effect=fake_send) as send:
+        source_item=item('source-code','!kod-zródłowy')
+        assert bot.process_message(project,stream,target,enabled,source_item)['status']=='sent'
+        assert bot.SOURCE_URL in send.call_args.args[2]
+        assert bot.process_message(project,stream,target,enabled,source_item)['status']=='duplicate'
+        assert bot.process_message(project,stream,target,enabled,item('source-other-user','!kod-zródłowy'))['status']=='throttled'
+        assert send.call_count==1
+    assert '!kod-zródłowy' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
+    duration_start=datetime.now(timezone.utc)-timedelta(days=2,hours=3,minutes=4)
+    timed_target=dict(target,actual_started_at=duration_start.isoformat(),actual_ended_at=None)
+    bot.remember_state(stream,project,timed_target)
+    duration_config=bot.command_config('!jak-długo')
+    assert duration_config[2]==600 and duration_config[4]==120
+    text=bot.build_duration_reply(stream,duration_config)
+    assert '2 dni, 3 godziny, 4 minuty' in text,text
+    with patch.object(bot.chat,'send',side_effect=fake_send) as send:
+        duration_item=item('duration','!jak-długo')
+        assert bot.process_message(project,stream,target,enabled,duration_item)['status']=='sent'
+        assert 'Czas trwania transmisji:' in send.call_args.args[2]
+        assert bot.process_message(project,stream,target,enabled,duration_item)['status']=='duplicate'
+        assert bot.process_message(project,stream,target,enabled,item('duration-other-user','!jak-długo'))['status']=='throttled'
+        assert send.call_count==1
+    assert '!jak-długo' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
     result={'passed':True,'run_id':run,'real_google_requests':0,'checks':['command statistics','deduplication','global cooldown across users','exact cooldown boundary','concurrent requests','uncertain sends retain cooldown','stale history ignored','unavailable measurements','persistent cursor and chat rotation']}
     folder=Path(os.getenv('DATA_DIR','data'))/'test-evidence'/'youtube-bot'/run
     folder.mkdir(parents=True,exist_ok=True)

@@ -1,0 +1,8 @@
+time="2026-10-26T09:13:11+01:00" level=warning msg="Found orphan containers (klawiatur-iphone-duo-fold-counter-official-data-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-15fc3635ceb4 Creating 
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-15fc3635ceb4 Created 
+.......................................
+----------------------------------------------------------------------
+Ran 39 tests in 0.627s
+
+OK

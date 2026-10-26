@@ -267,8 +267,15 @@ def analyze(cfg, state, obs, fixture=None, reset_clothing=False):
     obs["details"]["camera_view"] = details
     obs["details"]["clothing_baseline_observation"] = details.get("baseline_observation")
     obs["status"] = "analyzed"
-    appearances, appearance_updates = advance_appearances(state.get("appearances", {}), obs,
-                                                         manual_reset=reset_clothing)
+    pause = state.get('presenters', {}).get('activity_pause')
+    if pause and not reset_clothing:
+        # Retain camera/OCR evidence without inventing clothing transitions
+        # during a human-confirmed non-folding test.
+        appearances, appearance_updates = state.get('appearances', {}), []
+        obs['details']['folding_pause'] = pause
+    else:
+        appearances, appearance_updates = advance_appearances(state.get("appearances", {}), obs,
+                                                             manual_reset=reset_clothing)
     state["appearances"] = appearances
     obs["details"]["presenter_appearance_updates"] = appearance_updates
     obs["details"]["presenter_attribution_review_required"] = bool(
@@ -283,7 +290,7 @@ def analyze(cfg, state, obs, fixture=None, reset_clothing=False):
     obs["details"]["presenter_session_id"] = sessions.get("current", {}).get("id")
     obs["details"]["presenter_candidate_id"] = sessions.get("candidate", {}).get("id")
     if promote:
-        if sessions["current"]["detection_reason"] == "activity_resumed_after_night_pause":
+        if sessions["current"]["detection_reason"] in ("activity_resumed_after_night_pause", "activity_resumed_after_confirmed_pause"):
             # Yesterday's interrupted appearance belongs to the closed stint.
             # A known view plus accepted resumed activity establishes a new
             # anonymous stint; stale review state must not freeze its samples.
@@ -298,7 +305,10 @@ def analyze(cfg, state, obs, fixture=None, reset_clothing=False):
                 obs["details"]["presenter_appearance_updates"] = appearance_updates
             appearances.pop("attribution_review_required", None)
             obs["details"]["presenter_attribution_review_required"] = False
-            obs["details"]["presenter_appearance_resolution"] = "new_stint_after_night_pause"
+            obs["details"]["presenter_appearance_resolution"] = ('new_stint_after_night_pause'
+                if sessions['current']['detection_reason'] == 'activity_resumed_after_night_pause'
+                else 'new_stint_after_confirmed_pause')
+            obs['details'].pop('folding_pause', None)
         # Acknowledge this cue once, then compare against the new presenter's shirt.
         # Other views must be relearned rather than retaining the previous shirt.
         state["clothing"], _, _, _, _ = observe(

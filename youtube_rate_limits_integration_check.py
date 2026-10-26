@@ -20,13 +20,13 @@ def main():
         return HTTPError('url',403,'Forbidden',{'Retry-After':retry} if retry else {},io.BytesIO(json.dumps(body).encode()))
     with patch.dict(os.environ,{'YOUTUBE_CHAT_ENABLED':'true'}),patch.object(chat,'context',return_value=target) as context, \
             patch.object(chat.auth,'token',return_value='fake'),patch('youtube_rate_limits.random.uniform',return_value=0):
-        with patch.object(quota,'urlopen') as api:
+        with patch.object(quota,'open_request') as api:
             expired=send('expired',expires_at=datetime.now(timezone.utc)-timedelta(seconds=1))
             assert expired['error_reason']=='message_expired';api.assert_not_called()
-        with patch.object(quota,'urlopen',side_effect=failure('1200')) as api:
+        with patch.object(quota,'open_request',side_effect=failure('1200')) as api:
             original=send('original');assert original['status']=='rejected';assert api.call_count==1
         context.reset_mock()
-        with patch.object(quota,'urlopen') as api:
+        with patch.object(quota,'open_request') as api:
             assert send('blocked-notification',source_kind='stint_finished')['error_reason']=='account_backoff'
             api.assert_not_called();context.assert_not_called()
         with quota.connect() as conn:
@@ -36,20 +36,20 @@ def main():
             state=conn.execute('SELECT not_before,consecutive_rejections FROM youtube_account_posting_state WHERE channel_id=%s',(channel,)).fetchone()
             assert state[1]==1
             conn.execute("UPDATE youtube_account_posting_state SET not_before=now()-interval '1 second' WHERE channel_id=%s",(channel,))
-        with patch.object(quota,'urlopen') as api:
+        with patch.object(quota,'open_request') as api:
             assert send('original')['status']=='rejected'
             assert send('blocked-notification',source_kind='stint_finished')['status']=='rejected'
             assert send('expired')['status']=='rejected'
             chat.recover();api.assert_not_called()
         response=MagicMock();response.__enter__.return_value.read.return_value=b'{"id":"fresh-response"}'
         response.__enter__.return_value.status=200
-        with patch.object(quota,'urlopen',return_value=response) as api:
+        with patch.object(quota,'open_request',return_value=response) as api:
             assert send('fresh')['status']=='sent';assert api.call_count==1
         delays=[]
         for index in range(5):
             with quota.connect() as conn:
                 conn.execute("UPDATE youtube_account_posting_state SET not_before=now()-interval '1 second' WHERE channel_id=%s",(channel,))
-            with patch.object(quota,'urlopen',side_effect=failure()):
+            with patch.object(quota,'open_request',side_effect=failure()):
                 assert send('failure-'+str(index))['status']=='rejected'
             with quota.connect() as conn:
                 delay=conn.execute('SELECT delay_seconds FROM youtube_posting_backoff_events WHERE channel_id=%s '

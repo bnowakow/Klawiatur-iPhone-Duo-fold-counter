@@ -2,7 +2,8 @@
 
 The application implements local Google OAuth, private refresh-token storage,
 channel identification, live-chat discovery and explicit manual posting. The quota
-ledger and HTTP transport are in `youtube_quota.py`; `youtube_auth.py` handles
+ledger and transport accounting are in `youtube_quota.py`; posting HTTP is in
+`youtube_http.py` (`requests.Session`, no retries/redirects, bounded decompression); `youtube_auth.py` handles
 credentials and `youtube_chat.py` handles delivery. See the
 [Google Cloud setup and commands](youtube-setup.md).
 No Google account has been connected or real messages sent during implementation.

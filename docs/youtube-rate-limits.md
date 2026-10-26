@@ -96,3 +96,166 @@ a provider posting rate limit occurs (`youtube_posting_rate_limited`, `level`
 are reported on startup as `posting_cooldown_active` with the same time fields.
 This is the earliest locally permitted fresh attempt, not a promise that YouTube
 will accept it. There is no delayed resend of old replies.
+
+## Web investigation and request audit — 26 October 2026
+
+The API insert reference documents a posting-frequency rejection but publishes
+no numeric API posting interval or guaranteed recovery duration. The viewer
+help page states **11 messages per 30 seconds**, which is not a guarantee that
+an API client/account will always be permitted that rate. Stream-specific slow
+mode is a separate setting. Sources checked:
+
+- [Insert request and errors](https://developers.google.com/youtube/data/live/reference/rest/v3/liveChatMessages/insert)
+- [Viewer chat limits](https://support.google.com/youtube/answer/15270973?hl=en)
+- [Slow mode and moderation](https://support.google.com/youtube/answer/9826490?hl=en)
+- [Daily quota costs](https://developers.google.com/youtube/data/determine_quota_cost)
+
+The real project's persisted POST history at investigation time was:
+
+| Warsaw time | Result | Minutes since previous app POST attempt |
+| --- | --- | ---: |
+| 06:48:53 | 200 success | — |
+| 07:04:11 | 403 rateLimitExceeded | 15.31 |
+| 07:16:06 | 403 rateLimitExceeded | 11.91 |
+| 07:55:05 | 403 rateLimitExceeded | 38.99 |
+| 08:38:44 | 403 rateLimitExceeded | 43.64 |
+
+No safe posting frequency can be established from one success followed by these
+rejections. A delay of 44 minutes between attempts did not suffice on this account.
+A persistent account restriction or API-side issue is a hypothesis, not a proven
+cause. This app's ledger does not include activity by the same channel in other
+apps or browser sessions. Local estimated daily totals were 2,116 units on Pacific
+API day 2026-10-25 and 1,555 on 2026-10-26; Google Cloud remains authoritative.
+The returned reason was not `quotaExceeded`. Public issue searches did not
+establish a verified applicable numeric limit or the cause of this incident.
+
+The running bot's actual send path was audited with fake authentication and
+mocked HTTP/database writes, without any real Google request. It built exactly:
+
+```http
+POST https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet
+Authorization: Bearer <OAuth access token>
+Content-Type: application/json
+```
+
+```json
+{"snippet":{"liveChatId":"<current chat ID>","type":"textMessageEvent","textMessageDetails":{"messageText":"<reply>"}}}
+```
+
+The stored OAuth scope is `https://www.googleapis.com/auth/youtube.force-ssl`,
+which the insert reference accepts. Polish text survived JSON serialization.
+Only one simulated HTTP call occurred; no retry was attempted. `textMessageEvent`
+is the required request-body value; an outdated error-table entry saying `text`
+should not override the method's explicit request-body schema.
+
+The request format matches the documented contract. That does not prove the
+current account will be allowed to post or identify the restriction's cause.
+A useful next diagnostic, after the pause, is one manually sent message from
+**the same authorized bot channel** in YouTube's own interface, comparing any
+visible error with the API failure and actual Cloud Console limits. No manual
+message or API test was sent during this investigation. Do not infer a guaranteed
+unblock time from our local countdown, and never resend historical replies.
+
+### User follow-up: manual chat works, API chat does not
+
+On 26 October 2026 the user confirmed that manual messages come through, while
+only the app's first API message succeeded. Treat this as user-reported evidence;
+manual message IDs and channel identity were not independently inspected here.
+This makes a general inability to participate in chat less likely and shifts the
+investigation toward the API posting path, API-specific enforcement, and
+project/client/account interactions. None is yet established as the cause.
+Do not describe cooldown expiry as a fix or infer a safe interval from it.
+
+The next useful controlled test is one fresh message through Google's official
+API Explorer after the local pause, using the same channel and live chat. This
+still publishes a message and must be explicitly authorized before execution.
+A failure there would reproduce the problem outside our HTTP implementation; a
+success would warrant comparing client/project identity, credentials, payload,
+and request context. Explorer uses a different client/project context, so it is
+not an otherwise-identical test and cannot alone prove an app bug. Do not rotate
+accounts/projects or change identifiers to work around a restriction. No Explorer
+request, reauthorization, quota change or public post was performed for this
+follow-up. Targeted public searches did not identify a verified matching cause.
+
+### Authorized independent-client test succeeded; production transport switched
+
+At **09:08:28 Warsaw time on 26 October 2026**, an explicitly authorized single
+fresh `!pomoc` reply was accepted (HTTP 200) using `requests.Session`, with the
+same project, OAuth credentials, channel and chat. The user explicitly allowed
+this diagnostic to bypass the local cooldown once. There were no POST retries.
+A read-only chat lookup confirmed the exact text, author and publication time;
+the user also confirmed visibility with a screenshot. This was **not API Explorer**.
+The request/delivery and diagnostic incident are retained under
+`authorized-independent-help-diagnostic-2026-10-26-01`.
+
+The diagnostic initially tried to parse compressed `response.raw` bytes without
+decompression, so it temporarily recorded an unknown outcome. It did not repost.
+Readback confirmed the successful message and reconciled the records to `sent` /
+`succeeded`. The diagnostic script now requests decompression explicitly. The
+historic decoding issue is retained in the incident rather than erased.
+
+At the user's request, production `liveChatMessages.insert` now uses the same
+`requests.Session` / `HTTPAdapter(max_retries=0)` path in `youtube_http.py`.
+Redirect following is disabled, connect/read timeouts are 10/30 seconds, and
+streamed responses are explicitly decompressed before bounded JSON parsing.
+Compressed error bodies retain provider details and `Retry-After`. Read-only HTTP
+calls keep the prior transport. The shared accounting, deadline checks, persistent
+account cooldown, idempotency and no-old-reply policy still apply. The one-off
+override was not added to normal app sending.
+
+The success establishes that this client could post at that time. It does **not**
+prove `urllib` caused the earlier failures: elapsed time and other conditions also
+changed. Tests exercise actual Requests POSTs against a localhost server,
+including compressed Polish JSON, rate-limit errors, redirects, server failures,
+size limits and no retries; integration tests simulate Google with real PostgreSQL.
+No extra public post is needed merely to deploy this change.
+
+## Future consideration: alternate sender and per-attempt transport audit
+
+The user proposed trying a previous HTTP client when an API send fails, and
+recording which method sent each request and its outcome. On 26 October 2026
+they asked to document this for future consideration. **This is a proposal, not
+an enabled fallback policy or an implemented per-request transport audit.**
+
+Current evidence does not establish a transport-only cause: the independent
+Requests diagnostic sent `!pomoc` successfully at 09:08:28 Warsaw time, whereas
+the production Requests sender's fresh `!ile` reply at 09:18:19 was rejected with
+403 `rateLimitExceeded`. Timing, message text and request context differed.
+Changing the client alone has not established reliable posting. Message-specific
+enforcement is another hypothesis, not a demonstrated explanation.
+
+An automatic alternate-client POST is generally unsuitable after these outcomes:
+
+- `rateLimitExceeded`: preserve the account pause and honor Retry-After. Changing
+  HTTP clients does not establish that another attempt is permitted.
+- Timeout, connection loss after dispatch, 5xx, or malformed/misdecoded success
+  response: delivery may already have happened. Reconcile using durable evidence
+  or read-only chat lookup; do not send another copy. The diagnostic's HTTP 200
+  compressed-response issue demonstrates why an unreadable body is not proof of
+  a failed delivery.
+- Permanent authorization, target, validation or chat-state errors: address the
+  underlying error rather than trying the same action through another client.
+
+A possible future fallback could be considered only when the app can establish
+that the first attempt never dispatched. It would require its own explicit
+policy, bounded attempts, current expiry check and normal account/quota guards.
+A separate manually authorized diagnostic comparison can be useful, but it must
+be identified as a diagnostic exception rather than an automatic recovery path.
+No old or expired reply should be queued for later delivery.
+
+If implemented, retain an immutable record **per attempt**, linked to one logical
+delivery, including request ID, API method, selected HTTP transport/client version,
+primary versus fallback, parent attempt/reason, preparation/expiry/dispatch/
+completion timestamps, HTTP status, sanitized provider reason/message/Retry-After,
+returned message ID and outcome (`not_dispatched`, `succeeded`, `rejected`,
+`unknown`, `expired`, or `blocked`). Record whether a delivery was later confirmed
+by readback and retain its original uncertain outcome as history. Account for
+quota per actual/reserved attempt; never log OAuth tokens or credentials.
+
+Existing `youtube_api_requests` and `youtube_chat_deliveries` already link API
+methods, replies, timestamps and outcomes. Diagnostic incidents identify their
+client explicitly. General per-attempt transport/version/fallback metadata would
+be an additional future improvement; it should not be inferred as a historical
+fact when the client was not recorded. Future comparisons should control the
+channel/chat, message content, cooldown and timing as far as practical, and
+recognize that changing Google clients/projects introduces additional variables.

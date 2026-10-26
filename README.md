@@ -57,9 +57,11 @@ retention and remaining measurement limits.
 See [external folding-test references](docs/external-tests.md) for the CNET
 machine-test video.
 
-The [Google Sheets exporter](docs/google-sheets.md) posts stint measurements to
+The [Google Sheets exporter](docs/google-sheets.md) posts measurements for completed stints with captured start/end boundaries to
 our dedicated tab for human verification, matching `Ranking`'s first five
-columns and preserving reviewers' columns from O onward.
+columns and preserving reviewers' columns from P onward.
+`make sheets-job-up` enables automatic syncs hourly and after recorded stint
+finishes; each sync has a shared lock and a three-minute timeout.
 
 ## Git commits
 
@@ -537,3 +539,12 @@ The original 47-frame obstruction regression and real dark-shirt handover fixtur
 are preserved. Ambiguous real transitions still suspend attribution for review;
 `repair_presenter_review.py` provides an audited same-person resolution when a
 human has confirmed that no handover occurred.
+
+
+A confirmed daytime freeze test can be previewed with
+`docker compose run --rm --no-deps supervisor python folding_pause.py --session UUID --reason "Human-confirmed freeze test"`.
+Stop the supervisor before repeating with `--apply`, then start it again. This
+closes the stint at the estimated last counter increase, preserves an audit
+backup and keeps the app paused until fresh folding evidence returns. A missing
+counter alone is not enough to infer a freeze test. See
+[daytime pause storage](docs/data-storage.md).

@@ -8,9 +8,12 @@ import json
 import os
 from urllib.error import HTTPError
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import Request
+from youtube_http import open_request
+from youtube_public_text import validate_public_message
 import uuid
 import youtube_rate_limits as rate_limits
+import youtube_command_policy as command_policy
 from zoneinfo import ZoneInfo
 
 PACIFIC = ZoneInfo('America/Los_Angeles')
@@ -185,6 +188,9 @@ def finish(request_id, status, http_status=None, error_reason=None, response_id=
                           provider.get('retry_after_raw'),provider.get('retry_after_seconds'),Jsonb(provider)))
         rate_limits.record_result(conn,request_id,row[0],row[1],status,error_reason,provider)
         until=rate_limits.paused(conn,row[1]) if row[1] and error_reason=='rateLimitExceeded' else None
+        cooldown_change=command_policy.on_post_rate_limit(conn,row[1],request_id) if row[0]=='liveChatMessages.insert' and row[1] and error_reason=='rateLimitExceeded' else None
+    if cooldown_change:
+        print(json.dumps(cooldown_change),flush=True)
     if until:
         rate_limits.log_pause('youtube_posting_rate_limited',row[1],until,
             reason='rateLimitExceeded',request_id=str(request_id),http_status=http_status)
@@ -206,6 +212,7 @@ def tracked_request(project_id, method, access_token, params=None, body=None, ac
         if (snippet.get('type')!='textMessageEvent' or not snippet.get('liveChatId') or
                 not isinstance(message,str) or not message.strip() or len(message)>200):
             raise ValueError('A live-chat ID and text message of 1–200 characters are required')
+        validate_public_message(message)
     data=json.dumps(body).encode() if body is not None else None
     request=Request('https://www.googleapis.com/youtube/v3/'+path+'?'+urlencode(params or {}),
                     data=data,method=verb,headers={'Authorization':'Bearer '+access_token,
@@ -217,7 +224,7 @@ def tracked_request(project_id, method, access_token, params=None, body=None, ac
         finish(request_id,'failed',error_reason='local_message_expired')
         raise MessageExpired('Message expired before HTTP request')
     try:
-        with urlopen(request,timeout=30) as response:
+        with open_request(request,timeout=30) as response:
             raw=response.read(2*1024*1024+1)
             if len(raw)>2*1024*1024:
                 raise ValueError('API response too large')

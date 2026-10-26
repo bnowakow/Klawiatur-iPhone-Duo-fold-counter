@@ -12,7 +12,7 @@ class DeliveryExpiryTests(unittest.TestCase):
     def test_expiry_during_reservation_prevents_http(self):
         start=datetime(2026,10,26,6,tzinfo=timezone.utc)
         with patch.object(quota,'datetime') as clock,patch.object(quota,'reserve',return_value='request') as reserve, \
-                patch.object(quota,'finish') as finish,patch.object(quota,'urlopen') as http:
+                patch.object(quota,'finish') as finish,patch.object(quota,'open_request') as http:
             clock.now.side_effect=[start,start+timedelta(seconds=2)]
             with self.assertRaises(quota.MessageExpired):
                 quota.tracked_request('fixture','liveChatMessages.insert','fake-token',

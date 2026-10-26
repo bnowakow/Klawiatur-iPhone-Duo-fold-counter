@@ -1,0 +1,19 @@
+time="2026-10-26T09:14:14+01:00" level=warning msg="Found orphan containers (klawiatur-iphone-duo-fold-counter-official-data-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-bad1a2ebf945 Creating 
+ Container klawiatur-iphone-duo-fold-counter-youtube-chat-run-bad1a2ebf945 Created 
+{
+  "passed": true,
+  "run_id": "971501c4-7e2c-4e57-8b2c-c3bdc0aed398",
+  "real_google_requests": 0,
+  "checks": [
+    "command statistics",
+    "deduplication",
+    "global cooldown across users",
+    "exact cooldown boundary",
+    "concurrent requests",
+    "uncertain sends retain cooldown",
+    "stale history ignored",
+    "unavailable measurements",
+    "persistent cursor and chat rotation"
+  ]
+}

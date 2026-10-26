@@ -34,6 +34,10 @@ def current_measurements(conn, stream, now=None):
         'FROM presenter_session_rates WHERE stream_url=%s AND ended_at IS NULL '
         'ORDER BY detected_at DESC LIMIT 1', (stream,)).fetchone()
     if not row or row[0] is None or row[2] is None or row[3] is None:
+        paused = conn.execute("SELECT state#>'{presenters,activity_pause}' FROM monitor_state WHERE stream_url=%s", (stream,)).fetchone()
+        if paused and paused[0]:
+            raise PaceUnavailable('Trwa potwierdzona przerwa w składaniu: test mrożenia.' if paused[0].get('kind') == 'freeze_test'
+                                  else 'Trwa potwierdzona przerwa w składaniu.')
         raise PaceUnavailable('Brak wystarczających danych o tempie obecnej osoby.')
     latest = conn.execute(
         'SELECT observed_at,status,clothing_status,details FROM observations '
