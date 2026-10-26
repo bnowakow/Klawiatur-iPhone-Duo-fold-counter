@@ -1,0 +1,3 @@
+Restoring /Users/sup/code/Klawiatur-iPhone-Duo-fold-counter/docker-data/backup/postgres/fold-counter-postgres-2026-10-26_09-41-42Z-66424.zip into isolated container fold-counter-backup-verify-1793007770-66532...
+Restored public tables: 36
+Backup restore verified; disposable database will be removed.

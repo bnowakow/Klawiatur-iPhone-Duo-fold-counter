@@ -48,11 +48,13 @@ class BotTests(unittest.TestCase):
         with patch.object(bot.quota,'connect',side_effect=AssertionError('Unexpected database read')), \
                 patch.object(bot.quota,'tracked_request',side_effect=AssertionError('Unexpected API request')):
             text=bot.HANDLERS['source_code']('stream',('source_code',True,600,bot.SOURCE_DISCLAIMER,120))
-        self.assertIn('https://github.com/bnowakow/Klawiatur-iPhone-Duo-fold-counter',text)
+        self.assertEqual(text, 'Klawiatur-iPhone-Duo-fold-counter na githubie '+bot.SOURCE_DISCLAIMER)
+        self.assertNotIn('https://',text)
+        self.assertNotIn('http://',text)
         self.assertTrue(text.endswith(bot.SOURCE_DISCLAIMER))
         self.assertLessEqual(len(text),200)
-        self.assertEqual(bot.parsed_command({'type':1,'text':' !KOD-ZRÓDŁOWY '}),'!kod-zródłowy')
-        self.assertIsNone(bot.parsed_command({'type':1,'text':'!kod-zródłowy extra'}))
+        self.assertEqual(bot.parsed_command({'type':1,'text':' !KOD-ŹRÓDŁOWY '}),'!kod-źródłowy')
+        self.assertIsNone(bot.parsed_command({'type':1,'text':'!kod-źródłowy extra'}))
 
     def test_record_is_numeric_only_and_never_reads_appearance_descriptions(self):
         connection=MagicMock()
@@ -93,7 +95,7 @@ class BotTests(unittest.TestCase):
 
     def test_help_includes_link_with_all_existing_commands(self):
         commands=[('!ile','liczba złożeń i tempo'),('!jak-długo','czas trwania transmisji'),
-                  ('!kod-zródłowy','repozytorium na GitHubie'),('!link','adres strony testu'),
+                  ('!kod-źródłowy','repozytorium na GitHubie'),('!link','adres strony testu'),
                   ('!pomoc','lista komend'),('!rekord','najlepsza zakończona zmiana'),
                   ('!samsung','wynik testu Samsunga')]
         with patch.object(bot,'available_commands',return_value=commands):

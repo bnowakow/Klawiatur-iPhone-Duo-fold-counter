@@ -95,3 +95,21 @@ sheets-job-status:
 	docker compose --profile sheets run --rm --no-deps sheets-export python sheets_jobs.py status
 sheets-job-logs:
 	docker compose --profile sheets logs --tail=50 sheets-worker
+
+# PostgreSQL backups, adapted from ~/code/cozadzban. Scheduling is opt-in.
+PG_BACKUP_DIR ?= docker-data/backup/postgres
+CRON_SCHEDULE ?= 0 2 * * *
+CRON_MAKE ?= $(shell command -v make)
+export PG_BACKUP_DIR CRON_SCHEDULE CRON_MAKE
+.PHONY: docker-pg-backup docker-pg-backup-verify install-pg-backup-cron ensure-pg-backup-cron
+docker-pg-backup:
+	@bash utilities/docker-pg-backup.sh
+
+docker-pg-backup-verify:
+	@bash utilities/docker-pg-backup-verify.sh $(call youtube-quote,$(BACKUP_FILE))
+
+install-pg-backup-cron:
+	@bash utilities/install-pg-backup-cron.sh install
+
+ensure-pg-backup-cron:
+	@bash utilities/install-pg-backup-cron.sh ensure

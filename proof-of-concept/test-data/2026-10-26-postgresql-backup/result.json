@@ -1,0 +1,11 @@
+{
+  "backup_path": "docker-data/backup/postgres/fold-counter-postgres-2026-10-26_09-41-42Z-66424.zip",
+  "archive_bytes": 45045396,
+  "sql_bytes": 247096127,
+  "archive_sha256": "12d4dfaf97fb81fa4f74120b73e7f942cfec4450e820b2e7785d7fd8d41143cf",
+  "restore_verified": true,
+  "restored_public_tables": 36,
+  "production_restore_performed": false,
+  "host_cron_installed": false,
+  "unit_tests_passed": 6
+}

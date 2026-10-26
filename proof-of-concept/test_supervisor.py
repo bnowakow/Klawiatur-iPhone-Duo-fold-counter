@@ -151,6 +151,9 @@ class SupervisorTests(unittest.TestCase):
                 draw.rectangle((0, 0, i+1, 4), fill="black")
                 if i >= 2:
                     draw.rectangle((922, 551, 1248, 670), fill="black")
+                    # A whole-shirt colour change also reaches the exposed
+                    # shoulder; a chest-only patch models an arm/phone occlusion.
+                    draw.rectangle((778, 508, 835, 551), fill="black")
                 image.save(fixture)
                 with patch("supervisor.datetime", wraps=datetime) as clock, \
                         patch("supervisor.recognize", return_value=({"value":1000+i*7,"digits":[]},None)):

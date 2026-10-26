@@ -193,3 +193,11 @@ Commands from the posting channel itself have a user-requested 60-second delay.
 waiting. This queues a fresh, bounded-age instruction, not precomputed reply text.
 Rejected/unknown/expired commands are never rescheduled. See
 [the command delay policy](youtube-bot.md#one-minute-delay-for-commands-from-the-posting-channel).
+
+Logical PostgreSQL backups are available through `make docker-pg-backup`, adapted
+from `cozadzban`. Timestamped SQL ZIPs live in `docker-data/backup/postgres/`,
+separate from the persistent `postgres_data` volume and the image quota.
+`make docker-pg-backup-verify BACKUP_FILE=...` checks a full restore in a disposable
+PostgreSQL container. Daily cron targets are opt-in. See
+[PostgreSQL backups](postgresql-backups.md) for scope, files to back up separately,
+permissions, retention and scheduling.

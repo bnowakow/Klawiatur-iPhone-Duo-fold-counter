@@ -239,15 +239,14 @@ and is described as a finished transmission. The command uses the standard
 600-second shared-chat cooldown, 120-second message-age limit, deduplication and
 posting protections, and appears in `!pomoc`.
 
-## !kod-zródłowy source repository
+## !kod-źródłowy source repository
 
-`!kod-zródłowy` returns the project's GitHub repository:
-`https://github.com/bnowakow/Klawiatur-iPhone-Duo-fold-counter`, followed by its
-Polish cooldown disclaimer. The command spelling matches the requested
-`!kod-zródłowy`. It uses the same 600-second shared-chat command cooldown,
-120-second message-age limit, deduplication and account-wide posting protections.
-The reply uses a static URL and does not fetch GitHub or folding measurements.
-`!pomoc` includes it in the available-command list.
+`!kod-źródłowy` replies with `Klawiatur-iPhone-Duo-fold-counter na githubie`,
+followed by its Polish cooldown disclaimer. The reply contains no URL and does
+not fetch GitHub or folding measurements. It uses the same shared-chat cooldown,
+message-age limit, deduplication and account-wide posting protections.
+`!pomoc` includes the corrected spelling. The misspelled `!kod-zródłowy` entry is
+disabled while historical statistics and any active cooldown remain preserved.
 
 ## !rekord completed-stint record
 
@@ -422,3 +421,12 @@ check uses temporary table copies to verify rollback without touching live polic
 
 The observed live rollback, including request IDs and timestamps, is documented
 in [Kacper’s rejected help reply](youtube-rate-limits.md#observed-rollback-kacpers-pomoc--26-october-2026).
+
+
+For `liveChatMessages.streamList`, YouTube's generic gRPC `FAILED_PRECONDITION`
+means the live chat is disabled or ended; its message need not name either one.
+The adapter records `liveChatDisabledOrEnded` and the worker treats it as terminal,
+stops its command/notification workers, marks pending delayed replies disabled,
+persists `chat_closed` and remains dormant/healthy across restarts. It does not
+switch to ordinary video comments. Transient network failures still use backoff.
+Reference: https://developers.google.com/youtube/data/live/reference/rest/v3/liveChatMessages/streamList

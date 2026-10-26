@@ -553,3 +553,11 @@ closes the stint at the estimated last counter increase, preserves an audit
 backup and keeps the app paused until fresh folding evidence returns. A missing
 counter alone is not enough to infer a freeze test. See
 [daytime pause storage](docs/data-storage.md).
+
+### PostgreSQL backups
+
+Use `make docker-pg-backup` to create a private timestamped SQL ZIP in
+`docker-data/backup/postgres/`. Verify it with
+`make docker-pg-backup-verify BACKUP_FILE=...`, which restores only into a
+disposable PostgreSQL container. The `cozadzban`-style daily cron installation
+is available as an opt-in Make target. See [backup methods](docs/postgresql-backups.md).

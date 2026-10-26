@@ -39,17 +39,17 @@ def batches(project, chat_id, page_token, stop, duration=900):
                                  for item in response.items]}
     except grpc.RpcError as error:
         code = error.code()
+        reason='grpc_'+code.name.lower()
+        if code == grpc.StatusCode.FAILED_PRECONDITION:
+            # YouTube documents this code as disabled OR ended chat. The
+            # generic "Precondition check failed" text cannot distinguish them.
+            reason='liveChatDisabledOrEnded'
         if not received:
             quota.finish(request_id, 'unknown' if code in (grpc.StatusCode.DEADLINE_EXCEEDED, grpc.StatusCode.UNAVAILABLE, grpc.StatusCode.CANCELLED)
-                         else 'failed', error_reason='grpc_'+code.name.lower())
+                         else 'failed', error_reason=reason)
         if stop.is_set() or (received and code == grpc.StatusCode.DEADLINE_EXCEEDED):
             return
         # Provider details may contain private request data; expose only the status code.
-        reason='grpc_'+code.name.lower()
-        if code == grpc.StatusCode.FAILED_PRECONDITION:
-            detail=(error.details() or '').casefold()
-            if any(term in detail for term in ('livechatended','live chat has ended','live chat is no longer live')):
-                reason='liveChatEnded'
         raise quota.YouTubeRequestFailed('Live chat stream ended: '+code.name, reason=reason) from None
     except GeneratorExit:
         if not received:

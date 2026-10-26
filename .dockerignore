@@ -14,3 +14,6 @@ proof-of-concept/handover
 !proof-of-concept/latest/
 proof-of-concept/latest/*
 !proof-of-concept/latest/live-frame.jpg
+
+# PostgreSQL backups are host artifacts, never application build context.
+docker-data/

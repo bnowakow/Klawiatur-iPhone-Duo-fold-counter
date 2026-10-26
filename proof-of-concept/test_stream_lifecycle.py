@@ -16,6 +16,12 @@ import youtube_bot as bot
 
 class StreamLifecycleTests(unittest.TestCase):
     def test_bot_replies_after_video_offline_until_explicit_chat_closure(self):
+        self.assert_chat_closure(lifecycle.ChatClosed('Chat no longer accepts replies'))
+
+    def test_generic_failed_precondition_closes_chat_without_reconnecting(self):
+        self.assert_chat_closure(bot.quota.YouTubeRequestFailed('Precondition check failed', reason='liveChatDisabledOrEnded'))
+
+    def assert_chat_closure(self, terminal_error):
         first=MagicMock()
         first.__enter__.return_value.execute.return_value.fetchone.return_value=None
         leader=MagicMock()
@@ -27,7 +33,7 @@ class StreamLifecycleTests(unittest.TestCase):
         def responses(*args):
             yield {'offline_at':'2026-10-26T10:00:00Z','items':[],'next_page_token':'first'}
             yield {'offline_at':'','items':[message],'next_page_token':'second'}
-            raise lifecycle.ChatClosed('Chat no longer accepts replies')
+            raise terminal_error
         with patch.dict('os.environ',{'YOUTUBE_PROJECT_ID':'fixture','YOUTUBE_CHAT_ENABLED':'true'}), \
                 patch.object(bot,'initialize'), patch.object(bot.quota,'connect',side_effect=[first,leader]), \
                 patch.object(bot.auth,'locked',return_value=MagicMock()), patch.object(bot.auth,'stored',return_value={}), \

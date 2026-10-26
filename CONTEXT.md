@@ -973,3 +973,63 @@ rollback restored all command caps/disclaimers to600s at10:30:59.941. Account
 pause deadline was10:41:29.938 Warsaw. The failed prepared text keeps its old
 one-minute disclaimer as evidence; no retry. Root cause and safe interval remain
 unknown. See docs/youtube-rate-limits.md observed Kacper rollback section.
+
+PostgreSQL backup methods copied/adapted from ~/code/cozadzban: make
+`docker-pg-backup` runs pg_dump in Compose db and atomically publishes a private
+SQL ZIP under docker-data/backup/postgres. The directory is Git/build-ignored and
+outside the 20GB image quota; no archive expiry. Permissions0700/0600, fail-fast
+and temp cleanup. Optional install-pg-backup-cron / ensure-pg-backup-cron preserve
+unrelated jobs, default02:00 host time; no schedule installed automatically.
+`docker-pg-backup-verify BACKUP_FILE=...` restores only into an isolated disposable
+postgres:17 container/anonymous volume, never live data. First real backup restored
+36 tables successfully. Six mocked failure/cron unit checks passed. See
+utilities/docker-pg-backup*.sh, utilities/install-pg-backup-cron.sh and
+docs/postgresql-backups.md. Database-held data only; images/SQLite/secrets/.env
+need separate file backups. This task made no measurement-data correction.
+
+
+### Source command spelling and URL-free reply (2026-10-26)
+
+The active command is now `!kod-źródłowy`, replying with
+`Klawiatur-iPhone-Duo-fold-counter na githubie` plus its matching cooldown
+disclaimer. No URL is included. Startup migrates the old `!kod-zródłowy` policy,
+preserves any longer existing cooldown, and disables the old key without deleting
+historical events. Help lists only the enabled corrected spelling. 13 bot unit
+tests and the PostgreSQL bot integration check passed without real Google posts.
+Rebuilt/recreated the bot and verified its saved policy, generated reply and help
+in the running container. `make sheets-sync` also completed successfully after the
+configuration migration, as required by AGENTS.md. No test chat post was sent.
+
+
+### Terminal live-chat closure (2026-10-26, 11:18 Warsaw)
+
+After post-live chat closed, YouTube streamList returned generic gRPC
+FAILED_PRECONDITION (`Precondition check failed`). The adapter previously looked
+for explicit ended-chat wording, missed the generic response and retried with
+backoff up to 300 seconds, leaving the bot unhealthy. Official streamList docs
+state this status means disabled OR ended chat and cannot distinguish them.
+The adapter now records `liveChatDisabledOrEnded` for FAILED_PRECONDITION and the
+worker treats it as terminal. It sets the stop event before persisting closure,
+disables delayed replies and becomes dormant with durable `chat_closed`; startup
+honors this state without API requests. Network failures retain transient backoff.
+
+21 stream/lifecycle/bot tests passed, including generic provider text, transient
+network failure and no reconnect after closure. Rebuilt/recreated only the bot.
+At 11:18:36 Warsaw the real adapter recorded the normalized terminal result,
+logged `chat_completed`, saved `chat_closed` with no error, and passed its health
+command. `make sheets-sync` also succeeded. Ordinary video comments are not
+handled or posted by this live-chat worker.
+
+
+### App Docker storage removed at user request (2026-10-26)
+
+After shutdown, created and successfully restore-verified the 47 MB database
+backup `docker-data/backup/postgres/fold-counter-postgres-2026-10-26_10-20-45Z-69570.zip`
+(36 public tables; SHA-256
+`1bf1394b1915606098d7e66284ba510aaa170671411b454f8afeee6fd1f17ea2`).
+The user authorized removing recoverable Docker data. Removed eight stopped
+project containers and the `postgres_data` and `vision_models` named volumes.
+Preserved database backups, source/configuration, `.env`, `secrets/` and `data/`
+frames/review evidence. No app project containers/volumes remain. Before resuming
+this historical dataset, restore that SQL backup into a new PostgreSQL volume;
+starting Compose alone creates an empty database. Ollama models need re-download.

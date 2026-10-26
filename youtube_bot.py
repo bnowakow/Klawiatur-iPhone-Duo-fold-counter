@@ -18,8 +18,8 @@ HELP_DISCLAIMER = 'zapytanie !pomoc może być użyte nie częściej niż raz na
 LINK_REPLY = 'ipduotest kropka pl'
 LINK_DISCLAIMER = 'zapytanie !link może być użyte nie częściej niż raz na 10 minut'
 RECORD_DISCLAIMER = 'zapytanie !rekord może być użyte nie częściej niż raz na 10 minut'
-SOURCE_URL = 'https://github.com/bnowakow/Klawiatur-iPhone-Duo-fold-counter'
-SOURCE_DISCLAIMER = 'zapytanie !kod-zródłowy może być użyte nie częściej niż raz na 10 minut'
+SOURCE_REPLY = 'Klawiatur-iPhone-Duo-fold-counter na githubie'
+SOURCE_DISCLAIMER = 'zapytanie !kod-źródłowy może być użyte nie częściej niż raz na 10 minut'
 DURATION_DISCLAIMER = 'zapytanie !jak-długo może być użyte nie częściej niż raz na 10 minut'
 SAMSUNG_SOURCE_URL = 'https://cyfrowa.rp.pl/smartfony/art36496851-ile-faktycznie-wytrzyma-smartfon-polski-youtuber-postanowil-sprawdzic'
 SAMSUNG_SUMMARY = ('Samsung Galaxy Z Flip3: 418 500 złożeń. Nadal działał, '
@@ -100,6 +100,11 @@ def initialize():
     with quota.connect() as conn:
         conn.execute("SELECT pg_advisory_xact_lock(hashtext('youtube-bot-schema'))")
         conn.execute(SCHEMA)
+        # Keep the old key for historical event foreign keys, but expose only
+        # the correctly spelled command and preserve its existing policy.
+        conn.execute("INSERT INTO youtube_bot_commands(command,handler_key,enabled,cooldown_seconds,disclaimer,max_message_age_seconds) "
+                     "SELECT '!kod-źródłowy',handler_key,enabled,cooldown_seconds,%s,max_message_age_seconds "
+                     "FROM youtube_bot_commands WHERE command='!kod-zródłowy' ON CONFLICT DO NOTHING", (SOURCE_DISCLAIMER,))
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
                      "VALUES ('!ile','current_person',600,%s) ON CONFLICT DO NOTHING", (DISCLAIMER,))
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
@@ -109,7 +114,13 @@ def initialize():
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
                      "VALUES ('!rekord','completed_record',600,%s) ON CONFLICT DO NOTHING", (RECORD_DISCLAIMER,))
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
-                     "VALUES ('!kod-zródłowy','source_code',600,%s) ON CONFLICT DO NOTHING", (SOURCE_DISCLAIMER,))
+                     "VALUES ('!kod-źródłowy','source_code',600,%s) ON CONFLICT(command) DO UPDATE SET disclaimer=EXCLUDED.disclaimer", (SOURCE_DISCLAIMER,))
+        conn.execute("INSERT INTO youtube_bot_cooldowns(chat_id,command,available_at,last_claimed_at,last_event_id) "
+                     "SELECT chat_id,'!kod-źródłowy',available_at,last_claimed_at,last_event_id FROM youtube_bot_cooldowns "
+                     "WHERE command='!kod-zródłowy' ON CONFLICT(chat_id,command) DO UPDATE SET "
+                     "available_at=EXCLUDED.available_at,last_claimed_at=EXCLUDED.last_claimed_at,last_event_id=EXCLUDED.last_event_id "
+                     "WHERE youtube_bot_cooldowns.available_at<EXCLUDED.available_at")
+        conn.execute("UPDATE youtube_bot_commands SET enabled=false,updated_at=now() WHERE command='!kod-zródłowy' AND enabled")
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
                      "VALUES ('!jak-długo','stream_duration',600,%s) ON CONFLICT DO NOTHING", (DURATION_DISCLAIMER,))
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
@@ -125,7 +136,7 @@ def initialize():
         for command,description in (('!ile','liczba złożeń i tempo'),('!pomoc','lista komend'),
                                     ('!samsung','wynik testu Samsunga'),('!link','adres strony testu'),
                                     ('!rekord','najlepsza zakończona zmiana'),
-                                    ('!kod-zródłowy','repozytorium na GitHubie'),
+                                    ('!kod-źródłowy','repozytorium na GitHubie'),
                                     ('!jak-długo','czas trwania transmisji')):
             conn.execute("UPDATE youtube_bot_commands SET description=%s WHERE command=%s AND description=''",
                          (description,command))
@@ -173,7 +184,7 @@ def build_link_reply(stream, config):
 
 
 def build_source_reply(stream, config):
-    return chat.validate_message('Kod źródłowy: '+SOURCE_URL+' '+config[3])
+    return chat.validate_message(SOURCE_REPLY+' '+config[3])
 
 
 def polish_duration(seconds):
@@ -522,11 +533,11 @@ def run():
             except Exception as error:
                 reason = error.reason if isinstance(error,quota.YouTubeRequestFailed) else type(error).__name__
                 if (isinstance(error,stream_lifecycle.ChatClosed) or
-                        reason in ('liveChatEnded','liveChatDisabled','liveChatNotFound') or
+                        reason in ('liveChatEnded','liveChatDisabled','liveChatNotFound','liveChatDisabledOrEnded') or
                         (video_ended and reason=='grpc_not_found')):
                     chat_closed=True
-                    chat_finished(stream)
                     stop.set()
+                    chat_finished(stream)
                     break
                 try:
                     if reason == 'grpc_invalid_argument':

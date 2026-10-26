@@ -140,16 +140,17 @@ def main():
     text=bot.build_record_reply(stream,config)
     assert '3000 złożeń' in text and 'Opis osoby' not in text,text
     assert '!rekord' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
-    source_config=bot.command_config('!kod-zródłowy')
+    source_config=bot.command_config('!kod-źródłowy')
     assert source_config[2] in (60,600) and source_config[4]==120
     with patch.object(bot.chat,'send',side_effect=fake_send) as send:
-        source_item=item('source-code','!kod-zródłowy')
+        source_item=item('source-code','!kod-źródłowy')
         assert bot.process_message(project,stream,target,enabled,source_item)['status']=='sent'
-        assert bot.SOURCE_URL in send.call_args.args[2]
+        assert send.call_args.args[2] == bot.SOURCE_REPLY+' '+bot.SOURCE_DISCLAIMER
+        assert '://' not in send.call_args.args[2]
         assert bot.process_message(project,stream,target,enabled,source_item)['status']=='duplicate'
-        assert bot.process_message(project,stream,target,enabled,item('source-other-user','!kod-zródłowy'))['status']=='throttled'
+        assert bot.process_message(project,stream,target,enabled,item('source-other-user','!kod-źródłowy'))['status']=='throttled'
         assert send.call_count==1
-    assert '!kod-zródłowy' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
+    assert '!kod-źródłowy' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
     duration_start=datetime.now(timezone.utc)-timedelta(days=2,hours=3,minutes=4)
     timed_target=dict(target,actual_started_at=duration_start.isoformat(),actual_ended_at=None)
     bot.remember_state(stream,project,timed_target)
