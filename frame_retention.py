@@ -1,5 +1,6 @@
-"""Durable, per-stream anomaly windows over captured frames (not elapsed time)."""
+"""Two-hour debug history plus durable, per-stream anomaly context windows."""
 import json
+from datetime import datetime, timezone
 from contextlib import contextmanager
 from pathlib import Path
 import shutil
@@ -7,6 +8,21 @@ import sqlite3
 import uuid
 
 WINDOW = 10
+DEBUG_HISTORY_SECONDS = 2 * 60 * 60
+
+
+def capture_time(obs, folder):
+    value = obs.get('observed_at')
+    if value:
+        try:
+            stamp = value if isinstance(value, datetime) else datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+            if stamp.tzinfo is not None:
+                return stamp.timestamp()
+        except (ValueError, TypeError, OverflowError):
+            pass
+    # Legacy captures without an observation timestamp use the actual file time.
+    image = folder / 'frame.jpg'
+    return (image if image.exists() else folder).stat().st_mtime
 
 
 def reasons(obs):
@@ -42,6 +58,8 @@ def connect(root):
         seq INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT UNIQUE NOT NULL,
         stream TEXT NOT NULL, reasons TEXT NOT NULL, retained INTEGER NOT NULL)''')
     conn.execute('CREATE INDEX IF NOT EXISTS capture_stream ON captures(stream, seq)')
+    if 'captured_at' not in {row[1] for row in conn.execute('PRAGMA table_info(captures)')}:
+        conn.execute('ALTER TABLE captures ADD COLUMN captured_at REAL')
     try:
         with conn:
             yield conn
@@ -60,13 +78,16 @@ def register(root, obs):
         return
     why = reasons(obs)
     obs.setdefault('details', {})['frame_retention'] = {
-        'policy': 'anomaly_window', 'before': WINDOW, 'after': WINDOW,
+        'policy': 'recent_history_then_anomaly_window', 'before': WINDOW, 'after': WINDOW,
+        'recent_history_seconds': DEBUG_HISTORY_SECONDS,
         'anomaly_reasons': why,
-        'note': 'Ordinary frames are temporary; later anomalies may preserve them.'}
+        'note': 'All captures kept for two hours, then anomaly/context only; image cap takes priority.'}
     with connect(root) as conn:
         conn.execute('BEGIN IMMEDIATE')
         existing = conn.execute('SELECT seq,reasons FROM captures WHERE id=?', (obs['id'],)).fetchone()
         if existing:
+            conn.execute('UPDATE captures SET captured_at=COALESCE(captured_at,?) WHERE id=?',
+                         (capture_time(obs, folder), obs['id']))
             # A post-insert DB failure can promote this same capture to an anomaly.
             if why:
                 merged = sorted(set(json.loads(existing[1]) + why))
@@ -83,27 +104,36 @@ def register(root, obs):
         previous = conn.execute('SELECT id,reasons FROM captures WHERE stream=? '
                                 'ORDER BY seq DESC LIMIT ?', (obs['stream_url'], WINDOW)).fetchall()
         keep = bool(why) or any(json.loads(row[1]) for row in previous)
-        conn.execute('INSERT INTO captures(id,stream,reasons,retained) VALUES (?,?,?,?)',
-                     (obs['id'], obs['stream_url'], json.dumps(why), int(keep)))
+        conn.execute('INSERT INTO captures(id,stream,reasons,retained,captured_at) VALUES (?,?,?,?,?)',
+                     (obs['id'], obs['stream_url'], json.dumps(why), int(keep), capture_time(obs, folder)))
         if why:
             conn.executemany('UPDATE captures SET retained=1 WHERE id=?',
                              [(row[0],) for row in previous])
 
 
-def prune(root):
-    """Keep anomalies/windows indefinitely plus a rolling ten-frame lookbehind."""
+def prune(root, now=None):
+    """Keep two hours, anomalies/windows and a rolling ten-frame lookbehind."""
     root = Path(root)
+    cutoff = (now or datetime.now(timezone.utc)).timestamp() - DEBUG_HISTORY_SECONDS
     removed = 0
     with connect(root) as conn:
         conn.execute('BEGIN IMMEDIATE')
+        for identifier, in conn.execute('SELECT id FROM captures WHERE captured_at IS NULL').fetchall():
+            uuid.UUID(identifier)
+            folder = root / 'frames' / identifier
+            if folder.is_symlink():
+                raise ValueError('Refusing symlink in frame retention')
+            if folder.exists():
+                conn.execute('UPDATE captures SET captured_at=? WHERE id=?', (capture_time({}, folder), identifier))
         streams = conn.execute('SELECT DISTINCT stream FROM captures').fetchall()
         for (stream,) in streams:
             recent = conn.execute('SELECT seq FROM captures WHERE stream=? ORDER BY seq DESC LIMIT ?',
                                   (stream, WINDOW)).fetchall()
             if len(recent) < WINDOW:
                 continue
-            rows = conn.execute('SELECT id FROM captures WHERE stream=? AND retained=0 AND seq<?',
-                                (stream, recent[-1][0])).fetchall()
+            rows = conn.execute('SELECT id FROM captures WHERE stream=? AND retained=0 AND seq<? '
+                                'AND (captured_at<? OR captured_at IS NULL)',
+                                (stream, recent[-1][0], cutoff)).fetchall()
             for (identifier,) in rows:
                 # Observation IDs are UUIDs; do not follow a manipulated path.
                 uuid.UUID(identifier)

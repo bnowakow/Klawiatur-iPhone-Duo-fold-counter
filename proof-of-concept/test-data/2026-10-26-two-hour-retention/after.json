@@ -1,0 +1,16 @@
+{
+  "verified_at": "2026-10-26T06:47:12.063124+00:00",
+  "history_seconds": 7200,
+  "image_limit_bytes": 20000000000,
+  "ledger_rows": 3506,
+  "rows_with_capture_time": 3506,
+  "recent_rows": 323,
+  "latest_capture": [
+    "1b6d3b0f-b70e-434a-a150-9163c79788e9",
+    1792997226.917371,
+    1
+  ],
+  "deployed_retention_sha256": "8bcadacde61a1e8c48f29ef22176e3ba95699b931d56f8383f049fb8ba92cdcf",
+  "camera_code_preserved": true,
+  "camera_sha256": "c2b8a7b7c52688a9adb3bd009b8b808af482eaec3813d5edc3d64d62883e798c"
+}

@@ -1,0 +1,26 @@
+time="2026-10-26T07:43:07+01:00" level=warning msg="Found orphan containers (klawiatur-iphone-duo-fold-counter-official-data-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-2dfede8bb383 Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-2dfede8bb383 Created 
+................................F............................................................................................../usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmp6qd881b5/frames/01fc3c7d-bba9-44c2-8e57-5e81308f6a97/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+......./usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmp6qd881b5/frames/1aa7e8f6-ee38-4b35-8052-f36249acfd5b/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp6qd881b5/frames/c4b0402c-c185-4741-a5dd-683ed9a9761f/frame.jpg'>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................................
+======================================================================
+FAIL: test_all_reviewed_phone_hand_obstructions_keep_the_same_stint (test_clothing_occlusion.ClothingOcclusionTests.test_all_reviewed_phone_hand_obstructions_keep_the_same_stint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/proof-of-concept/test_clothing_occlusion.py", line 23, in test_all_reviewed_phone_hand_obstructions_keep_the_same_stint
+    self.assertIn(status,('baseline_created','no_clothing_change_detected'),(row['file'],camera))
+AssertionError: 'change_pending' not found in ('baseline_created', 'no_clothing_change_detected') : ('bf7fe97c-b3f9-473f-82c7-b5b013e16927.jpg', {'view': 'presenter_main', 'background_distances': {'presenter_main': 0.0037, 'presenter_inset': 0.2884, 'presenter_main_morning': 0.319}, 'break_scene': {'matched': False, 'profile': 'night_break_board_2026_10_25', 'distances': {'break_sign': 0.8094, 'empty_background': 0.2868}, 'signal': 'calibrated_break_sign'}, 'clothing_roi': [0.48, 0.51, 0.65, 0.62], 'garment_rois': [[0.46, 0.59, 0.58, 0.69]], 'colour_score': 0.087109375, 'luminance_score': 0.08354384698664745, 'garment_scores': [0.81109375], 'garment_upper_scores': [0.6807031250000001], 'garment_effective_scores': [0.6807031250000001], 'localized_garment_change_ignored': False, 'tracking': {'last_observation': 1792996420.705807, 'changed_since': 1792996420.705807, 'sustained_seconds': 0.0, 'status': 'change_pending'}, 'baseline_observation': '0'})
+
+----------------------------------------------------------------------
+Ran 166 tests in 26.992s
+
+FAILED (failures=1)
+

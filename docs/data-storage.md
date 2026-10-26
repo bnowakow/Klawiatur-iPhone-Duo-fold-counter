@@ -68,9 +68,10 @@ A supervisor observation completed during a database outage is queued in
 queue independently under `data/ipduotest-pl/pending/`. Pending files are not yet
 in PostgreSQL until recovery; database failures must remain visible in logs.
 
-Stream images remain files referenced by observation paths. Only detected
-anomalies and the ten captured frames before/after each are preserved subject to the global 20 GB image cap;
-ordinary frames are deleted after leaving the rolling ten-frame buffer. See
+Stream images remain files referenced by observation paths. All captures from the
+latest two hours are kept;
+older frames retain only anomalies and the ten captured frames before/after each,
+plus the rolling ten-frame buffer. The global 20 GB image cap takes priority. See
 [anomaly-window retention](frame-retention.md). Unknown-camera and presenter-review evidence,
 website raw blobs, and regression datasets are retained separately. The database
 retains numeric readings, diagnostics, source bytes and timing evidence after
@@ -145,3 +146,10 @@ backoff decisions and delivery expiry times are retained in PostgreSQL with no
 automatic expiry. Suppressed or stale replies remain audit records and are never
 queued for later posting. See [posting limits](youtube-rate-limits.md) for tables,
 the investigated incident and freshness policy.
+
+`presenter_review_resolutions` stores audited human confirmations that ambiguous
+appearance cues belonged to the same presenter. Each entry includes the original
+monitor state, affected observation snapshots and appearance rows before correction.
+The repair keeps the stint UUID/baseline and replays accepted counter readings;
+historical observations receive resolution annotations and preserve original flags.
+No new stint or automatic finish notification is created by such a resolution.

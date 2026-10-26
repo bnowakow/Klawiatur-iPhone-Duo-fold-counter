@@ -54,6 +54,9 @@ retained. Rankings, presentation and reconciliation policy can be decided later.
 See the [database storage contract](docs/data-storage.md) for the field mapping,
 retention and remaining measurement limits.
 
+See [external folding-test references](docs/external-tests.md) for the CNET
+machine-test video.
+
 ## Git commits
 
 ```sh
@@ -523,3 +526,10 @@ Use `make youtube-bot-stats`, `make youtube-bot-logs` and `make youtube-bot-stop
 The bot also posts one final-statistics summary when a newly observed folding stint
 ends through a handover or night stop. Automatic summaries use the completed
 person's data, persist delivery history, and do not replay historical stints.
+
+Supplemental clothing-patch changes require spatial agreement with an upper patch
+and a calibrated upper-right anchor, reducing hand/phone obstruction alarms.
+The original 47-frame obstruction regression and real dark-shirt handover fixtures
+are preserved. Ambiguous real transitions still suspend attribution for review;
+`repair_presenter_review.py` provides an audited same-person resolution when a
+human has confirmed that no handover occurred.

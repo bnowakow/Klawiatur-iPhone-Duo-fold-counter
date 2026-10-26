@@ -1,0 +1,15 @@
+{
+  "retained_flag_counts": [
+    [
+      1,
+      3464
+    ]
+  ],
+  "ledger_columns": [
+    "seq",
+    "id",
+    "stream",
+    "reasons",
+    "retained"
+  ]
+}

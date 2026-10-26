@@ -1,0 +1,33 @@
+time="2026-10-26T07:42:27+01:00" level=warning msg="Found orphan containers (klawiatur-iphone-duo-fold-counter-official-data-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-4ce444f2f7f6 Creating 
+ Container klawiatur-iphone-duo-fold-counter-supervisor-run-4ce444f2f7f6 Created 
+................................E............................................................................................../usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpmlz88kh8/frames/1a4a4549-5fa6-4134-abec-b9c604e00bfb/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+......./usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.FileIO name='/tmp/tmpmlz88kh8/frames/6d476c0f-82ce-430a-93e1-9548be759917/frame.jpg' mode='rb' closefd=True>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.12/unittest/mock.py:2217: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpmlz88kh8/frames/b3af17cc-f3d1-4b37-b763-b5f317b45394/frame.jpg'>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................................
+======================================================================
+ERROR: test_all_reviewed_phone_hand_obstructions_keep_the_same_stint (test_clothing_occlusion.ClothingOcclusionTests.test_all_reviewed_phone_hand_obstructions_keep_the_same_stint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/proof-of-concept/test_clothing_occlusion.py", line 14, in test_all_reviewed_phone_hand_obstructions_keep_the_same_stint
+    fixtures=json.loads((ROOT/'manifest.json').read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/app/proof-of-concept/test-data/2026-10-26-clothing-occlusion/manifest.json'
+
+----------------------------------------------------------------------
+Ran 166 tests in 26.413s
+
+FAILED (errors=1)
+

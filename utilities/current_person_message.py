@@ -41,11 +41,16 @@ def current_measurements(conn, stream, now=None):
     if not latest:
         raise PaceUnavailable('Brak aktualnych odczytów licznika.')
     observed, status, clothing, details = latest
-    if (status != 'analyzed' or details.get('presenter_attribution_review_required')
-            or details.get('presenter_candidate_id')
-            or clothing in ('change_pending', 'possible_handover_review_required',
-                            'camera_view_unknown_review_required', 'night_break_detected')):
-        raise PaceUnavailable('Trwa przerwa lub odczyty wymagają weryfikacji.')
+    if status != 'analyzed':
+        raise PaceUnavailable('Ostatnia klatka nie została poprawnie przeanalizowana.')
+    if details.get('presenter_attribution_review_required'):
+        raise PaceUnavailable('Przypisanie złożeń wstrzymane po niepewnej zmianie obrazu ubrania; wymagana weryfikacja. To nie oznacza potwierdzonej zmiany osoby.')
+    if details.get('presenter_candidate_id') or clothing in ('change_pending','possible_handover_review_required'):
+        raise PaceUnavailable('Trwa weryfikacja możliwej zmiany osoby; statystyki są chwilowo wstrzymane.')
+    if clothing == 'camera_view_unknown_review_required':
+        raise PaceUnavailable('Nieznany widok kamery; nie można wiarygodnie przypisać złożeń.')
+    if clothing == 'night_break_detected':
+        raise PaceUnavailable('Wykryto nocną przerwę w składaniu.')
     interval = float(details.get('polling_interval_seconds', os.getenv('INTERVAL_SECONDS', 4)))
     limit = max(60, interval * 2.5)
     if any(not 0 <= (now - stamp).total_seconds() <= limit for stamp in (observed, row[1])):

@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import tempfile
 import unittest
@@ -23,13 +24,14 @@ class FrameRetentionTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.ids = []
 
-    def capture(self, n, anomaly=False, stream='live', prune=True):
+    def capture(self, n, anomaly=False, stream='live', prune=True, observed_at='2020-01-01T00:00:00+00:00'):
         identifier = str(uuid.UUID(int=n + 1))
         self.ids.append(identifier)
         folder = self.root / 'frames' / identifier
         folder.mkdir(parents=True, exist_ok=True)
         (folder / 'frame.jpg').write_bytes(b'image')
         obs = {'id': identifier, 'stream_url': stream, 'status': 'analyzed',
+               'observed_at': observed_at,
                'counter_status': 'rejected' if anomaly else 'accepted', 'details': {}}
         retention.register(self.root, obs)
         if prune:
@@ -38,6 +40,66 @@ class FrameRetentionTests(unittest.TestCase):
 
     def exists(self, n):
         return (self.root / 'frames' / str(uuid.UUID(int=n + 1))).exists()
+
+    def test_two_hour_window_then_original_anomaly_policy(self):
+        now = datetime(2026, 10, 26, 7, tzinfo=timezone.utc)
+        for n in range(50):
+            self.capture(n, anomaly=n == 15, prune=False,
+                         observed_at=(now-timedelta(minutes=90)).isoformat())
+        retention.prune(self.root, now=now)
+        self.assertTrue(all(self.exists(n) for n in range(50)))
+        # Reopening the ledger preserves timestamps; age, not capture count, expires history.
+        retention.prune(self.root, now=now+timedelta(minutes=31))
+        self.assertEqual([n for n in range(50) if self.exists(n)],
+                         list(range(5,26))+list(range(40,50)))
+
+    def test_exact_two_hour_boundary_and_delayed_observation(self):
+        now = datetime(2026, 10, 26, 7, tzinfo=timezone.utc)
+        for n in range(15):
+            self.capture(n, prune=False, observed_at=(now-timedelta(hours=2)).isoformat())
+        retention.prune(self.root, now=now)
+        self.assertTrue(self.exists(0))
+        retention.prune(self.root, now=now+timedelta(microseconds=1))
+        self.assertFalse(self.exists(0))
+        self.assertTrue(self.exists(14))
+
+    def test_migrates_legacy_ledger_using_observation_time(self):
+        import sqlite3
+        conn = sqlite3.connect(self.root / 'frame-retention.sqlite3')
+        conn.execute('CREATE TABLE captures (seq INTEGER PRIMARY KEY AUTOINCREMENT, '
+                     'id TEXT UNIQUE NOT NULL,stream TEXT NOT NULL,reasons TEXT NOT NULL,retained INTEGER NOT NULL)')
+        conn.close()
+        obs = self.capture(0, prune=False, observed_at='2026-10-26T07:00:00+00:00')
+        with retention.connect(self.root) as conn:
+            conn.execute('UPDATE captures SET captured_at=NULL')
+        retention.register(self.root, obs)
+        with retention.connect(self.root) as conn:
+            self.assertEqual(conn.execute('SELECT captured_at FROM captures').fetchone()[0],
+                             datetime(2026,10,26,7,tzinfo=timezone.utc).timestamp())
+
+    def test_legacy_missing_timestamp_uses_image_time_without_resetting_age(self):
+        import os
+        now = datetime(2026,10,26,7,tzinfo=timezone.utc)
+        for n in range(15):
+            self.capture(n, prune=False)
+            os.utime(self.root / 'frames' / self.ids[-1] / 'frame.jpg',
+                     (now.timestamp(),now.timestamp()))
+        with retention.connect(self.root) as conn:
+            conn.execute('UPDATE captures SET captured_at=NULL')
+        retention.prune(self.root, now=now+timedelta(hours=1))
+        self.assertTrue(self.exists(0))
+        retention.prune(self.root, now=now+timedelta(hours=3))
+        self.assertFalse(self.exists(0))
+
+    def test_image_cap_overrides_recent_debug_window(self):
+        now = datetime.now(timezone.utc)
+        self.capture(0, observed_at=now.isoformat())
+        retention.prune(self.root, now=now)
+        self.assertTrue(self.exists(0))
+        with self.assertLogs(level='ERROR'):
+            report=retention.enforce_image_limit(self.root, limit=1)
+        self.assertLessEqual(report['after_bytes'],1)
+        self.assertFalse((self.root / 'frames' / self.ids[0] / 'frame.jpg').exists())
 
     def test_exact_ten_before_and_after(self):
         for n in range(50):

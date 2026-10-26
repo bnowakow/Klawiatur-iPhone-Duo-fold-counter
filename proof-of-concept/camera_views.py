@@ -99,6 +99,12 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
     features = histogram(crop)
     garment_rois = profile.get("garment_rois", [])
     garment_features = [histogram(clothing_crop(image, region)) for region in garment_rois]
+    # Hands/phone often cover only the lower chest. Require agreement in the
+    # upper half before treating a localized garment change as a new shirt.
+    upper_rois = [[x1,y1,x2,(y1+y2)/2] for x1,y1,x2,y2 in garment_rois]
+    upper_features = [histogram(clothing_crop(image, region)) for region in upper_rois]
+    anchor_rois = [[(x1+x2)/2,y1,x2,y1+(y2-y1)/4] for x1,y1,x2,y2 in garment_rois]
+    anchor_features = [histogram(clothing_crop(image, region)) for region in anchor_rois]
     details["clothing_roi"] = list(crop_roi)
     details["garment_rois"] = garment_rois
     saved = state["views"].get(view)
@@ -106,6 +112,8 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
         saved = {"baseline": features.tolist(), "baseline_observation": observation_id,
                  "luminance_baseline": luminance_histogram(crop).tolist(),
                  "garment_baselines": [feature.tolist() for feature in garment_features],
+                 "garment_upper_baselines": [feature.tolist() for feature in upper_features],
+                 "garment_anchor_baselines": [feature.tolist() for feature in anchor_features],
                  "garment_rois": garment_rois}
         state["views"][view] = saved
         status, score = "baseline_created", 0
@@ -114,6 +122,8 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
             saved.pop("tracking", None)
         old_profile = next(p for p in previous_config[0] if p['name'] == view)
         needs_garments = (len(saved.get('garment_baselines', [])) != len(garment_rois)
+                          or len(saved.get('garment_upper_baselines', [])) != len(garment_rois)
+                          or len(saved.get('garment_anchor_baselines', [])) != len(garment_rois)
                           or saved.get('garment_rois', old_profile.get('garment_rois', [])) != garment_rois)
         if needs_garments:
             reference = (Path(evidence_root) / saved['baseline_observation'] / 'frame.jpg'
@@ -126,6 +136,10 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
             with Image.open(reference) as original:
                 saved['garment_baselines'] = [histogram(clothing_crop(original, region)).tolist()
                                               for region in garment_rois]
+                saved['garment_upper_baselines'] = [histogram(clothing_crop(original, region)).tolist()
+                                                    for region in upper_rois]
+                saved['garment_anchor_baselines'] = [histogram(clothing_crop(original, region)).tolist()
+                                                     for region in anchor_rois]
             saved['garment_rois'] = garment_rois
             details['garment_baseline_reconstructed'] = True
         score = float(np.abs(features-np.asarray(saved["baseline"])).sum()/2)
@@ -146,10 +160,23 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
         garment_scores = [float(np.abs(feature-np.asarray(reference)).sum()/2)
                           for feature, reference in zip(garment_features, garment_baselines)]
         details["garment_scores"] = garment_scores
+        upper_scores = [float(np.abs(feature-np.asarray(reference)).sum()/2)
+                        for feature,reference in zip(upper_features,saved.get('garment_upper_baselines',[]))]
+        anchor_scores = [float(np.abs(feature-np.asarray(reference)).sum()/2)
+                         for feature,reference in zip(anchor_features,saved.get('garment_anchor_baselines',[]))]
+        # Calibrated upper-right anchor avoids the hand/phone path. Its smaller
+        # print coverage needs two-thirds of the full-patch threshold.
+        effective_scores = [min(full,upper,anchor*1.5)
+                            for full,upper,anchor in zip(garment_scores,upper_scores,anchor_scores)]
+        details['garment_upper_scores'] = upper_scores
+        details['garment_anchor_scores'] = anchor_scores
+        details['garment_effective_scores'] = effective_scores
+        details['localized_garment_change_ignored'] = any(full>=threshold and effective<threshold
+                                                        for full,effective in zip(garment_scores,effective_scores))
         # A shirt print can disappear while a plain shoulder crop stays black.
         # The additional regions remain clothing-only and use the same
         # persistence, layout-continuity and review rules as the primary crop.
-        score = max([score] + garment_scores)
+        score = max([score] + effective_scores)
         # Fine brightness bins distinguish light grey from white. This remains
         # an appearance cue: lighting changes can also require review.
         if luminance_score is not None and luminance_score >= .60:

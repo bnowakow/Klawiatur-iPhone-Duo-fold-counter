@@ -348,8 +348,8 @@ independent streams.
 
 Image paths in PostgreSQL are container paths such as `/data/frames/<id>/frame.jpg`;
 the corresponding host path is `data/frames/<id>/frame.jpg`. Images and database
-records have separate retention. Ordinary images are deleted outside anomaly
-windows and a ten-frame lookbehind buffer. Review archives bypass ordinary
+records have separate retention. All captures are kept for two hours; older ordinary
+images are deleted outside anomaly windows and a ten-frame lookbehind buffer. Review archives bypass ordinary
 pruning, but all images under `data/` remain subject to the global 20 GB cap.
 Database history and repository regression fixtures are outside that image quota.
 Back up the database volume and the persistent evidence separately.
@@ -604,7 +604,7 @@ Current effective intervals are in observations.details.polling_interval_seconds
 and passed to camera continuity/comparison freshness logic. See
 docs/backpressure.md and proof-of-concept/test-data/2026-10-25-backpressure/.
 
-Captured-frame retention is specified in `docs/frame-retention.md`: keep anomalies plus ten captures before/after, persist protection in `data/frame-retention.sqlite3`, and delete other ordinary captures.
+Captured-frame retention is specified in `docs/frame-retention.md`: keep all captures for two hours, then anomalies plus ten captures before/after and a ten-frame lookbehind, persist capture times/protection in `data/frame-retention.sqlite3`, and delete other ordinary captures.
 
 `IMAGE_STORAGE_LIMIT_BYTES=20000000000`: after each supervisor cycle, log ERROR on excess image bytes under `data/`, then delete oldest image files only until within the limit. The cap overrides anomaly protection; DB/metadata and repository regression fixtures are excluded. Events are saved in the retention ledger.
 
@@ -726,3 +726,30 @@ honor longer Retry-After; these are not guaranteed Google unblock times. New
 provider errors are sanitized in youtube_api_error_details and emit ERROR
 `youtube_posting_rate_limited` with the retry time. Stats include active posting
 backoff. No automatic resend/probe is introduced and stale requests are discarded.
+
+### Reviewed false clothing cues and repair (2026-10-26)
+
+Hands/phone crossing the supplemental chest patch produced 17 false pending cues
+at 07:29–07:37 Warsaw time while the user confirmed the presenter did not change.
+The old interrupted-cue rule correctly preserved uncertainty but left a sticky
+attribution-review flag and froze that stint's last counter. `camera_views.py` now
+requires full-patch changes to be corroborated by the upper half and upper-right
+anchor; the smaller anchor uses two-thirds of the full-patch threshold. New
+baseline features are reconstructed from original evidence, never the current
+frame. Original false-alarm JPEGs/checksums are in the clothing-occlusion dataset;
+recorded real dark-shirt handover, brief appearances and layout tests remain.
+`repair_presenter_review.py` previews/applies an explicitly human-confirmed
+same-presenter resolution with stream locking, outbox checks and full pre-change
+backups in `presenter_review_resolutions`. It preserves the stint ID and baseline,
+replays only accepted counters, annotates historical observations/cues and clears
+review/candidate tracking without resetting clothing identity. Generic unresolved
+cues are not silently auto-cleared. Message-generation errors now distinguish
+review holds, pending changes, unknown cameras and actual night breaks.
+
+Live audited resolution applied at 07:49 Warsaw on 2026-10-26:
+`ae8e04dd-5f31-4388-bb18-39a8721692f1`, preserving active stint
+`c44a8bda-017f-4d94-9df1-ed978ad32e6d`. Replayed 228 reviewed observations,
+resolved 39 brief cues, restored the last counter from 67918 to 69248, and retained
+all original records in the audit. Subsequent live observations advanced to 69290
+with review=false and no candidate; the original stint remained open. Thirty
+relevant tests plus the isolated audit-repair integration check passed.

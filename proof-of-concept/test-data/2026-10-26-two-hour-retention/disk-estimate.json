@@ -1,0 +1,19 @@
+{
+  "measured_on": "2026-10-26",
+  "sample_capture_folders": 500,
+  "mean_bytes_per_capture": 392938.458,
+  "median_bytes_per_capture": 418863,
+  "p95_bytes_per_capture": 638610,
+  "current_image_bytes": 1633572577,
+  "image_limit_bytes": 20000000000,
+  "debug_history_seconds": 7200,
+  "estimated_window_bytes_by_interval_seconds": {
+    "1": 2829156898,
+    "2": 1414578449,
+    "4": 707289224,
+    "5": 565831380
+  },
+  "p95_size_window_bytes_at_one_second": 4597992000,
+  "recent_actual_mean_interval_seconds": 10.95,
+  "estimate_note": "Captured images and derived crops/annotations; assumes similar image sizes. Existing anomalies overlap the window rather than adding duplicates."
+}
