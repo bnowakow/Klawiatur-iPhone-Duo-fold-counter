@@ -93,6 +93,17 @@ def main():
     with quota.connect() as conn:
         assert conn.execute("SELECT received,answered,throttled FROM youtube_bot_command_usage WHERE stream_url=%s AND command='!samsung'",(stream,)).fetchone()==(2,1,1)
     assert '!samsung' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
+    with patch.object(bot.chat,'send',side_effect=fake_send) as send:
+        link_item=item('link','!link')
+        assert bot.process_message(project,stream,target,enabled,link_item)['status']=='sent'
+        assert send.call_args.args[2] == 'ipduotest kropka pl'
+        assert bot.process_message(project,stream,target,enabled,link_item)['status']=='duplicate'
+        assert bot.process_message(project,stream,target,enabled,item('link-other-user','!link'))['status']=='throttled'
+        assert send.call_count == 1
+    with quota.connect() as conn:
+        assert conn.execute("SELECT cooldown_seconds,max_message_age_seconds FROM youtube_bot_commands WHERE command='!link'").fetchone()==(600,120)
+        assert conn.execute("SELECT received,answered,throttled FROM youtube_bot_command_usage WHERE stream_url=%s AND command='!link'",(stream,)).fetchone()==(2,1,1)
+    assert '!link' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
     result={'passed':True,'run_id':run,'real_google_requests':0,'checks':['command statistics','deduplication','global cooldown across users','exact cooldown boundary','concurrent requests','uncertain sends retain cooldown','stale history ignored','unavailable measurements','persistent cursor and chat rotation']}
     folder=Path(os.getenv('DATA_DIR','data'))/'test-evidence'/'youtube-bot'/run
     folder.mkdir(parents=True,exist_ok=True)

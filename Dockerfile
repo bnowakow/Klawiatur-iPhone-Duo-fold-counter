@@ -31,5 +31,6 @@ COPY repair_presenter_review.py presenter_review_resolution_integration_check.py
 COPY proof-of-concept/test-data/2026-10-26-clothing-occlusion/ proof-of-concept/test-data/2026-10-26-clothing-occlusion/
 COPY proof-of-concept/test-data/2026-10-26-dark-clothing-handover/ proof-of-concept/test-data/2026-10-26-dark-clothing-handover/
 COPY utilities/current_person_message.py utilities/current_person_message.py
+COPY sheets_auth.py sheets_export.py ./
 COPY proof-of-concept/test-data/2026-10-26-morning-resumption/ proof-of-concept/test-data/2026-10-26-morning-resumption/
 CMD ["python", "supervisor.py"]

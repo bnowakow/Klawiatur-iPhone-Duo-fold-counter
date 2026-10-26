@@ -197,7 +197,7 @@ Evidence is saved under `data/test-evidence/youtube-stint-notifications/`.
 `!pomoc` replies with the list of enabled commands whose handlers are available,
 including their descriptions from `youtube_bot_commands.description`. Currently:
 
-> Komendy: !ile — liczba złożeń i tempo; !pomoc — lista komend. zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut
+> Komendy: !ile — liczba złożeń i tempo; !link — adres strony testu; !pomoc — lista komend; !samsung — wynik testu Samsunga. zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut
 
 Its own persisted policy uses `handler_key=help` and `cooldown_seconds=600`.
 The cap is global across viewers for this command, independent of the `!ile`
@@ -207,6 +207,16 @@ and durable delivery path as other commands. Help works without folding data;
 disabled/unimplemented commands are excluded. Very long descriptions fall back
 to the complete command-name list to fit the 200-character limit. Seeding preserves
 operator policy changes and custom nonempty descriptions across restarts.
+
+## !link static website address
+
+`!link` replies with exactly `ipduotest kropka pl`. It uses the standard delivery,
+deduplication, usage statistics and account-wide posting protections, plus its
+own shared-chat 600-second cooldown and 120-second message-age limit, matching
+the other commands. It needs no live folding measurements or website request.
+The static reply has no appended disclaimer. `!pomoc` includes the command;
+help falls back to command names if the complete description list exceeds
+YouTube's message-length limit.
 
 ## !samsung cached historical result
 

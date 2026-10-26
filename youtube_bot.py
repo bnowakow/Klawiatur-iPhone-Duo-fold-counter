@@ -14,6 +14,8 @@ from youtube_stream import batches
 
 DISCLAIMER = 'zapytanie !ile może być użyte nie częściej niż raz na 10 minut'
 HELP_DISCLAIMER = 'zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut'
+LINK_REPLY = 'ipduotest kropka pl'
+LINK_DISCLAIMER = 'zapytanie !link może być użyte nie częściej niż raz na 10 minut'
 SAMSUNG_SOURCE_URL = 'https://cyfrowa.rp.pl/smartfony/art36496851-ile-faktycznie-wytrzyma-smartfon-polski-youtuber-postanowil-sprawdzic'
 SAMSUNG_SUMMARY = ('Samsung Galaxy Z Flip3: 418 500 złożeń. Nadal działał, '
                    'ale nie domykał się. Źródło: cyfrowa.rp.pl.')
@@ -86,6 +88,8 @@ def initialize():
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
                      "VALUES ('!pomoc','help',600,%s) ON CONFLICT DO NOTHING", (HELP_DISCLAIMER,))
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
+                     "VALUES ('!link','static_link',600,%s) ON CONFLICT DO NOTHING", (LINK_DISCLAIMER,))
+        conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
                      "VALUES ('!samsung','cached_samsung',600,%s) ON CONFLICT DO NOTHING", (SAMSUNG_DISCLAIMER,))
         from psycopg.types.json import Jsonb
         conn.execute('INSERT INTO youtube_bot_command_cache '
@@ -96,7 +100,7 @@ def initialize():
                              'still_working_at_end':True,'could_close_fully_at_end':False,
                              'sand_added_after_folds':333333}), '2026-10-26'))
         for command,description in (('!ile','liczba złożeń i tempo'),('!pomoc','lista komend'),
-                                    ('!samsung','wynik testu Samsunga')):
+                                    ('!samsung','wynik testu Samsunga'),('!link','adres strony testu')):
             conn.execute("UPDATE youtube_bot_commands SET description=%s WHERE command=%s AND description=''",
                          (description,command))
 
@@ -138,7 +142,12 @@ def build_samsung_reply(stream, config):
     return chat.validate_message(cached[0]+' '+config[3])
 
 
-HANDLERS = {'current_person': build_reply, 'help': build_help_reply, 'cached_samsung': build_samsung_reply}
+def build_link_reply(stream, config):
+    return chat.validate_message(LINK_REPLY)
+
+
+HANDLERS = {'current_person': build_reply, 'help': build_help_reply, 'cached_samsung': build_samsung_reply,
+            'static_link': build_link_reply}
 
 
 def parsed_command(item):

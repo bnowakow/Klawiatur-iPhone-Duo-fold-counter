@@ -57,6 +57,10 @@ retention and remaining measurement limits.
 See [external folding-test references](docs/external-tests.md) for the CNET
 machine-test video.
 
+The [Google Sheets exporter](docs/google-sheets.md) posts stint measurements to
+our dedicated tab for human verification, matching `Ranking`'s first five
+columns and preserving reviewers' columns from O onward.
+
 ## Git commits
 
 ```sh

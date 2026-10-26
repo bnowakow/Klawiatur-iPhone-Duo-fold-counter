@@ -9,6 +9,9 @@ from detect_handover import advance, clothing_crop, histogram
 
 PROFILE_PATH = Path(__file__).with_name("camera-profiles") / "layouts.json"
 BREAK_PROFILE_PATH = PROFILE_PATH.with_name("night-break.json")
+# Separate left shoulder, outside the primary chest/right-arm sampling path.
+# Only calibrated for this broadcast's full-size presenter layout.
+SHOULDER_ROIS = {'presenter_main': (.405, .47, .435, .51)}
 
 
 def detect_break_scene(image, profile=None):
@@ -105,6 +108,8 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
     upper_features = [histogram(clothing_crop(image, region)) for region in upper_rois]
     anchor_rois = [[(x1+x2)/2,y1,x2,y1+(y2-y1)/4] for x1,y1,x2,y2 in garment_rois]
     anchor_features = [histogram(clothing_crop(image, region)) for region in anchor_rois]
+    shoulder_roi = SHOULDER_ROIS.get(view)
+    shoulder_features = histogram(clothing_crop(image, shoulder_roi)) if shoulder_roi else None
     details["clothing_roi"] = list(crop_roi)
     details["garment_rois"] = garment_rois
     saved = state["views"].get(view)
@@ -115,6 +120,9 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
                  "garment_upper_baselines": [feature.tolist() for feature in upper_features],
                  "garment_anchor_baselines": [feature.tolist() for feature in anchor_features],
                  "garment_rois": garment_rois}
+        if shoulder_features is not None:
+            saved['shoulder_baseline'] = shoulder_features.tolist()
+            saved['shoulder_roi'] = list(shoulder_roi)
         state["views"][view] = saved
         status, score = "baseline_created", 0
     else:
@@ -124,6 +132,8 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
         needs_garments = (len(saved.get('garment_baselines', [])) != len(garment_rois)
                           or len(saved.get('garment_upper_baselines', [])) != len(garment_rois)
                           or len(saved.get('garment_anchor_baselines', [])) != len(garment_rois)
+                          or (shoulder_roi is not None and ('shoulder_baseline' not in saved
+                              or saved.get('shoulder_roi') != list(shoulder_roi)))
                           or saved.get('garment_rois', old_profile.get('garment_rois', [])) != garment_rois)
         if needs_garments:
             reference = (Path(evidence_root) / saved['baseline_observation'] / 'frame.jpg'
@@ -140,6 +150,9 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
                                                     for region in upper_rois]
                 saved['garment_anchor_baselines'] = [histogram(clothing_crop(original, region)).tolist()
                                                      for region in anchor_rois]
+                if shoulder_roi is not None:
+                    saved['shoulder_baseline'] = histogram(clothing_crop(original, shoulder_roi)).tolist()
+                    saved['shoulder_roi'] = list(shoulder_roi)
             saved['garment_rois'] = garment_rois
             details['garment_baseline_reconstructed'] = True
         score = float(np.abs(features-np.asarray(saved["baseline"])).sum()/2)
@@ -181,6 +194,16 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
         # an appearance cue: lighting changes can also require review.
         if luminance_score is not None and luminance_score >= .60:
             score = max(score, threshold)
+        # A raised arm can cover both chest regions at once. Broad colour or
+        # brightness changes must also reach the independent shoulder patch.
+        # Print-only changes on dark shirts still use the garment signal above.
+        if shoulder_features is not None:
+            shoulder_score = float(np.abs(shoulder_features-np.asarray(saved['shoulder_baseline'])).sum()/2)
+            details.update(shoulder_roi=list(shoulder_roi), shoulder_score=shoulder_score)
+            broad_change = details['colour_score'] >= threshold or (luminance_score is not None and luminance_score >= .60)
+            details['arm_occlusion_ignored'] = broad_change and score >= threshold and shoulder_score < threshold
+            if broad_change:
+                score = min(score, shoulder_score)
         tracking = advance(saved.get("tracking", {}), score, timestamp, threshold,
                            confirm, max_gap=max(interval*2.5, 25))
         saved["tracking"] = tracking

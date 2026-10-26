@@ -70,3 +70,17 @@ youtube-bot-stats:
 	docker compose --profile youtube run --rm --no-deps youtube-chat python youtube_bot.py stats
 youtube-bot-logs:
 	docker compose --profile youtube logs --tail=100 youtube-bot
+
+.PHONY: sheets-build sheets-auth sheets-status sheets-preview sheets-sync sheets-disconnect
+sheets-build:
+	docker compose --profile sheets build sheets-export
+sheets-auth:
+	docker compose --profile sheets run --rm --no-deps --service-ports sheets-export python sheets_export.py connect
+sheets-status:
+	docker compose --profile sheets run --rm --no-deps sheets-export python sheets_export.py status
+sheets-preview:
+	docker compose --profile sheets run --rm --no-deps sheets-export python sheets_export.py preview
+sheets-sync:
+	docker compose --profile sheets run --rm --no-deps sheets-export python sheets_export.py sync
+sheets-disconnect:
+	docker compose --profile sheets run --rm --no-deps sheets-export python sheets_export.py disconnect

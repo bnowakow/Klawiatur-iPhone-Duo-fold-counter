@@ -1,0 +1,138 @@
+{
+  "description": "Raised arms over beige shirt: two isolated false cues at 08:38:40 and 08:40:02 Europe/Warsaw; original JPEGs, same uninterrupted stint.",
+  "frames": [
+    {
+      "id": "f5c4e318-b466-4c92-9f27-6577cefe7175",
+      "file": "baseline.jpg",
+      "observed_at": "2026-10-26T07:05:28.776219+00:00",
+      "accepted_counter": 70064,
+      "sha256": "d003494a9687b14c58b0a8157d58d69be23b2272eabb1f9dbc80f22a6c8f6aca"
+    },
+    {
+      "id": "bb2ab2f9-138d-4753-97b6-fc486aedb575",
+      "file": "bb2ab2f9-138d-4753-97b6-fc486aedb575.jpg",
+      "observed_at": "2026-10-26T07:38:26.502027+00:00",
+      "accepted_counter": 71721,
+      "sha256": "70410e922c0785f77944884f49bc4099d9d0ed7db3171e2e61000eeba76d3728"
+    },
+    {
+      "id": "43a2741a-defa-4973-a825-2cc4573bfa2e",
+      "file": "43a2741a-defa-4973-a825-2cc4573bfa2e.jpg",
+      "observed_at": "2026-10-26T07:38:33.996776+00:00",
+      "accepted_counter": 71731,
+      "sha256": "f857039c48b07cd51765a343d72ae385a4ca16ce6052cfee13c527fe5e89d362"
+    },
+    {
+      "id": "9e2dfdb7-ba70-472a-aa71-eb497e45ba0c",
+      "file": "9e2dfdb7-ba70-472a-aa71-eb497e45ba0c.jpg",
+      "observed_at": "2026-10-26T07:38:40.783107+00:00",
+      "accepted_counter": 71734,
+      "sha256": "4a85901d5882e8c1e17549827b6f5fc7cb6e6406c5f6f332da8fd140144cf423"
+    },
+    {
+      "id": "45eb96c3-b110-4efa-af8d-742dbf61170d",
+      "file": "45eb96c3-b110-4efa-af8d-742dbf61170d.jpg",
+      "observed_at": "2026-10-26T07:38:47.137325+00:00",
+      "accepted_counter": 71737,
+      "sha256": "932c4f3a0661ea3dedd85aec8999536704ca3d3faca38c257c00ebb314730ecf"
+    },
+    {
+      "id": "a98ec8e0-134c-4e24-bd7d-c26017c931c3",
+      "file": "a98ec8e0-134c-4e24-bd7d-c26017c931c3.jpg",
+      "observed_at": "2026-10-26T07:38:53.561637+00:00",
+      "accepted_counter": 71747,
+      "sha256": "d56849aca373244aa8f0a7228cbee28a62a97f9a672a5f042c66df702db3d1f1"
+    },
+    {
+      "id": "9ff5f95e-a0b6-4319-9a39-299caca17865",
+      "file": "9ff5f95e-a0b6-4319-9a39-299caca17865.jpg",
+      "observed_at": "2026-10-26T07:38:59.635501+00:00",
+      "accepted_counter": 71751,
+      "sha256": "93cabe9459ba75ef7223f5db4081a16720d28872f0a2f359a875424b8cbc7420"
+    },
+    {
+      "id": "2703cfdc-3af9-4e0e-a477-36625352c83a",
+      "file": "2703cfdc-3af9-4e0e-a477-36625352c83a.jpg",
+      "observed_at": "2026-10-26T07:39:06.264171+00:00",
+      "accepted_counter": 71754,
+      "sha256": "328e9f3289986f57408d0c13a0338d038fefcb38954b90481f057f612901331a"
+    },
+    {
+      "id": "30a3ef1c-a779-4d06-8509-7bb6496a3a89",
+      "file": "30a3ef1c-a779-4d06-8509-7bb6496a3a89.jpg",
+      "observed_at": "2026-10-26T07:39:12.19637+00:00",
+      "accepted_counter": 71760,
+      "sha256": "14b6d1027972cdbebc20ea1f39ee169255471c1a3186a63126bee7e230f86677"
+    },
+    {
+      "id": "d4e635ae-2889-4e4a-8c18-46b466e93b6b",
+      "file": "d4e635ae-2889-4e4a-8c18-46b466e93b6b.jpg",
+      "observed_at": "2026-10-26T07:39:18.845187+00:00",
+      "accepted_counter": 71769,
+      "sha256": "a5e2604cef63346f1ec02683c00a809db4e49a57c13b7211622bf63aee756dd0"
+    },
+    {
+      "id": "8bff2cae-1b50-40e1-a821-e16ddf918400",
+      "file": "8bff2cae-1b50-40e1-a821-e16ddf918400.jpg",
+      "observed_at": "2026-10-26T07:39:24.812862+00:00",
+      "accepted_counter": 71774,
+      "sha256": "26849d97648680b76ae2c9778c44d01aa1b467cfd43886b08795247c0cad97b0"
+    },
+    {
+      "id": "1e5d05f1-9d75-43b2-a99b-af704550388a",
+      "file": "1e5d05f1-9d75-43b2-a99b-af704550388a.jpg",
+      "observed_at": "2026-10-26T07:39:31.27333+00:00",
+      "accepted_counter": 71777,
+      "sha256": "b8ece749a4a4797edf09bf5d9df1c5d3b57af005d7f01a963db204f36f6c4aa9"
+    },
+    {
+      "id": "7a7db646-b0a5-4ba6-a95d-e11cb95ebfef",
+      "file": "7a7db646-b0a5-4ba6-a95d-e11cb95ebfef.jpg",
+      "observed_at": "2026-10-26T07:39:37.593469+00:00",
+      "accepted_counter": 71782,
+      "sha256": "ddc544335995a4e502e942596cfca9063db254d12de9966b82d4281d13c2601c"
+    },
+    {
+      "id": "8ccbdf7a-b645-4a39-ac5d-5a02b3ca527c",
+      "file": "8ccbdf7a-b645-4a39-ac5d-5a02b3ca527c.jpg",
+      "observed_at": "2026-10-26T07:39:43.686683+00:00",
+      "accepted_counter": 71790,
+      "sha256": "0f577862fc47722277e0a8e05186ce10aad6f2f79fcb2bfd30fbd603d298d1d6"
+    },
+    {
+      "id": "5f75c628-de84-45cd-aaed-341acb96abad",
+      "file": "5f75c628-de84-45cd-aaed-341acb96abad.jpg",
+      "observed_at": "2026-10-26T07:39:50.017446+00:00",
+      "accepted_counter": 71794,
+      "sha256": "a0d0ebedf3940849ca685f1fc9f48a17fce78371288260ac60fe8f0c060a5342"
+    },
+    {
+      "id": "ac0c1cbf-306a-46b1-9781-68b7e97ea2dc",
+      "file": "ac0c1cbf-306a-46b1-9781-68b7e97ea2dc.jpg",
+      "observed_at": "2026-10-26T07:39:56.416537+00:00",
+      "accepted_counter": 71798,
+      "sha256": "1f123d7b5504fb5ee0d91265d4666d4ac36515aca90927cfd9052f128e8c8a57"
+    },
+    {
+      "id": "7d3dceb5-6bbc-4d40-804a-fd8441dd1ecb",
+      "file": "7d3dceb5-6bbc-4d40-804a-fd8441dd1ecb.jpg",
+      "observed_at": "2026-10-26T07:40:02.614812+00:00",
+      "accepted_counter": 71801,
+      "sha256": "6bd644ea18a935486296636fb0662266b3c49b78dce92bc2c0c645a5eab8621c"
+    },
+    {
+      "id": "78be2cc2-e8f3-43ea-a549-40a9a92f96de",
+      "file": "78be2cc2-e8f3-43ea-a549-40a9a92f96de.jpg",
+      "observed_at": "2026-10-26T07:40:08.627682+00:00",
+      "accepted_counter": 71810,
+      "sha256": "48ac3a176f2a8b9ee5cbab6ae0fd5921b7ae1d03b7a01657e5c5a775206f5994"
+    },
+    {
+      "id": "ede81ba8-29b2-4e6c-9185-faf488dcb3bf",
+      "file": "ede81ba8-29b2-4e6c-9185-faf488dcb3bf.jpg",
+      "observed_at": "2026-10-26T07:40:14.610807+00:00",
+      "accepted_counter": 71813,
+      "sha256": "06a51e0d6dcdf30a0d7ee5d17a7cf0298af9a8323f851c4d54379d189c8232db"
+    }
+  ]
+}

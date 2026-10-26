@@ -204,6 +204,30 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  sheets-export:
+    build: .
+    profiles: [sheets]
+    env_file:
+      - ./.env
+    command: ["python", "sheets_export.py", "preview"]
+    environment:
+      PGHOST: db
+      PGDATABASE: folding
+      PGUSER: folding
+      PGPASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
+      SHEETS_AUTH_DIR: /secrets/sheets
+      GOOGLE_OAUTH_CLIENT_FILE: /secrets/youtube/client.json
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - ./secrets/sheets:/secrets/sheets
+      - ./secrets/youtube/client.json:/secrets/youtube/client.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    init: true
+    restart: "no"
+
 volumes:
   postgres_data:
   vision_models:

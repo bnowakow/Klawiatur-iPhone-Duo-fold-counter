@@ -753,3 +753,52 @@ resolved 39 brief cues, restored the last counter from 67918 to 69248, and retai
 all original records in the audit. Subsequent live observations advanced to 69290
 with review=false and no candidate; the original stint remained open. Thirty
 relevant tests plus the isolated audit-repair integration check passed.
+
+## Dedicated Google Sheets export (2026-10-26)
+
+The user enabled Sheets API and requested application writes only to
+`Klawiatur-iPhone-Duo-fold-counter` in the shared history spreadsheet, with
+`Ranking` as the format reference and human verification after posting.
+`sheets_export.py` pins spreadsheet `1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM`
+and tab ID `2091633028`; Ranking's original ID 0 is never a write destination.
+A:E match Ranking's headers; F:N add boundary times, baseline counter, UUID,
+review links and measurement timestamp. O onward are reserved for human review
+and never written by the exporter. Rows are upserted by UUID without sorting
+or deletion. Counts use last accepted counter minus accepted baseline; durations
+use real baseline-to-last-reading time rather than planned hourly slots.
+
+Separate Sheets OAuth reuses the existing client/callback but saves private
+credentials under `secrets/sheets/`. Commands: `make sheets-build`, `sheets-auth`,
+`sheets-preview`, `sheets-status`, `sheets-sync`, `sheets-disconnect`. Sync is
+manual, with no recurring worker. See `docs/google-sheets.md`. Fifteen unit tests
+pass, the Docker image builds, and a read-only preview returned five production
+stints. Browser consent and a first real write still need confirmation; do not
+claim data was posted based on the preview alone.
+
+
+### Raised-arm attribution repair (2026-10-26, 08:48 Warsaw)
+
+Two isolated cues at 08:38:40 and 08:40:02 were caused by arms crossing the
+primary and supplemental beige-shirt patches. Their return to baseline in the
+next frame left the conservative interrupted-cue review hold active. Main-view
+broad colour/brightness changes now need corroboration from the independent left
+shoulder (.405,.47,.435,.51); supplemental print-only dark-shirt cues retain their
+existing checks. The new shoulder histogram is hydrated from the original frame,
+never the current frame; missing evidence holds for review. This is a calibrated
+occlusion heuristic, not an identity guarantee or blanket automatic review reset.
+Original evidence/checksums are under the clothing-occlusion `raised-arms/` archive.
+All 33 relevant image/session/message tests pass, including real dark-shirt and
+light-to-dark transitions, brief appearances and upgrade/missing-evidence cases.
+An 87-frame replay had no missing frames or remaining change warnings.
+
+Audited repair `07c7621f-c28f-4dd2-b3e5-a3722bdd0942` preserved active stint
+`813b2228-d940-47c6-9006-6e74bbd7473f`, baseline 69900 and original start times.
+Replayed 96 observations, resolved two appearance cues, restored the last counter
+71731 -> 72267 (536 folds recovered). Original state/rows remain in
+`presenter_review_resolutions`; ordinary observation annotations preserve the
+original detector results. Deployed the rebuilt supervisor only.
+
+Post-deployment observations at 08:49:11, 08:49:25 and 08:49:32 Warsaw retained the
+same stint and review=false; the original shoulder baseline was hydrated from its
+saved frame. One intervening unknown-layout observation remained conservatively
+blocked and the following recognized frame resumed attribution normally.

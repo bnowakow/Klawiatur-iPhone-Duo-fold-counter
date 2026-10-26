@@ -20,3 +20,13 @@ Regression: proof-of-concept/test_clothing_occlusion.py.
 An additional 30 later pending-cue frames are preserved unchanged in
 followup-manifest.json, bringing regression coverage to 47 obstruction frames.
 Both manifests retain independent SHA-256 hashes; the first archive is unchanged.
+
+The `raised-arms/` archive contains the original beige-shirt baseline and 18
+consecutive samples around two isolated arm-over-shirt cues at 08:38:40 and
+08:40:02 Europe/Warsaw. Its own manifest preserves timestamps, counter values and
+SHA-256 hashes. Broad colour/brightness changes in the main view now require
+corroboration from a separate left-shoulder patch (.405,.47,.435,.51). Print-only
+dark-shirt changes keep the existing garment checks. The shoulder feature is
+reconstructed from the original baseline on upgrade; missing original evidence
+requires review. This broadcast-specific heuristic does not segment hands or
+prove identity, and ambiguous cues remain reviewable.
