@@ -110,7 +110,11 @@ pending imports later. UUID/content-hash keys make replay idempotent. Original
 responses are retained even if HTML parsing fails. A database advisory lock
 serializes imports; there should normally be one collecting service.
 
-These files and database history are **not subject to frame retention**.
+These files and database history are **not subject to ordinary frame pruning**.
+Local image blobs under `data/` are still subject to the global 20 GB image cap;
+original bytes already imported into PostgreSQL have no automatic expiry.
+The quota can also evict pending image blobs before import, in which case replay
+needs those missing bytes restored. See [image quota behavior](frame-retention.md#global-image-limit).
 Back up both the database volume and `data/official/`. File growth continues
 while collecting. `proof-of-concept/test-data/2026-10-25-official-site/` preserves
 the initial homepage, table-loader script, source tables, chart, parsed data,

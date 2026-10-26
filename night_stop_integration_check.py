@@ -49,9 +49,21 @@ def main():
         assert closed['details']['presenter_session_id'] is None
         paused=run(9,121)
         assert paused['details']['presenter_session_id'] is None
+        # Reproduce overnight persisted review state from a brief appearance.
+        from psycopg.types.json import Jsonb
+        with psycopg.connect() as conn:
+            conn.execute("UPDATE monitor_state SET state=jsonb_set(state,'{appearances}',%s) "
+                         "WHERE stream_url=%s",
+                         (Jsonb({'attribution_review_required':True}),cfg['stream']))
         resumed=run(10,142)
         assert resumed['details']['presenter_session_id']!=ended['id']
         assert resumed['details']['camera_view']['baseline_replaced_for_session']
+        assert resumed['details']['presenter_attribution_review_required'] is False
+        folding=run(11,163)
+        assert folding['details']['presenter_session_id']==resumed['details']['presenter_session_id']
+        fresh=folding['details']['presenter_session_updates'][0]
+        assert fresh['folding_start_counter']==163,fresh
+        assert fresh['folding_started_at']==(base+timedelta(seconds=330)).isoformat(),fresh
         with psycopg.connect() as conn:
             supervisor.insert(conn,closed)
             supervisor.insert(conn,closed)
@@ -69,6 +81,7 @@ def main():
     report={'integration':'passed','stream':cfg['stream'],'stints':2,'night_endpoints':1,
             'checks':['estimated stop separate from confirmation','end record persisted',
                       'stationary counter stays closed','activity resumes in a new stint',
+                      'old appearance review does not block resumed folding attribution',
                       'idempotent replay','absence remains unverified']}
     (archive/'result.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report))

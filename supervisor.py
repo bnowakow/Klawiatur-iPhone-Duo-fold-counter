@@ -24,6 +24,7 @@ from read_counter import recognize
 from camera_views import observe, detect_break_scene
 import polling
 import frame_retention
+import clothing_descriptions
 from presenter_sessions import SCHEMA as SESSION_SCHEMA, advance_sessions, advance_appearances, save_sessions
 
 
@@ -40,7 +41,7 @@ CREATE TABLE IF NOT EXISTS monitor_state (
  stream_url text PRIMARY KEY, updated_at timestamptz NOT NULL DEFAULT now(),
  state jsonb NOT NULL
 );
-""" + SESSION_SCHEMA + polling.SCHEMA
+""" + SESSION_SCHEMA + polling.SCHEMA + clothing_descriptions.SCHEMA
 
 
 def number(name, default, minimum=0):
@@ -276,12 +277,29 @@ def analyze(cfg, state, obs, fixture=None, reset_clothing=False):
     obs["details"]["presenter_session_id"] = sessions.get("current", {}).get("id")
     obs["details"]["presenter_candidate_id"] = sessions.get("candidate", {}).get("id")
     if promote:
+        if sessions["current"]["detection_reason"] == "activity_resumed_after_night_pause":
+            # Yesterday's interrupted appearance belongs to the closed stint.
+            # A known view plus accepted resumed activity establishes a new
+            # anonymous stint; stale review state must not freeze its samples.
+            candidate = appearances.pop("candidate", None)
+            if candidate:
+                candidate.update(status="resolved_on_activity_resumption_review_required",
+                                 ended_at=obs["observed_at"], version_at=obs["observed_at"],
+                                 closing_observation_id=obs["id"],
+                                 closing_frame_path=obs.get("frame_path"))
+                appearance_updates = [row for row in appearance_updates if row["id"] != candidate["id"]]
+                appearance_updates.append(candidate)
+                obs["details"]["presenter_appearance_updates"] = appearance_updates
+            appearances.pop("attribution_review_required", None)
+            obs["details"]["presenter_attribution_review_required"] = False
+            obs["details"]["presenter_appearance_resolution"] = "new_stint_after_night_pause"
         # Acknowledge this cue once, then compare against the new presenter's shirt.
         # Other views must be relearned rather than retaining the previous shirt.
         state["clothing"], _, _, _, _ = observe(
             Image.open(path), {}, now.timestamp(), obs["id"], cfg["roi"],
             cfg["clothing_threshold"], cfg["confirm"], cfg.get("effective_interval",cfg["interval"]), reset=True)
         obs["details"]["camera_view"]["baseline_replaced_for_session"] = True
+    clothing_descriptions.prepare(Image.open(path), obs, sessions)
     state["last_observed_at"] = obs["observed_at"]
     if status == "camera_view_unknown_review_required":
         # Preserve new-angle evidence outside the rolling frame retention tree.
@@ -305,6 +323,7 @@ def insert(conn, obs):
                  + ",".join(["%s"]*13) + ") ON CONFLICT (id) DO NOTHING",
                  tuple(obs.get(c) for c in columns) + (Jsonb(obs["details"]),))
     save_sessions(conn, obs)
+    clothing_descriptions.save_job(conn, obs)
 
 
 _READY_SCHEMAS = set()

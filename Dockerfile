@@ -5,7 +5,7 @@ WORKDIR /app
 COPY requirements.txt ./
 COPY proof-of-concept/requirements.txt proof-of-concept/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-COPY supervisor.py frame_retention.py polling.py polling_integration_check.py presenter_sessions.py benchmark_frame_intervals.py compare_current_tester.py comparison_integration_check.py official_data.py integration_check.py session_integration_check.py official_data_integration_check.py night_stop_integration_check.py ./
+COPY supervisor.py clothing_descriptions.py frame_retention.py polling.py polling_integration_check.py presenter_sessions.py benchmark_frame_intervals.py compare_current_tester.py comparison_integration_check.py official_data.py integration_check.py session_integration_check.py official_data_integration_check.py night_stop_integration_check.py ./
 COPY proof-of-concept/*.py proof-of-concept/
 COPY break_scene_integration_check.py ./
 COPY refine_break_endpoint.py ./

@@ -1,5 +1,17 @@
 # Project context for future work
 
+## Morning resumption readiness (2026-10-26)
+
+The live overnight state retained `appearances.attribution_review_required=true`.
+The supervisor now clears that old-stint hold only after a known presenter layout
+and accepted counter increase establish `activity_resumed_after_night_pause`.
+A pending appearance cue is retained with resolution
+`resolved_on_activity_resumption_review_required`; it cannot reapply the old hold
+to the new stint. A second accepted increase within the new stint establishes
+its folding start. Stationary break frames continue to leave the previous stint
+closed. Regression coverage includes a simultaneous new clothing cue and an
+isolated PostgreSQL test with persisted review state.
+
 Verified real break outcome (2026-10-25): final display 63,333; prior stint
 `1ce68ce5-5e1c-47b0-bb47-e1a07ad098dc` is closed with estimated stop
 22:00:57.733 Warsaw and confirmation 22:15:15.440. Its attributed counter remains

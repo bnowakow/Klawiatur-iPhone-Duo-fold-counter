@@ -328,7 +328,10 @@ nonfolding presenter stint while the night-stop evidence accumulates.
 The closed stint stays closed while the counter is stationary. Once an
 accepted increase and known camera layout are observed, a new anonymous stint
 starts with reason `activity_resumed_after_night_pause`, and clothing baselines
-are refreshed. A returning person is not identified as a previously seen person.
+are refreshed. Unresolved appearance review from the closed stint is cleared
+for the new stint; any pending appearance record is retained with its resolution.
+The next accepted increase within that new stint establishes its folding start.
+A returning person is not identified as a previously seen person.
 Normal handovers retain their existing `ended_at` behavior.
 
 ```sh

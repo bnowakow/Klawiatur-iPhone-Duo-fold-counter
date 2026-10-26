@@ -8,7 +8,7 @@ comparison in PostgreSQL `tester_comparisons` for analysis over time.
 ## Running
 
 Fetch fresh public source data, archive it, and print folds/minute on labeled lines
-(requires host `jq`):
+(requires host `jq`; labels are blue and value/unit columns are aligned):
 
 ```sh
 make docker-compare
@@ -164,10 +164,11 @@ docker compose run --rm official-data python benchmark_frame_intervals.py --seco
 
 The benchmark first times two captures through the current per-frame yt-dlp/
 ffmpeg setup. It then keeps one HLS decoder open and samples 60 media seconds
-at the selected interval (1, 2 or 5 seconds), passing each frame through the full supervisor analysis
+at the selected interval (1, 2, 3, 4 or 5 seconds), passing each frame through the full supervisor analysis
 and PostgreSQL commit path. It runs concurrently with regular monitoring.
-Benchmark observations use an isolated `benchmark:one-second:<uuid>` stream
-and do not update production counter/presenter state.
+Benchmark observations use an isolated `benchmark:interval-<interval>s:<uuid>`
+stream (serial mode uses `benchmark:serial:<uuid>`) and do not update production
+counter/presenter state.
 
 It reports frame counts, accepted samples, mean/p95/max analysis plus database
 time, cycles exceeding one second, CPU seconds, Python peak RSS and actual
@@ -176,11 +177,14 @@ it excludes CPU consumed by PostgreSQL and the regular supervisor. Memory
 units are platform-specific (`ru_maxrss`, KiB inside Linux Compose).
 
 Source frames, per-frame timing/observation logs and results remain under
-`data/benchmarks/interval-<interval>s-<uuid>/`
-(the first historical run uses `one-second-<uuid>/`), outside rolling frame retention. The result
-is also stored in PostgreSQL `frame_interval_benchmarks`. Benchmark timestamps
-are nominal media positions at the configured interval anchored at receipt of the first frame,
-not authoritative broadcaster UTC times. The fixture flag identifies these
+`data/benchmarks/persistent-interval-<interval>s-<uuid>/`
+(older runs used `interval-<interval>s-<uuid>/` or `one-second-<uuid>/`).
+Serial mode uses `serial-interval-<interval>s-<uuid>/`. These directories bypass
+ordinary capture pruning, but their images remain subject to the global 20 GB cap.
+The result is also stored in PostgreSQL `frame_interval_benchmarks`. Persistent-mode
+timestamps are nominal media positions at the configured interval anchored at
+receipt of the first frame; serial mode uses actual receipt times. Neither is
+an authoritative broadcaster UTC time. The fixture flag identifies persistent-mode
 rows. HLS segments may arrive in bursts; one media frame/second is different
 from receiving fresh video every wall-clock second.
 

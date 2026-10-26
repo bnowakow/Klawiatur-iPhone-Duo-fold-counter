@@ -88,6 +88,46 @@ class SupervisorTests(unittest.TestCase):
             self.assertEqual((archive / "frame.jpg").read_bytes(), original)
             self.assertTrue((archive / "observation.json").exists())
 
+    def test_morning_resumption_resolves_stale_review_and_new_clothing_candidate(self):
+        from datetime import timedelta
+        from pathlib import Path
+        import tempfile
+        from unittest.mock import patch
+        from PIL import Image, ImageDraw
+        from supervisor import analyze, observation
+
+        base = datetime(2026, 10, 26, 5, tzinfo=timezone.utc)
+        state = {'presenters': {'night_closed': {'session_id': 'previous-stint', 'counter': 63333}},
+                 'appearances': {'attribution_review_required': True},
+                 'counter': {'anchor': {'value': 63333, 'time': base.timestamp()}, 'rates': [.7]}}
+        with tempfile.TemporaryDirectory() as temporary:
+            cfg = dict(self.cfg, data=Path(temporary))
+            fixture = Path(temporary) / 'morning.png'
+            def camera(*args, **kwargs):
+                status = 'baseline_created' if kwargs.get('reset') else (
+                    'change_pending' if index == 1 else 'no_clothing_change_detected')
+                return ({}, status, .8, None, {'view': 'presenter_main',
+                        'tracking': {'changed_since': base.timestamp()+10}})
+            for index, value in [(1, 63340), (2, 63347)]:
+                image = Image.new('RGB', (32, 32), 'white')
+                ImageDraw.Draw(image).rectangle((0, 0, index, 5), fill='black')
+                image.save(fixture)
+                with patch('supervisor.datetime', wraps=datetime) as clock, \
+                     patch('supervisor.recognize', return_value=({'value': value, 'digits': []}, None)), \
+                     patch('supervisor.observe', side_effect=camera):
+                    clock.now.return_value = base+timedelta(seconds=index*10)
+                    obs = observation(cfg)
+                    state = analyze(cfg, state, obs, fixture)
+                self.assertFalse(obs['details']['presenter_attribution_review_required'])
+                self.assertNotIn('candidate', state['appearances'])
+                if index == 1:
+                    rows = obs['details']['presenter_appearance_updates']
+                    self.assertEqual(len(rows), 1)
+                    self.assertEqual(rows[0]['status'], 'resolved_on_activity_resumption_review_required')
+                    self.assertEqual(state['presenters']['current']['detection_reason'],
+                                     'activity_resumed_after_night_pause')
+            self.assertEqual(state['presenters']['current']['folding_start_counter'], 63347)
+
     def test_sustained_shirt_change_creates_only_one_new_stint(self):
         from datetime import timedelta
         from pathlib import Path

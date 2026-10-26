@@ -5,11 +5,12 @@ an aligned group of red digits, crops each illuminated digit, measures seven
 segment regions, and matches the resulting pattern against digits 0–9.
 It does not call a remote AI service or use a fixed counter location.
 
-Run with Python 3 and the dependencies in `requirements.txt`:
+Run from the repository root with Python 3. The root `requirements.txt`
+installs both image-analysis and supervisor/test dependencies:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/pip install -r proof-of-concept/requirements.txt
+.venv/bin/pip install -r requirements.txt
 .venv/bin/python proof-of-concept/read_counter.py proof-of-concept/live-frame.jpg
 ```
 
@@ -30,11 +31,13 @@ checks cover 999,999 → 1,000,000, 1,000,001, 1,234,567, 1,999,999 and
 .venv/bin/python -m unittest discover -s proof-of-concept -p 'test_*.py'
 ```
 
-Real-stream validation currently covers this one frame only. Red thresholds, segment regions,
+The original proof-of-concept validation used this one frame; later captured
+layouts and transitions are preserved under `test-data/`. Red thresholds, segment regions,
 and component grouping need validation against more live frames, lighting,
 camera motion, and digit transitions. Synthetic checks do not establish
 accuracy on real stream footage, especially with partially lit digits.
-There is no temporal smoothing or continuous stream capture yet.
+The standalone recognizer has no temporal validation or capture loop. The
+root supervisor captures continuously and validates counter changes over time.
 
 ## Possible presenter handover cues
 
@@ -53,10 +56,11 @@ compositions need calibration in `camera-profiles/layouts.json`.
   --timestamp 2026-10-25T20:21:02+01:00
 ```
 
-For eventual monitoring, pass a newly captured frame about every 10 seconds
+For standalone clothing checks, pass a newly captured frame about every 10 seconds
 and its capture timestamp. The script saves comparison crops and a JSON
 state, rejecting a repeated saved frame. A colour-distance score of at least
-0.45 must persist for 60 seconds, with gaps no longer than 25 seconds, to
+0.45, or a 16-bin brightness-distance score of at least 0.60, must persist for
+60 seconds, with gaps no longer than 25 seconds, to
 produce `possible_handover_review_required`. One changed frame is only
 `change_pending`. These are provisional thresholds to calibrate on actual
 handover footage. Human confirmation is always required; after confirmation,
@@ -64,8 +68,9 @@ choose a fresh baseline and reset the state file. It never silently adopts
 an unconfirmed change as its baseline.
 
 Long capture gaps, including an overnight pause, reset pending evidence.
-There is no hardcoded hourly schedule or night schedule, since the actual
-break times are not known. An hour passing is not evidence of a handover.
+The standalone CLI has no hourly or night schedule. The root supervisor has
+configurable night-inactivity handling and a calibrated break-board scene;
+see [night stop times](../README.md#night-stop-times). An hour passing is not evidence of a handover.
 An empty chair, a title card, camera movement, lighting changes, or a shirt
 change can also trigger this cue. Two presenters in similar clothes can be
 missed. The supervisor in the repository root provides continuous capture, separate
