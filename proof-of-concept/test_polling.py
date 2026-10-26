@@ -7,6 +7,17 @@ import polling
 
 
 class PollingTests(unittest.TestCase):
+    def test_pending_appearance_gets_fast_followup_with_processing_headroom(self):
+        state=polling.advance({'effective_interval_seconds':60},5,4,appearance_pending=True)
+        self.assertEqual(state['effective_interval_seconds'],6.3)
+        self.assertEqual(state['action'],'follow_appearance_candidate')
+        state=polling.advance(state,12,4,appearance_pending=True)
+        self.assertGreaterEqual(state['effective_interval_seconds'],15)
+        self.assertEqual(state['action'],'increase')
+        state=polling.advance({'effective_interval_seconds':60},1,4,
+                              outcome='database_unavailable',appearance_pending=True)
+        self.assertEqual(state['action'],'failure_backoff')
+
     def test_overrun_increases_above_elapsed_with_headroom(self):
         state=polling.advance({},5,3)
         self.assertEqual(state['effective_interval_seconds'],6.3)

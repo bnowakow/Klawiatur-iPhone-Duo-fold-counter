@@ -7,9 +7,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from official_data import discover, fetch, parse_sheet, collect
+from ipduotest_pl import archive_root, discover, fetch, parse_sheet, collect
 
-FIXTURES = Path(__file__).parent / 'test-data/2026-10-25-official-site'
+FIXTURES = Path(__file__).parent / 'test-data/2026-10-25-ipduotest-pl'
 
 
 class Response(io.BytesIO):
@@ -20,7 +20,28 @@ class Response(io.BytesIO):
         self.headers['Content-Type'] = content_type
 
 
-class OfficialDataTests(unittest.TestCase):
+class IpduotestPlTests(unittest.TestCase):
+    def test_archive_rename_preserves_pending_runs_and_blobs(self):
+        with tempfile.TemporaryDirectory() as temp, patch.dict('os.environ', {'DATA_DIR': temp}):
+            legacy = Path(temp) / 'official'
+            (legacy / 'pending').mkdir(parents=True)
+            (legacy / 'blobs').mkdir()
+            (legacy / 'pending/run.json').write_bytes(b'{"id":"saved"}')
+            (legacy / 'blobs/hash').write_bytes(b'original response')
+            root = archive_root()
+            self.assertEqual(root.name, 'ipduotest-pl')
+            self.assertFalse(legacy.exists())
+            self.assertEqual((root / 'pending/run.json').read_bytes(), b'{"id":"saved"}')
+            self.assertEqual((root / 'blobs/hash').read_bytes(), b'original response')
+            self.assertEqual(archive_root(), root)
+
+    def test_archive_rename_refuses_to_overwrite_existing_archive(self):
+        with tempfile.TemporaryDirectory() as temp, patch.dict('os.environ', {'DATA_DIR': temp}):
+            for name in ('official', 'ipduotest-pl'):
+                (Path(temp) / name).mkdir()
+            with self.assertRaisesRegex(RuntimeError, 'Both legacy'):
+                archive_root()
+
     def test_discovery_deduplicates_embeds_and_keeps_table_metadata(self):
         sources = discover((FIXTURES/'home.html').read_text())
         sheets = [s for s in sources if s['kind']=='sheet']
@@ -58,7 +79,7 @@ class OfficialDataTests(unittest.TestCase):
 
     def test_parse_failure_preserves_raw_response_and_checksum(self):
         source={'resource_key':'sheet:test','source_url':'https://example.test', 'kind':'sheet','metadata':{}}
-        with tempfile.TemporaryDirectory() as temp, patch('official_data.urlopen', return_value=Response(b'<html>login</html>')):
+        with tempfile.TemporaryDirectory() as temp, patch('ipduotest_pl.urlopen', return_value=Response(b'<html>login</html>')):
             resource=fetch(source,Path(temp))
             self.assertEqual(resource['status'],'error')
             self.assertIsNotNone(resource['sha256'])
@@ -66,7 +87,7 @@ class OfficialDataTests(unittest.TestCase):
             self.assertEqual(resource['sha256'],hashlib.sha256(b'<html>login</html>').hexdigest())
 
     def test_failed_homepage_is_durable_and_does_not_look_complete(self):
-        with tempfile.TemporaryDirectory() as temp, patch('official_data.urlopen', side_effect=TimeoutError('offline')):
+        with tempfile.TemporaryDirectory() as temp, patch('ipduotest_pl.urlopen', side_effect=TimeoutError('offline')):
             root=Path(temp)
             run=collect(root)
             self.assertEqual(run['status'],'error')

@@ -1,5 +1,5 @@
 """One durable automatic chat summary for each newly completed folding stint."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 import threading
 import youtube_auth as auth
@@ -11,7 +11,7 @@ END_REASONS = ('sustained_clothing_change', 'night_break_sign_counter_stopped_re
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS youtube_stint_notification_settings (
  stream_url text PRIMARY KEY, enabled boolean NOT NULL DEFAULT true,
- enabled_at timestamptz NOT NULL DEFAULT now(), max_age_seconds integer NOT NULL DEFAULT 3600 CHECK(max_age_seconds>0)
+ enabled_at timestamptz NOT NULL DEFAULT now(), max_age_seconds integer NOT NULL DEFAULT 120 CHECK(max_age_seconds>0)
 );
 CREATE TABLE IF NOT EXISTS youtube_stint_notifications (
  session_id uuid PRIMARY KEY, stream_url text NOT NULL, ended_at timestamptz NOT NULL,
@@ -28,6 +28,7 @@ def initialize(stream):
         conn.execute("SELECT pg_advisory_xact_lock(hashtext('youtube-stint-notifications-schema'))")
         conn.execute(SCHEMA)
         conn.execute('INSERT INTO youtube_stint_notification_settings(stream_url) VALUES (%s) ON CONFLICT DO NOTHING', (stream,))
+        conn.execute('UPDATE youtube_stint_notification_settings SET max_age_seconds=LEAST(max_age_seconds,120) WHERE stream_url=%s',(stream,))
 
 
 def finished_message(pace, folds, disclaimer):
@@ -59,7 +60,7 @@ def process_finished(project, stream, now=None):
     for session_id,ended,confirmed,reason,folds,pace in rows:
         key = 'stint-finished:'+str(session_id)
         status, text, error = 'processing', None, None
-        if not 0 <= (now-confirmed).total_seconds() <= policy[1]:
+        if not 0 <= (now-confirmed).total_seconds() <= min(policy[1],120):
             status, error = 'expired', 'closure_notification_too_old_or_future'
         else:
             try:
@@ -83,7 +84,8 @@ def process_finished(project, stream, now=None):
                 with auth.locked():
                     target = chat.context(project,stream)
                     delivery = chat.send(project,stream,text,key,target['channel']['id'],target['chat_id'],
-                                         source_kind='stint_finished',source_id=str(session_id))
+                                         source_kind='stint_finished',source_id=str(session_id),
+                                         expires_at=confirmed+timedelta(seconds=min(policy[1],120)))
                 status, delivery_id, error = delivery['status'],delivery['id'],delivery.get('error_reason')
             except Exception:
                 status, error = 'unknown', 'automatic_summary_interrupted_or_unavailable'

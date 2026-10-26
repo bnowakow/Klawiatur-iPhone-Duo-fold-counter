@@ -1,4 +1,4 @@
-"""Archive public ipduotest.pl data independently of OCR/presenter inference."""
+"""Archive public ipduotest-pl data independently of OCR/presenter inference."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -18,33 +18,65 @@ import uuid
 SITE = 'https://ipduotest.pl/'
 MAX_BYTES = 20 * 1024 * 1024
 SCHEMA = """
-CREATE TABLE IF NOT EXISTS official_data_runs (
+-- Rename existing archives in place, preserving rows, foreign keys and views.
+DO $$
+DECLARE old_name text; new_name text;
+BEGIN
+ FOREACH old_name IN ARRAY ARRAY['official_data_runs', 'official_data_blobs',
+                                 'official_data_resources'] LOOP
+  new_name := replace(old_name, 'official_data', 'ipduotest_pl');
+  IF EXISTS (SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+             WHERE n.nspname=current_schema() AND c.relname=old_name) THEN
+   EXECUTE format('ALTER TABLE %I RENAME TO %I', old_name, new_name);
+  END IF;
+ END LOOP;
+ FOREACH old_name IN ARRAY ARRAY['official_data_latest', 'official_data_latest_success'] LOOP
+  new_name := replace(old_name, 'official_data', 'ipduotest_pl');
+  IF EXISTS (SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+             WHERE n.nspname=current_schema() AND c.relname=old_name) THEN
+   EXECUTE format('ALTER VIEW %I RENAME TO %I', old_name, new_name);
+  END IF;
+ END LOOP;
+END $$;
+CREATE TABLE IF NOT EXISTS ipduotest_pl_runs (
  id uuid PRIMARY KEY, started_at timestamptz NOT NULL, completed_at timestamptz NOT NULL,
  site_url text NOT NULL, status text NOT NULL, discovery_error text
 );
-CREATE TABLE IF NOT EXISTS official_data_blobs (
+CREATE TABLE IF NOT EXISTS ipduotest_pl_blobs (
  sha256 text PRIMARY KEY, content_type text NOT NULL, body bytea NOT NULL
 );
-CREATE TABLE IF NOT EXISTS official_data_resources (
- run_id uuid NOT NULL REFERENCES official_data_runs(id), resource_key text NOT NULL,
+CREATE TABLE IF NOT EXISTS ipduotest_pl_resources (
+ run_id uuid NOT NULL REFERENCES ipduotest_pl_runs(id), resource_key text NOT NULL,
  source_url text NOT NULL, fetched_at timestamptz NOT NULL, status text NOT NULL,
- sha256 text REFERENCES official_data_blobs(sha256), error text,
+ sha256 text REFERENCES ipduotest_pl_blobs(sha256), error text,
  metadata jsonb NOT NULL, parsed jsonb,
  PRIMARY KEY (run_id, resource_key)
 );
-CREATE INDEX IF NOT EXISTS official_data_resources_time
- ON official_data_resources(resource_key, fetched_at DESC);
-CREATE OR REPLACE VIEW official_data_latest AS
- SELECT DISTINCT ON (resource_key) * FROM official_data_resources
+CREATE INDEX IF NOT EXISTS ipduotest_pl_resources_time
+ ON ipduotest_pl_resources(resource_key, fetched_at DESC);
+CREATE OR REPLACE VIEW ipduotest_pl_latest AS
+ SELECT DISTINCT ON (resource_key) * FROM ipduotest_pl_resources
  ORDER BY resource_key, fetched_at DESC, run_id DESC;
-CREATE OR REPLACE VIEW official_data_latest_success AS
- SELECT DISTINCT ON (resource_key) * FROM official_data_resources
+CREATE OR REPLACE VIEW ipduotest_pl_latest_success AS
+ SELECT DISTINCT ON (resource_key) * FROM ipduotest_pl_resources
  WHERE status='ok' ORDER BY resource_key, fetched_at DESC, run_id DESC;
 """
 
 
 def now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def archive_root():
+    """Move an existing archive to its source name before collecting or replaying."""
+    base = Path(os.getenv('DATA_DIR', 'data'))
+    root = base / 'ipduotest-pl'
+    legacy = base / 'official'
+    if legacy.exists():
+        if root.exists():
+            raise RuntimeError('Both legacy and ipduotest-pl archives exist; consolidate before collecting')
+        legacy.rename(root)
+    return root
 
 
 class HomeParser(HTMLParser):
@@ -223,14 +255,14 @@ def flush(root):
     (root/'runs').mkdir(parents=True,exist_ok=True)
     with psycopg.connect(os.getenv('DATABASE_URL',''),connect_timeout=10) as conn:
         locked = conn.execute("SELECT pg_try_advisory_lock(hashtext(%s))",
-                              ('official-data:'+SITE,)).fetchone()[0]
+                              ('ipduotest-pl:'+SITE,)).fetchone()[0]
         if not locked:
             return 0
         conn.execute(SCHEMA)
         paths = sorted((root/'pending').glob('*.json'))
         for path in paths:
             run = json.loads(path.read_text())
-            conn.execute('INSERT INTO official_data_runs VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING',
+            conn.execute('INSERT INTO ipduotest_pl_runs VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING',
                          tuple(run[key] for key in ('id','started_at','completed_at','site_url','status','discovery_error')))
             for resource in run['resources']:
                 digest = resource['sha256']
@@ -238,9 +270,9 @@ def flush(root):
                     body = (root/'blobs'/digest).read_bytes()
                     if hashlib.sha256(body).hexdigest()!=digest:
                         raise ValueError('Archived response checksum mismatch')
-                    conn.execute('INSERT INTO official_data_blobs VALUES (%s,%s,%s) ON CONFLICT DO NOTHING',
+                    conn.execute('INSERT INTO ipduotest_pl_blobs VALUES (%s,%s,%s) ON CONFLICT DO NOTHING',
                                  (digest,resource['content_type'],body))
-                conn.execute('INSERT INTO official_data_resources VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) '
+                conn.execute('INSERT INTO ipduotest_pl_resources VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) '
                              'ON CONFLICT DO NOTHING',
                              (run['id'],resource['resource_key'],resource['source_url'],resource['fetched_at'],
                               resource['status'],digest,resource['error'],Jsonb(resource['metadata']),
@@ -257,16 +289,16 @@ def main():
     parser.add_argument('--once',action='store_true')
     parser.add_argument('--replay-only',action='store_true',help='Import saved pending snapshots without fetching')
     args = parser.parse_args()
-    interval = float(os.getenv('OFFICIAL_DATA_INTERVAL_SECONDS',300))
+    interval = float(os.getenv('IPDUOTEST_PL_INTERVAL_SECONDS',300))
     if not math.isfinite(interval) or interval < 60:
-        parser.error('OFFICIAL_DATA_INTERVAL_SECONDS must be at least 60')
-    root = Path(os.getenv('DATA_DIR','data')) / 'official'
+        parser.error('IPDUOTEST_PL_INTERVAL_SECONDS must be at least 60')
+    root = archive_root()
     stopped = threading.Event()
     for signum in (signal.SIGTERM,signal.SIGINT):
         signal.signal(signum,lambda *_:stopped.set())
     while not stopped.is_set():
         run = None if args.replay_only else collect(root)
-        result = {'collector':'official_data','run_id':run['id'] if run else None,
+        result = {'collector':'ipduotest-pl','run_id':run['id'] if run else None,
                   'status':run['status'] if run else 'replay_only'}
         try:
             result['imported_runs'] = flush(root)
@@ -278,7 +310,7 @@ def main():
                     with psycopg.connect(os.getenv('DATABASE_URL',''),connect_timeout=10) as conn:
                         comparison = compare(conn)
                     result['comparison'] = {key:comparison.get(key) for key in
-                                            ('id','status','official_fpm','recent_fpm','stint_fpm','stint_gap_fpm')}
+                                            ('id','status','ipduotest_pl_fpm','recent_fpm','stint_fpm','stint_gap_fpm')}
                 except Exception as exc:
                     result['comparison_error'] = f'{type(exc).__name__}: {exc}'
         except Exception as exc:

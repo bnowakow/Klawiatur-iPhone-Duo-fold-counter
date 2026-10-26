@@ -7,7 +7,7 @@ command -v jq >/dev/null 2>&1 || { echo "jq is required for docker-compare." >&2
 report=$(mktemp "${TMPDIR:-/tmp}/fold-counter-comparison.XXXXXX")
 trap 'rm -f "$report"' EXIT
 status=0
-docker compose run --rm -T official-data python compare_current_tester.py >"$report" || status=$?
+docker compose run --rm -T ipduotest-pl python compare_current_tester.py >"$report" || status=$?
 
 # Exit 2 is a valid report with unavailable comparison evidence. Operational
 # failures and malformed JSON still fail the command.

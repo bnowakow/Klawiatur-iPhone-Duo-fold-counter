@@ -16,7 +16,8 @@ CREATE INDEX IF NOT EXISTS polling_events_stream_time ON polling_events(stream_u
 """
 
 
-def advance(state, elapsed, base, maximum=60, stable_samples=12, outcome='analyzed'):
+def advance(state, elapsed, base, maximum=60, stable_samples=12, outcome='analyzed',
+            appearance_pending=False):
     if not math.isfinite(elapsed) or elapsed<0 or not 0<base<=maximum or stable_samples<1:
         raise ValueError('Invalid backpressure inputs')
     budget=min(maximum,max(base,float(state.get('effective_interval_seconds',base))))
@@ -30,6 +31,10 @@ def advance(state, elapsed, base, maximum=60, stable_samples=12, outcome='analyz
         target=max(budget*1.25,elapsed*1.25)
         stable=0
         action='increase'
+    elif appearance_pending and outcome == 'analyzed':
+        target=min(budget,max(base,elapsed*1.25))
+        stable=0
+        action='follow_appearance_candidate'
     else:
         target=budget
         if outcome in ('outside_active_hours','skipped_already_running'):
@@ -48,7 +53,8 @@ def advance(state, elapsed, base, maximum=60, stable_samples=12, outcome='analyz
     return {'effective_interval_seconds':target,'stable_samples':stable,
             'base_interval_seconds':base,'maximum_interval_seconds':maximum,
             'cycle_seconds':elapsed,'previous_interval_seconds':budget,'action':action,
-            'outcome':outcome, 'stable_samples_required':stable_samples}
+            'outcome':outcome, 'stable_samples_required':stable_samples,
+            'appearance_pending':appearance_pending}
 
 
 def wait_seconds(state, elapsed):

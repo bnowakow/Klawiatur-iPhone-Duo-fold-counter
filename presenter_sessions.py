@@ -265,6 +265,9 @@ def advance_sessions(state, obs, manual_reset=False, night_config=None):
     status = obs.get("clothing_status")
     camera = obs["details"].get("camera_view", {})
     known = camera.get("view") is not None and camera.get("scene_kind") != "scheduled_break"
+    if camera.get('baseline_review_required'):
+        state.pop('candidate', None)
+        return state, updates, False
     current = state.get("current")
     candidate = state.get("candidate")
     if not known:

@@ -10,6 +10,7 @@ from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 import uuid
+import youtube_rate_limits as rate_limits
 from zoneinfo import ZoneInfo
 
 PACIFIC = ZoneInfo('America/Los_Angeles')
@@ -68,12 +69,20 @@ CREATE OR REPLACE VIEW youtube_daily_usage AS
  FROM youtube_api_requests GROUP BY project_id,api_day;
 """
 
+SCHEMA += rate_limits.SCHEMA
+
 
 class QuotaExceeded(RuntimeError):
     pass
 
 
 class ChatRateLimited(RuntimeError):
+    def __init__(self,message,reason='local_account_rate_guard'):
+        super().__init__(message)
+        self.reason=reason
+
+
+class MessageExpired(ValueError):
     pass
 
 
@@ -93,6 +102,7 @@ def ensure_schema(conn):
     from psycopg.types.json import Jsonb
     conn.execute("SELECT pg_advisory_xact_lock(hashtext('youtube-schema'))")
     conn.execute(SCHEMA)
+    rate_limits.seed_policy(conn)
     for key,(value,source) in POLICIES.items():
         conn.execute('INSERT INTO youtube_api_policies VALUES (%s,%s,%s,%s) '
                      'ON CONFLICT DO NOTHING',(key,VERIFIED_ON,Jsonb(value),source))
@@ -142,6 +152,9 @@ def reserve(project_id, method, account_channel_id=None, now=None, delivery_id=N
             raise QuotaExceeded('Local daily YouTube quota budget would be exceeded')
         if method=='liveChatMessages.insert':
             conn.execute('SELECT pg_advisory_xact_lock(hashtext(%s))',('youtube-account:'+account_channel_id,))
+            until=rate_limits.paused(conn,account_channel_id,now)
+            if until:
+                raise ChatRateLimited('Account posting paused until '+until.isoformat(),reason='account_backoff')
             attempts=conn.execute("SELECT count(*) FROM youtube_api_requests WHERE account_channel_id=%s "
                                   "AND method='liveChatMessages.insert' AND requested_at>%s AND requested_at<=%s",
                                   (account_channel_id,now-timedelta(seconds=30),now)).fetchone()[0]
@@ -154,16 +167,26 @@ def reserve(project_id, method, account_channel_id=None, now=None, delivery_id=N
     return request_id
 
 
-def finish(request_id, status, http_status=None, error_reason=None, response_id=None):
+def finish(request_id, status, http_status=None, error_reason=None, response_id=None, provider=None):
     if status not in ('succeeded','failed','unknown'):
         raise ValueError('Invalid completion status')
     with connect() as conn:
-        conn.execute('UPDATE youtube_api_requests SET completed_at=now(),status=%s,http_status=%s, '
-                     'error_reason=%s,response_id=%s WHERE id=%s AND completed_at IS NULL',
-                     (status,http_status,error_reason,response_id,request_id))
+        row=conn.execute('UPDATE youtube_api_requests SET completed_at=now(),status=%s,http_status=%s, '
+                         'error_reason=%s,response_id=%s WHERE id=%s AND completed_at IS NULL '
+                         'RETURNING method,account_channel_id',
+                         (status,http_status,error_reason,response_id,request_id)).fetchone()
+        if not row:return
+        if provider is not None:
+            from psycopg.types.json import Jsonb
+            conn.execute('INSERT INTO youtube_api_error_details '
+                         '(request_id,http_status,provider_message,provider_domain,retry_after_raw,retry_after_seconds,details) '
+                         'VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING',
+                         (request_id,http_status,provider.get('provider_message'),provider.get('provider_domain'),
+                          provider.get('retry_after_raw'),provider.get('retry_after_seconds'),Jsonb(provider)))
+        rate_limits.record_result(conn,request_id,row[0],row[1],status,error_reason,provider)
 
 
-def tracked_request(project_id, method, access_token, params=None, body=None, account_channel_id=None, delivery_id=None):
+def tracked_request(project_id, method, access_token, params=None, body=None, account_channel_id=None, delivery_id=None, expires_at=None):
     """Official API transport for a future OAuth client; never log credentials.
 
     No automatic retries: a timed-out POST may already have published a message.
@@ -183,7 +206,12 @@ def tracked_request(project_id, method, access_token, params=None, body=None, ac
     request=Request('https://www.googleapis.com/youtube/v3/'+path+'?'+urlencode(params or {}),
                     data=data,method=verb,headers={'Authorization':'Bearer '+access_token,
                                                   'Content-Type':'application/json'})
+    if expires_at is not None and datetime.now(timezone.utc)>=expires_at:
+        raise MessageExpired('Message expired before API reservation')
     request_id=reserve(project_id,method,account_channel_id,delivery_id=delivery_id)
+    if expires_at is not None and datetime.now(timezone.utc)>=expires_at:
+        finish(request_id,'failed',error_reason='local_message_expired')
+        raise MessageExpired('Message expired before HTTP request')
     try:
         with urlopen(request,timeout=30) as response:
             raw=response.read(2*1024*1024+1)
@@ -196,14 +224,13 @@ def tracked_request(project_id, method, access_token, params=None, body=None, ac
                 raise ValueError('Posting response has no message ID')
             http_status=response.status
     except HTTPError as error:
-        reason='http_error'
+        reply={}
         try:
             reply=json.loads(error.read(65536))
-            value=reply['error']['errors'][0]['reason']
-            if isinstance(value,str) and value.isalnum():reason=value[:100]
-        except (ValueError,KeyError,IndexError,TypeError):
-            pass
-        finish(request_id,'failed',error.code,reason)
+        except (ValueError,TypeError):pass
+        provider=rate_limits.provider_error(reply,error.headers.get('Retry-After') if error.headers else None)
+        reason=provider['reason']
+        finish(request_id,'failed',error.code,reason,provider=provider)
         raise YouTubeRequestFailed(f'YouTube returned HTTP {error.code}: {reason}; request {request_id}',
                                    definitive=400<=error.code<500, reason=reason) from None
     except Exception:

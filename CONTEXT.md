@@ -114,7 +114,9 @@ accuracy guarantee for all future footage.
 At that stage, validation passed **17 unit tests** in Docker and the
 PostgreSQL integration check. That check produced five isolated observations
 and verified inserts, state reloads, spike rejection, and database-outage replay.
-There has not yet been a manually verified real presenter-handover evaluation.
+At that snapshot there had not yet been a manually verified real handover
+evaluation. The reviewed 26 October 07:00 dark-clothing transition now has
+saved regression frames in `proof-of-concept/test-data/2026-10-26-dark-clothing-handover/`.
 
 **Deployment gap at this snapshot:** the host's `supervisor.py` and the running
 image's `/app/supervisor.py` had different SHA-256 hashes. `camera_views.py`
@@ -138,7 +140,7 @@ not require a container rebuild.
 | `polling.py` | Adaptive scheduling, restart state and timing-event replay |
 | `frame_retention.py` | Anomaly windows, SQLite ledger and global image quota |
 | `presenter_sessions.py` | Stints, appearances, night endpoints and SQL rate views |
-| `official_data.py` | Published-site archive and queued imports |
+| `ipduotest_pl.py` | Published-site archive and queued imports |
 | `compare_current_tester.py` | Source-aligned pace comparisons and cadence diagnostics |
 | `benchmark_frame_intervals.py` | Isolated persistent-decoder and full-path cadence benchmarks |
 | `refine_break_endpoint.py` | Preview/apply an audited correction of a verified break endpoint |
@@ -275,7 +277,7 @@ do not overwrite historical evidence to make a new implementation pass.
 
 Active configuration is stored in the repository-root `.env` on the host,
 ignored by Git and excluded from Docker image builds. Both `supervisor` and
-`official-data` use Compose `env_file` and a read-only bind mount of that file
+`ipduotest-pl` use Compose `env_file` and a read-only bind mount of that file
 at `/app/.env`. There is no separate authoritative copy inside a container.
 Create `.env` from `.env.sample` on a new checkout before starting Compose.
 Edits require recreating the affected application containers to reload their
@@ -301,7 +303,7 @@ Copy `.env.sample` to `.env` to override Compose defaults. Current defaults:
 | `NIGHT_STOP_START`, `NIGHT_STOP_END` | `21:30`, `06:30` in `TIMEZONE` |
 | `NIGHT_STOP_IDLE_SECONDS` | 180 seconds |
 | `IMAGE_STORAGE_LIMIT_BYTES` | 20000000000 (20 GB decimal) |
-| `OFFICIAL_DATA_INTERVAL_SECONDS` | 300 seconds after each collector run |
+| `IPDUOTEST_PL_INTERVAL_SECONDS` | 300 seconds after each collector run |
 | `TIMEZONE` | `Europe/Warsaw` |
 | `ACTIVE_START`, `ACTIVE_END` | Both `00:00`; equal values mean all day |
 | `POSTGRES_PORT` | 54329 on host localhost |
@@ -356,7 +358,7 @@ Back up the database volume and the persistent evidence separately.
 
 Use `make docker-upgrade` after code, dependency, or `.env` changes. It builds
 both application images, ensures the database service is ready, and recreates
-`supervisor` and `official-data` with the latest configuration, preserving data.
+`supervisor` and `ipduotest-pl` with the latest configuration, preserving data.
 
 Run commands from this repository's root. Docker Desktop must be running and
 the host awake for polling to continue.
@@ -384,17 +386,35 @@ WHERE stream_url = 'https://www.youtube.com/watch?v=vaiHWiExDXg'
 ORDER BY observed_at DESC LIMIT 20;"
 ```
 
-For a manually verified handover missed by automatic tracking, start a fresh
-stint and clothing baseline (do not reset again for an already recorded stint):
+For a reviewed historical handover missed by automatic tracking, preview an
+audited split using accepted boundary observations belonging to the still-current
+old stint:
 
 ```sh
-docker compose stop supervisor
-docker compose run --rm supervisor python supervisor.py --once --reset-clothing-baseline
-docker compose start supervisor
+docker compose run --rm supervisor python repair_presenter_handover.py \
+  --old-session OLD_UUID --last-old-observation LAST_OLD_UUID \
+  --first-new-observation FIRST_NEW_UUID
 ```
 
-Verify the one-shot result actually says `baseline_created`; an inactive window,
-capture failure, or duplicate frame will not establish a new baseline.
+After reviewing the preview, stop the supervisor, repeat with `--apply`, and
+start the supervisor with the rebuilt image. The repair transaction stores
+original state/observations/comparisons, closes the old stint at the last reviewed
+old sample, installs the new clothing baseline and reassigns later samples.
+Counter increases between the boundary samples remain unattributed. Historical
+mixed-stint comparisons are marked superseded; duplicate repair is refused.
+It requires a subsequent accepted increase proving folding in the new stint.
+
+Supplemental garment-print crops supplement the shoulder histograms using the
+same threshold and sustained-change rules. Dark garments with similar prints
+can still hide a handover; these cues do not identify people.
+Compatible detector upgrades preserve existing baseline observation IDs and
+reconstruct supplemental garment features from those original frames. Missing
+source evidence or changed crop geometry produces
+`clothing_baseline_review_required` and holds stint attribution until reviewed;
+the current shirt is never silently acknowledged as the previous baseline.
+Threshold/confirmation changes restart pending continuity without replacing the
+baseline. Pending appearance cues request a faster next sample with processing
+headroom; errors, overruns and saturation retain their backpressure protections.
 `docker compose down` stops services while preserving the named volume.
 Adding `-v` deletes the database volume; it is not a routine restart command.
 
@@ -442,30 +462,30 @@ start times, closure, SQL rates and outage/replay, preserving evidence under
 `/data/test-evidence/presenter-sessions/` by default. Unit tests also cover real
 layout crops with a synthetic shirt change, ensuring only one stint is created.
 
-## Organizer's public website archive (added 2026-10-25)
+## ipduotest-pl’s public website archive (added 2026-10-25)
 
 The user requested all published test data from https://ipduotest.pl/ and its
-context. `official_data.py` collects homepage HTML, all configured public
+context. `ipduotest_pl.py` collects homepage HTML, all configured public
 Sheetable sheet views and same-site homepage images, independently of the
 stream supervisor. The initial source set is three unique Google sheet/tab
 views (current score, Top 5, overall history) plus the chart and homepage.
 Table configurations 1 and 2 reference the same history sheet; fetch once,
 retain both aliases. No participant names are published in those tables.
 
-Compose service `official-data` starts immediately and then waits
-`OFFICIAL_DATA_INTERVAL_SECONDS=300` after each run. Schema: `official_data_runs`,
-`official_data_resources`, `official_data_blobs`; views: `official_data_latest`
-and `official_data_latest_success`. Exact response bytes, parsed cells, source
+Compose service `ipduotest-pl` starts immediately and then waits
+`IPDUOTEST_PL_INTERVAL_SECONDS=300` after each run. Schema: `ipduotest_pl_runs`,
+`ipduotest_pl_resources`, `ipduotest_pl_blobs`; views: `ipduotest_pl_latest`
+and `ipduotest_pl_latest_success`. Exact response bytes, parsed cells, source
 configuration, timestamps and errors are retained. Local content-addressed
-blobs and pending/imported manifests live under `data/official/`. Ordinary
+blobs and pending/imported manifests live under `data/ipduotest-pl/`. Ordinary
 frame pruning excludes them; the global image cap can evict local image blobs.
 Original response bytes already imported into PostgreSQL remain stored. Database failure queues files and replay is idempotent.
 
-See `docs/official-data.md` for verified source links, field meanings, source
+See `docs/ipduotest-pl.md` for verified source links, field meanings, source
 inconsistencies, freshness checks and SQL. Initial fixtures and regression
-evidence are preserved in `proof-of-concept/test-data/2026-10-25-official-site/`.
+evidence are preserved in `proof-of-concept/test-data/2026-10-25-ipduotest-pl/`.
 Published times lack an explicit timezone and remain source strings. Do not
-interpret scheduled hourly slots as detected handovers or merge official
+interpret scheduled hourly slots as detected handovers or merge ipduotest-pl
 scores into accepted OCR. Chart raw numeric points, private/unreferenced tabs,
 and pre-collection edit history are unavailable from the homepage.
 
@@ -497,10 +517,10 @@ boundary still makes the whole-turn average uncertain.
 
 ## Current scope: database collection first
 
-The user clarified that this is an independent alternative to ipduotest.pl.
+The user clarified that this is an independent alternative to ipduotest-pl.
 For now, retain all needed data in PostgreSQL and defer the rest. Keep our
 stream observations and anonymous presenter evidence separate from archived
-organizer values. Do not build a UI, choose a new ranking/projection policy,
+ipduotest-pl values. Do not build a UI, choose a new ranking/projection policy,
 or silently equate scheduled source slots with our detected stints.
 `docs/data-storage.md` maps future totals, starts, durations, rates, rankings,
 source projections and event notes to stored inputs, and states gaps explicitly.
@@ -527,7 +547,7 @@ preserved at deployment; the seed applies when rate history is empty.
 The user requested a script and ongoing observation of whether the folds/minute
 gap narrows with stint duration, to inform frame cadence later.
 `compare_current_tester.py` refreshes public data by default; `--stored` reads
-the latest archived attempt. The `official-data` service invokes it after
+the latest archived attempt. The `ipduotest-pl` service invokes it after
 each refresh and persists `tester_comparisons` rows keyed by stream/source run.
 It aligns accepted app samples to source fetch time, records recent and stint
 pace and source score/minutes, and suppresses numeric gaps for stale data or
@@ -658,3 +678,40 @@ The worker enables replies through its Compose environment override; manual
 `.env` sending remains false. Control it with `make youtube-bot-up/stop/stats/logs`.
 Docker restart policy is unless-stopped; only an already running bot is recreated
 by docker-upgrade. See [bot behavior and schema](docs/youtube-bot.md).
+
+### Automatic final-stint chat summaries
+
+`youtube_stint_notifications.py` runs a 15-second timer inside the bot container,
+independent of chat batches. Newly closed presenter sessions (sustained handover
+or detected night pause) trigger one compact final-statistics message plus the
+existing disclaimer. Final counts/pace come from that specific closed row in
+`presenter_session_rates`, never from the current successor. Manual resets, open
+stints and closures ending before initial feature activation are ignored.
+`youtube_stint_notification_settings` stores stream enable/activation/max-age=3600;
+`youtube_stint_notifications` stores UUID-based claims, exact final data/text,
+source closure times/reason, delivery and outcome. Unknown outcomes never resend;
+recovery reconciles interrupted claims. The source kind is `stint_finished`.
+These automatic messages bypass the manual !ile request cooldown and do not inflate
+viewer command statistics, but use the same global quota and posting guard.
+`make youtube-bot-stats` reports their settings and recent history. Feature tests
+use isolated real-PostgreSQL fixtures and simulated sends only.
+
+`!pomoc` is enabled with handler `help`, a separate chat-wide 600-second cooldown
+and its own exact Polish cooldown disclaimer. It dynamically lists enabled
+implemented commands/descriptions from `youtube_bot_commands.description`, works
+without folding data, and shares command-event usage/delivery accounting.
+Repeated !pomoc requests do not consume !ile's independent cooldown. See bot docs.
+
+`!samsung` uses the persistent `youtube_bot_command_cache` row to answer in Polish:
+Samsung Galaxy Z Flip3, final 418500 folds, still working but unable to close fully.
+The supplied Cyfrowa.rp.pl article's updated final result was verified on 2026-10-26;
+canonical URL/title, structured facts and summary are cached once without startup
+refreshes. No article fetch occurs on command use. Its own cooldown is 600 seconds,
+usage/delivery use the common path, and !pomoc includes it dynamically.
+
+## Source naming correction (2026-10-26)
+
+The user clarified that ipduotest-pl is unofficial. Use `ipduotest-pl` for this
+source, collector service and archive path, and `ipduotest_pl` for Python/SQL
+identifiers. Never describe its values as official or authoritative. Existing
+archives and database rows migrate in place; see `docs/ipduotest-pl.md`.

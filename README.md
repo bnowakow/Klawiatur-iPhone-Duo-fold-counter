@@ -44,7 +44,7 @@ capture remains enabled all day because these times are approximate.
 
 For now, the goal is storing the inputs for an independent application in
 PostgreSQL. Counter history, presenter starts and endpoints, brief appearances,
-attribution uncertainty, and the organizer's published reference data are
+attribution uncertainty, and ipduotest-pl’s published reference data are
 retained. Rankings, presentation and reconciliation policy can be decided later.
 See the [database storage contract](docs/data-storage.md) for the field mapping,
 retention and remaining measurement limits.
@@ -65,18 +65,21 @@ Set `CODEX_BIN=/absolute/path/to/codex` to select another executable. The CLI
 must already be authenticated. Optional `dialog`/`whiptail` provide menus;
 otherwise it uses plain terminal prompts.
 
-## Organizer's published data
+## ipduotest-pl’s published data
 
-The independent `official-data` Compose service archives the public data from
-[ipduotest.pl](https://ipduotest.pl/) every five minutes: the homepage, full
+ipduotest-pl is an unofficial source. Its published values are archived as source
+claims, not treated as authoritative measurements.
+
+The independent `ipduotest-pl` Compose service archives the public data from
+[ipduotest-pl](https://ipduotest.pl/) every five minutes: the homepage, full
 embedded tables (overall history, current tester score and Top 5), and chart.
 Original responses, parsed cells, source metadata and fetch times are retained
-in PostgreSQL and `data/official/`, including revisions and failed attempts.
+in PostgreSQL and `data/ipduotest-pl/`, including revisions and failed attempts.
 Start all services with `docker compose up -d --build`.
 
-See [published-data context and operations](docs/official-data.md) for the
+See [published-data context and operations](docs/ipduotest-pl.md) for the
 source inventory, database schema, queries, refresh settings and limitations.
-Official hourly slots and scores stay separate from our detected presenter
+ipduotest-pl hourly slots and scores stay separate from our detected presenter
 stints; they have no participant names and do not override OCR validation.
 
 ## Current tester comparisons
@@ -113,7 +116,7 @@ provisional, and a second plausible reading establishes an anchor. Later values
 must be nondecreasing and fit a pace envelope around the median of the last 20
 accepted positive rates. Before positive rates have been learned, the initial
 range is **29.5–56.7 folds/minute** from 27 completed tester rows in the fresh
-[ipduotest.pl history](https://docs.google.com/spreadsheets/u/0/d/1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM/htmlview/sheet?headers=true&gid=0).
+[ipduotest-pl history](https://docs.google.com/spreadsheets/u/0/d/1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM/htmlview/sheet?headers=true&gid=0).
 `EXPECTED_RATE_MIN=0.4916666666666667` and `EXPECTED_RATE_MAX=0.945` express
 these bounds in folds/second and replace the former scalar `EXPECTED_RATE`.
 The initial bounds also validate the second provisional/post-gap sample.
@@ -511,3 +514,7 @@ The [continuous YouTube command bot](docs/youtube-bot.md) answers `!ile` with cu
 folding statistics and a disclaimer, at most once per ten minutes across the chat.
 Its command settings, cooldowns and usage statistics persist in PostgreSQL.
 Use `make youtube-bot-stats`, `make youtube-bot-logs` and `make youtube-bot-stop`.
+
+The bot also posts one final-statistics summary when a newly observed folding stint
+ends through a handover or night stop. Automatic summaries use the completed
+person's data, persist delivery history, and do not replay historical stints.

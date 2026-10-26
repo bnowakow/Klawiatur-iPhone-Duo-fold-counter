@@ -63,17 +63,17 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-  official-data:
+  ipduotest-pl:
     build: .
     env_file:
       - ./.env
-    command: ["python", "official_data.py"]
+    command: ["python", "ipduotest_pl.py"]
     environment:
       PGHOST: db
       PGDATABASE: folding
       PGUSER: folding
       PGPASSWORD: ${POSTGRES_PASSWORD:-folding-local-dev}
-      OFFICIAL_DATA_INTERVAL_SECONDS: ${OFFICIAL_DATA_INTERVAL_SECONDS:-300}
+      IPDUOTEST_PL_INTERVAL_SECONDS: ${IPDUOTEST_PL_INTERVAL_SECONDS:-300}
       STREAM_URL: ${STREAM_URL:-https://www.youtube.com/watch?v=vaiHWiExDXg}
       INTERVAL_SECONDS: ${INTERVAL_SECONDS:-4}
     volumes:

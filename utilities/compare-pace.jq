@@ -7,16 +7,16 @@ def pad_right($width): . + (" " * ($width - length));
 if type != "object" or (.status | type) != "string" then
   error("Invalid comparison report: missing status")
 elif .status != "compared" then
-  "\("Website (ipduotest.pl):" | pad_right(24) | blue_label)  unavailable",
+  "\("Website (ipduotest-pl):" | pad_right(24) | blue_label)  unavailable",
   "\("Our current person (avg):" | pad_right(24) | blue_label)  unavailable",
   "\("Difference (ours − site):" | pad_right(24) | blue_label)  unavailable",
   "Comparison unavailable: \(.status | gsub("_"; " "))\(if .details.error then ". " + .details.error else "" end)"
-elif (.official_fpm | type) != "number" or (.stint_fpm | type) != "number" then
+elif (.ipduotest_pl_fpm | type) != "number" or (.stint_fpm | type) != "number" then
   error("Pace comparison unavailable: missing folds/minute values")
 else
-  (.stint_fpm - .official_fpm) as $gap |
+  (.stint_fpm - .ipduotest_pl_fpm) as $gap |
   [
-    {label: "Website (ipduotest.pl):", value: (.official_fpm | fpm)},
+    {label: "Website (ipduotest-pl):", value: (.ipduotest_pl_fpm | fpm)},
     {label: "Our current person (avg):", value: (.stint_fpm | fpm)},
     {label: "Difference (ours − site):", value: ((if $gap > 0 then "+" else "" end) + ($gap | fpm))}
   ] as $rows |

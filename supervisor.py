@@ -270,7 +270,7 @@ def analyze(cfg, state, obs, fixture=None, reset_clothing=False):
     state["appearances"] = appearances
     obs["details"]["presenter_appearance_updates"] = appearance_updates
     obs["details"]["presenter_attribution_review_required"] = bool(
-        appearances.get("attribution_review_required"))
+        appearances.get("attribution_review_required") or details.get('baseline_review_required'))
     sessions, updates, promote = advance_sessions(state.get("presenters", {}), obs,
         manual_reset=reset_clothing,
         night_config={"timezone": cfg["timezone"], "start": cfg["night_start"],
@@ -446,7 +446,8 @@ def main():
             return 1 if result["status"] in ("error", "database_unavailable") else 0
         elapsed = time.monotonic()-started
         pressure = polling.advance(pressure, elapsed, cfg["interval"], cfg["poll_max"],
-                                   int(cfg["poll_stable"]), result["status"])
+                                   int(cfg["poll_stable"]), result["status"],
+                                   appearance_pending=result.get('clothing_status') == 'change_pending')
         saved = polling.record(cfg,pressure,result.get("id"),import_events=False)
         print(json.dumps({"polling":pressure,"prior_telemetry_queued":telemetry['queued']}),flush=True)
         # Scheduling is relative to this cycle, with no backlog or catch-up loop.

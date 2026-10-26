@@ -20,7 +20,7 @@ def main():
     with quota.connect() as conn:
         conn.execute('UPDATE youtube_stint_notification_settings SET enabled_at=%s WHERE stream_url=%s',
                      (now-timedelta(hours=3),stream))
-    def session(reason='sustained_clothing_change',ended=None,baseline=100,active=False):
+    def session(reason='sustained_clothing_change',ended=None,baseline=100,active=False,version=None):
         sid=str(uuid.uuid4())
         ended=ended or now-timedelta(seconds=30)
         detected=ended-timedelta(minutes=10)
@@ -31,14 +31,14 @@ def main():
                          'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                          (sid,stream,detected,detected+timedelta(seconds=30),'integration',str(uuid.uuid4()),
                           detected+timedelta(seconds=30),baseline,baseline,400,ended-timedelta(seconds=10),
-                          None if active else ended,None if active else reason,now))
+                          None if active else ended,None if active else reason,version or now))
         return sid
     normal=session()
     night=session('night_pause_counter_stopped_review_required',now-timedelta(minutes=3))
     historical=session(ended=now-timedelta(hours=4))
     manual=session('manual_baseline_reset')
     active=session(active=True)
-    expired=session(ended=now-timedelta(hours=2))
+    expired=session(ended=now-timedelta(hours=2),version=now-timedelta(hours=2)+timedelta(seconds=20))
     unavailable=session(baseline=None)
     sent=[]
     target={'channel':{'id':'fixture-channel'},'chat_id':'fixture-chat'}

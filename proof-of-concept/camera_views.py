@@ -50,6 +50,13 @@ def select_view(image, profiles):
     return name if known else None, dict((name, round(score, 4)) for score, name in scores)
 
 
+def baseline_geometry(config):
+    # New garment features can be reconstructed from the original frame.
+    # Timing/threshold changes must never acknowledge a new shirt implicitly.
+    return [[{k: v for k, v in p.items() if k != 'garment_rois'}
+             for p in config[0]], config[1]]
+
+
 def observe(image, state, timestamp, observation_id, roi, threshold, confirm, interval,
             reset=False, profiles=None, evidence_root=None):
     if profiles is None:
@@ -58,12 +65,19 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
     signature = [profiles, list(roi), threshold, confirm, interval]
     previous_config = state.get("config")
     # Polling frequency changes continuity limits, not clothing appearance.
-    same_baselines = previous_config is not None and previous_config[:-1] == signature[:-1]
-    if reset or not same_baselines:
+    same_baselines = previous_config is not None and baseline_geometry(previous_config) == baseline_geometry(signature)
+    if previous_config is not None and not same_baselines and not reset:
+        return state, 'clothing_baseline_review_required', None, None, {
+            'view': view, 'background_distances': distances,
+            'baseline_review_required': True, 'reason': 'baseline_geometry_changed'}
+    if reset or previous_config is None:
         state = {"config": signature, "views": {}}
     else:
         state = json.loads(json.dumps(state))
         state["config"] = signature
+        if previous_config[2:-1] != signature[2:-1]:
+            for saved in state['views'].values():
+                saved.pop('tracking', None)
     details = {"view": view, "background_distances": distances}
     is_break, break_details = detect_break_scene(image)
     details["break_scene"] = break_details
@@ -91,12 +105,29 @@ def observe(image, state, timestamp, observation_id, roi, threshold, confirm, in
     if saved is None:
         saved = {"baseline": features.tolist(), "baseline_observation": observation_id,
                  "luminance_baseline": luminance_histogram(crop).tolist(),
-                 "garment_baselines": [feature.tolist() for feature in garment_features]}
+                 "garment_baselines": [feature.tolist() for feature in garment_features],
+                 "garment_rois": garment_rois}
         state["views"][view] = saved
         status, score = "baseline_created", 0
     else:
         if state.get("last_view") != view:
             saved.pop("tracking", None)
+        old_profile = next(p for p in previous_config[0] if p['name'] == view)
+        needs_garments = (len(saved.get('garment_baselines', [])) != len(garment_rois)
+                          or saved.get('garment_rois', old_profile.get('garment_rois', [])) != garment_rois)
+        if needs_garments:
+            reference = (Path(evidence_root) / saved['baseline_observation'] / 'frame.jpg'
+                         if evidence_root is not None else None)
+            if reference is None or not reference.exists():
+                details.update(baseline_review_required=True,
+                               reason='original_garment_baseline_frame_unavailable',
+                               baseline_observation=saved['baseline_observation'])
+                return state, 'clothing_baseline_review_required', None, crop, details
+            with Image.open(reference) as original:
+                saved['garment_baselines'] = [histogram(clothing_crop(original, region)).tolist()
+                                              for region in garment_rois]
+            saved['garment_rois'] = garment_rois
+            details['garment_baseline_reconstructed'] = True
         score = float(np.abs(features-np.asarray(saved["baseline"])).sum()/2)
         # Hydrate older state from its original evidence, never from a new shirt.
         if "luminance_baseline" not in saved and evidence_root is not None:

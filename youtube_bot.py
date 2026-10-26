@@ -13,12 +13,23 @@ import youtube_quota as quota
 from youtube_stream import batches
 
 DISCLAIMER = 'zapytanie !ile może być użyte nie częściej niż raz na 10 minut'
+HELP_DISCLAIMER = 'zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut'
+SAMSUNG_SOURCE_URL = 'https://cyfrowa.rp.pl/smartfony/art36496851-ile-faktycznie-wytrzyma-smartfon-polski-youtuber-postanowil-sprawdzic'
+SAMSUNG_SUMMARY = ('Samsung Galaxy Z Flip3: 418 500 złożeń. Nadal działał, '
+                   'ale nie domykał się. Źródło: cyfrowa.rp.pl.')
+SAMSUNG_DISCLAIMER = 'zapytanie !samsung może być użyte nie częściej niż raz na 10 minut'
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS youtube_bot_commands (
  command text PRIMARY KEY, handler_key text NOT NULL,
  enabled boolean NOT NULL DEFAULT true, cooldown_seconds integer NOT NULL CHECK(cooldown_seconds>=1),
  disclaimer text NOT NULL, max_message_age_seconds integer NOT NULL DEFAULT 120 CHECK(max_message_age_seconds>0),
  updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE youtube_bot_commands ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT '';
+CREATE TABLE IF NOT EXISTS youtube_bot_command_cache (
+ command text PRIMARY KEY REFERENCES youtube_bot_commands(command),
+ summary_pl text NOT NULL, source_url text NOT NULL, source_title text NOT NULL,
+ facts jsonb NOT NULL, verified_on date NOT NULL, cached_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS youtube_bot_state (
  stream_url text PRIMARY KEY, project_id text NOT NULL, channel_id text NOT NULL,
@@ -72,6 +83,22 @@ def initialize():
         conn.execute(SCHEMA)
         conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
                      "VALUES ('!ile','current_person',600,%s) ON CONFLICT DO NOTHING", (DISCLAIMER,))
+        conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
+                     "VALUES ('!pomoc','help',600,%s) ON CONFLICT DO NOTHING", (HELP_DISCLAIMER,))
+        conn.execute('INSERT INTO youtube_bot_commands(command,handler_key,cooldown_seconds,disclaimer) '
+                     "VALUES ('!samsung','cached_samsung',600,%s) ON CONFLICT DO NOTHING", (SAMSUNG_DISCLAIMER,))
+        from psycopg.types.json import Jsonb
+        conn.execute('INSERT INTO youtube_bot_command_cache '
+                     '(command,summary_pl,source_url,source_title,facts,verified_on) VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING',
+                     ('!samsung',SAMSUNG_SUMMARY,SAMSUNG_SOURCE_URL,
+                      'Ile faktycznie wytrzyma smartfon? Polski youtuber postanowił sprawdzić',
+                      Jsonb({'model':'Samsung Galaxy Z Flip3','final_folds':418500,
+                             'still_working_at_end':True,'could_close_fully_at_end':False,
+                             'sand_added_after_folds':333333}), '2026-10-26'))
+        for command,description in (('!ile','liczba złożeń i tempo'),('!pomoc','lista komend'),
+                                    ('!samsung','wynik testu Samsunga')):
+            conn.execute("UPDATE youtube_bot_commands SET description=%s WHERE command=%s AND description=''",
+                         (description,command))
 
 
 def command_config(command):
@@ -88,7 +115,30 @@ def build_reply(stream, config):
     return chat.validate_message(text+' '+config[3])
 
 
-HANDLERS = {'current_person': build_reply}
+def available_commands():
+    with quota.connect() as conn:
+        return conn.execute('SELECT command,description FROM youtube_bot_commands '
+                            'WHERE enabled AND handler_key=ANY(%s) ORDER BY command', (list(HANDLERS),)).fetchall()
+
+
+def build_help_reply(stream, config):
+    commands = available_commands()
+    listing = '; '.join(command+' — '+description if description else command for command,description in commands)
+    text = 'Komendy: '+listing+'. '+config[3]
+    if len(text)>200:
+        text = 'Komendy: '+', '.join(command for command,_ in commands)+'. '+config[3]
+    return chat.validate_message(text)
+
+
+def build_samsung_reply(stream, config):
+    with quota.connect() as conn:
+        cached = conn.execute("SELECT summary_pl FROM youtube_bot_command_cache WHERE command='!samsung'").fetchone()
+    if not cached:
+        raise ValueError('Samsung source summary has not been cached')
+    return chat.validate_message(cached[0]+' '+config[3])
+
+
+HANDLERS = {'current_person': build_reply, 'help': build_help_reply, 'cached_samsung': build_samsung_reply}
 
 
 def parsed_command(item):
@@ -191,7 +241,8 @@ def process_message(project, stream, target, enabled_at, item, now=None):
     try:
         with auth.locked():
             result = chat.send(project,stream,text,request_key,target['channel']['id'],chat_id,
-                               source_kind='command',source_id=item['id'])
+                               source_kind='command',source_id=item['id'],
+                               expires_at=published+timedelta(seconds=min(config[4],120)))
         outcome = complete(result['status'],result.get('error_reason'),text,result['id'])
     except Exception:
         outcome = complete('unknown', 'send_interrupted_or_unavailable', text)
@@ -221,13 +272,20 @@ def statistics(stream=None):
     with quota.connect() as conn:
         conn.row_factory = dict_row
         commands = conn.execute('SELECT * FROM youtube_bot_commands ORDER BY command').fetchall()
+        cached_content = conn.execute('SELECT * FROM youtube_bot_command_cache ORDER BY command').fetchall()
         usage = conn.execute('SELECT * FROM youtube_bot_command_usage WHERE (%s::text IS NULL OR stream_url=%s) ORDER BY command,stream_url',params).fetchall()
         daily = conn.execute('SELECT * FROM youtube_bot_command_daily_usage WHERE (%s::text IS NULL OR stream_url=%s) ORDER BY usage_day DESC LIMIT 100',params).fetchall()
         states = conn.execute('SELECT * FROM youtube_bot_state WHERE (%s::text IS NULL OR stream_url=%s) ORDER BY stream_url',params).fetchall()
         cooldowns = conn.execute('SELECT c.* FROM youtube_bot_cooldowns c WHERE (%s::text IS NULL OR EXISTS '
                                 '(SELECT 1 FROM youtube_bot_command_events e WHERE e.chat_id=c.chat_id AND e.command=c.command AND e.stream_url=%s)) '
                                 'ORDER BY available_at DESC LIMIT 100',params).fetchall()
-    return {'commands':commands,'usage':usage,'daily_usage':daily,'workers':states,'cooldowns':cooldowns}
+        settings, notifications = [], []
+        if conn.execute("SELECT to_regclass('youtube_stint_notifications') IS NOT NULL AS ready").fetchone()['ready']:
+            settings = conn.execute('SELECT * FROM youtube_stint_notification_settings WHERE (%s::text IS NULL OR stream_url=%s)',params).fetchall()
+            notifications = conn.execute('SELECT * FROM youtube_stint_notifications WHERE (%s::text IS NULL OR stream_url=%s) '
+                                         'ORDER BY created_at DESC LIMIT 20',params).fetchall()
+    return {'commands':commands,'cached_content':cached_content,'usage':usage,'daily_usage':daily,'workers':states,'cooldowns':cooldowns,
+            'stint_notification_settings':settings,'stint_notifications':notifications}
 
 
 def run():

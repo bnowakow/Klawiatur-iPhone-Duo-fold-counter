@@ -35,6 +35,22 @@ class CameraViewTests(unittest.TestCase):
         self.assertEqual(details['baseline_observation'], '0')
         self.assertEqual(score, 0)
 
+    def test_threshold_change_preserves_baseline_but_restarts_pending_evidence(self):
+        state, _, _, _, _ = self.observe(self.inset, {}, 0)
+        state, status, _, _, details = observe(
+            self.inset, state, 30, 'new', (.48,.51,.65,.62), .4, 90, 10)
+        self.assertEqual(status, 'no_clothing_change_detected')
+        self.assertEqual(details['baseline_observation'], '0')
+
+    def test_changed_crop_requires_review_instead_of_learning_current_shirt(self):
+        state, _, _, _, _ = self.observe(self.inset, {}, 0)
+        for ts in (30, 60):
+            state, status, _, _, details = observe(
+                self.inset, state, ts, 'new', (.4,.5,.6,.6), .45, 60, 30)
+            self.assertEqual(status, 'clothing_baseline_review_required')
+            self.assertTrue(details['baseline_review_required'])
+            self.assertEqual(state['views']['presenter_inset']['baseline_observation'], '0')
+
     def test_switch_selects_inset_shirt_and_keeps_separate_baselines(self):
         state, _, _, _, _ = self.observe(self.main, {}, 0)
         state, status, _, crop, details = self.observe(self.inset, state, 30)

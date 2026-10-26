@@ -47,8 +47,8 @@ class ImageLimitTests(unittest.TestCase):
         self.assertEqual(result['deleted_files'], [])
 
     def test_extensionless_archived_images_count(self):
-        image = self.write('official/blobs/abcd', body=b'\x89PNG\r\n\x1a\nxxxx')
-        html = self.write('official/blobs/efgh', body=b'<html>archive</html>')
+        image = self.write('ipduotest-pl/blobs/abcd', body=b'\x89PNG\r\n\x1a\nxxxx')
+        html = self.write('ipduotest-pl/blobs/efgh', body=b'<html>archive</html>')
         with self.assertLogs(level='ERROR'):
             result = enforce_image_limit(self.root, 1)
         self.assertFalse(image.exists())

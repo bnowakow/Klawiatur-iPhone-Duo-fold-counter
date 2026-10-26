@@ -58,6 +58,14 @@ reset merely because the target changes; sustained evidence still uses actual
 capture timestamps. Current-tester comparisons use the observed effective
 interval for app-freshness checks, not only the configured minimum.
 
+A fresh `change_pending` appearance cue requests a faster follow-up instead of
+waiting for the normal recovery streak: the next target is the smaller of the
+current budget and `max(base interval, cycle duration × 1.25)`, rounded up to a
+tenth of a second. `follow_appearance_candidate` records this decision.
+Processing overruns, failures and saturation take precedence, so captures stay
+serial and retain headroom. This improves confirmation timing; it cannot recover
+a handover whose appearance produced no detectable cue.
+
 ## Persistence and inspection
 
 `polling_events` stores every decision with stream, observation ID, receipt

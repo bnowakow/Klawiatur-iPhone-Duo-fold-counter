@@ -5,17 +5,28 @@ import hashlib
 import json
 import math
 import os
-from pathlib import Path
 import uuid
 
 CURRENT_KEY = 'sheet:1fK3Qn5pPK0sEZGayoWihVKLhizaGhnYR4iplJ7MCd_s:225705126'
 SCHEMA = """
+DO $$
+DECLARE old_name text;
+BEGIN
+ FOREACH old_name IN ARRAY ARRAY['official_run_id', 'official_fpm'] LOOP
+  IF EXISTS (SELECT FROM information_schema.columns
+             WHERE table_schema=current_schema() AND table_name='tester_comparisons'
+             AND column_name=old_name) THEN
+   EXECUTE format('ALTER TABLE tester_comparisons RENAME COLUMN %I TO %I',
+                  old_name, replace(old_name, 'official', 'ipduotest_pl'));
+  END IF;
+ END LOOP;
+END $$;
 CREATE TABLE IF NOT EXISTS tester_comparisons (
  id uuid PRIMARY KEY, compared_at timestamptz NOT NULL, stream_url text NOT NULL,
- official_run_id uuid NOT NULL, session_id uuid, status text NOT NULL,
- official_fpm double precision, recent_fpm double precision, stint_fpm double precision,
+ ipduotest_pl_run_id uuid NOT NULL, session_id uuid, status text NOT NULL,
+ ipduotest_pl_fpm double precision, recent_fpm double precision, stint_fpm double precision,
  recent_gap_fpm double precision, stint_gap_fpm double precision,
- details jsonb NOT NULL, UNIQUE (stream_url, official_run_id)
+ details jsonb NOT NULL, UNIQUE (stream_url, ipduotest_pl_run_id)
 );
 CREATE INDEX IF NOT EXISTS tester_comparisons_session_time
  ON tester_comparisons(session_id, compared_at);
@@ -105,15 +116,15 @@ def compare(conn, stream=None, at=None):
     conn.execute(SCHEMA)
     # Read latest attempt; never silently substitute an old successful fetch.
     source = conn.execute('SELECT run_id,fetched_at,status,parsed,sha256,source_url '
-                          'FROM official_data_latest WHERE resource_key=%s',(CURRENT_KEY,)).fetchone()
+                          'FROM ipduotest_pl_latest WHERE resource_key=%s',(CURRENT_KEY,)).fetchone()
     if source is None:
         return {'status':'no_published_source','stream_url':stream}
     run_id,fetched,status,parsed,sha,url = source
-    existing = conn.execute('SELECT id,status,official_fpm,recent_fpm,stint_fpm,details '
-                            'FROM tester_comparisons WHERE stream_url=%s AND official_run_id=%s',
+    existing = conn.execute('SELECT id,status,ipduotest_pl_fpm,recent_fpm,stint_fpm,details '
+                            'FROM tester_comparisons WHERE stream_url=%s AND ipduotest_pl_run_id=%s',
                             (stream,run_id)).fetchone()
     if existing:
-        return {'id':str(existing[0]),'status':existing[1], 'official_fpm':existing[2],
+        return {'id':str(existing[0]),'status':existing[1], 'ipduotest_pl_fpm':existing[2],
                 'recent_fpm':existing[3],'stint_fpm':existing[4],
                 'details':existing[5], 'already_stored':True}
     details = {'source_url':url,'source_fetched_at':fetched.isoformat(),'source_sha256':sha,
@@ -136,7 +147,7 @@ def compare(conn, stream=None, at=None):
         except (KeyError,ValueError,StopIteration,TypeError) as exc:
             verdict = 'source_parse_error'
             details['error'] = str(exc)
-    max_source_age = max(float(os.getenv('OFFICIAL_DATA_INTERVAL_SECONDS',300))*2,60)
+    max_source_age = max(float(os.getenv('IPDUOTEST_PL_INTERVAL_SECONDS',300))*2,60)
     if verdict == 'compared' and not 0 <= (at-fetched).total_seconds() <= max_source_age:
         verdict = 'source_stale'
     if session:
@@ -176,18 +187,18 @@ def compare(conn, stream=None, at=None):
     # Differences are numeric only when freshness and attribution checks pass.
     recent = metrics.get('recent_fpm') if verdict=='compared' else None
     stint = metrics.get('stint_fpm') if verdict=='compared' else None
-    official = values.get('fpm')
-    recent_gap = recent-official if recent is not None else None
-    stint_gap = stint-official if stint is not None else None
-    if official and stint_gap is not None:
-        details['stint_gap_percent'] = 100*stint_gap/official
-    report = {'id':str(uuid.uuid4()),'status':verdict,'official_fpm':official,
+    ipduotest_pl = values.get('fpm')
+    recent_gap = recent-ipduotest_pl if recent is not None else None
+    stint_gap = stint-ipduotest_pl if stint is not None else None
+    if ipduotest_pl and stint_gap is not None:
+        details['stint_gap_percent'] = 100*stint_gap/ipduotest_pl
+    report = {'id':str(uuid.uuid4()),'status':verdict,'ipduotest_pl_fpm':ipduotest_pl,
               'recent_fpm':recent,'stint_fpm':stint,'recent_gap_fpm':recent_gap,
               'stint_gap_fpm':stint_gap,'details':details}
     conn.execute('INSERT INTO tester_comparisons VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) '
-                 'ON CONFLICT (stream_url,official_run_id) DO NOTHING',
+                 'ON CONFLICT (stream_url,ipduotest_pl_run_id) DO NOTHING',
                  (report['id'],at,stream,run_id,session[0] if session else None,verdict,
-                  official,recent,stint,recent_gap,stint_gap,Jsonb(details)))
+                  ipduotest_pl,recent,stint,recent_gap,stint_gap,Jsonb(details)))
     return report
 
 
@@ -198,11 +209,14 @@ def main():
     parser.add_argument('--stream',default=None)
     args = parser.parse_args()
     if not args.stored:
-        from official_data import collect,flush
-        root = Path(os.getenv('DATA_DIR','data'))/'official'
+        from ipduotest_pl import archive_root,collect,flush
+        root = archive_root()
         collect(root)
         flush(root)
     with psycopg.connect(os.getenv('DATABASE_URL',''),connect_timeout=10) as conn:
+        if args.stored:
+            from ipduotest_pl import SCHEMA as source_schema
+            conn.execute(source_schema)
         report = compare(conn,args.stream)
     print(json.dumps(report,ensure_ascii=False,indent=2))
     return 0 if report['status']=='compared' else 2

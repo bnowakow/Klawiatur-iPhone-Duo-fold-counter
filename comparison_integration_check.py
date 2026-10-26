@@ -11,7 +11,7 @@ from psycopg import sql
 from psycopg.types.json import Jsonb
 
 import supervisor
-import official_data
+import ipduotest_pl
 from compare_current_tester import compare,CURRENT_KEY
 
 
@@ -22,7 +22,7 @@ def main():
     with patch.dict(os.environ,{'PGOPTIONS':'-c search_path='+schema}):
         with psycopg.connect() as conn:
             conn.execute(supervisor.SCHEMA)
-            conn.execute(official_data.SCHEMA)
+            conn.execute(ipduotest_pl.SCHEMA)
             t=datetime.now(timezone.utc)
             stream='comparison-fixture'
             sid=str(uuid.uuid4())
@@ -46,8 +46,8 @@ def main():
                     'rows':[['200','5','2400','40']]}
             def source(at,status='ok'):
                 rid=str(uuid.uuid4())
-                conn.execute('INSERT INTO official_data_runs VALUES (%s,%s,%s,%s,%s,NULL)',(rid,at,at,official_data.SITE,status))
-                conn.execute('INSERT INTO official_data_resources VALUES (%s,%s,%s,%s,%s,NULL,NULL,%s,%s)',
+                conn.execute('INSERT INTO ipduotest_pl_runs VALUES (%s,%s,%s,%s,%s,NULL)',(rid,at,at,ipduotest_pl.SITE,status))
+                conn.execute('INSERT INTO ipduotest_pl_resources VALUES (%s,%s,%s,%s,%s,NULL,NULL,%s,%s)',
                              (rid,CURRENT_KEY,'fixture-source',at,status,Jsonb({}),Jsonb(parsed)))
                 return rid
             source(t)
@@ -55,7 +55,10 @@ def main():
             assert result['status']=='compared',result
             assert result['stint_fpm']==60 and result['recent_fpm']==60,result
             assert result['stint_gap_fpm']==20,result
-            assert compare(conn,stream,t)['already_stored']
+            conn.execute('ALTER TABLE tester_comparisons RENAME COLUMN ipduotest_pl_run_id TO official_run_id')
+            conn.execute('ALTER TABLE tester_comparisons RENAME COLUMN ipduotest_pl_fpm TO official_fpm')
+            migrated = compare(conn,stream,t)
+            assert migrated['already_stored'] and migrated['ipduotest_pl_fpm']==40,migrated
             assert conn.execute('SELECT count(*) FROM tester_comparisons').fetchone()[0]==1
             source(t+timedelta(seconds=1))
             stale=compare(conn,stream,t+timedelta(seconds=1000))
@@ -74,7 +77,8 @@ def main():
         root.mkdir(parents=True,exist_ok=True)
         report={'integration':'passed','schema':schema,'comparison':result,
                 'checks':['timestamp alignment','recent and stint windows','idempotent rerun',
-                          'source freshness','app freshness','attribution uncertainty','source failure']}
+                          'legacy comparison migration','source freshness','app freshness',
+                          'attribution uncertainty','source failure']}
         (root/'result.json').write_text(json.dumps(report,indent=2)+'\n')
         print(json.dumps({'integration':'passed','schema':schema,'evidence_path':str(root)}))
 

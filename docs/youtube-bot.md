@@ -141,3 +141,90 @@ and [streamList reference](https://developers.google.com/youtube/v3/live/docs/li
 `youtube_stream.proto` is a minimal wire-compatible subset of the official sample;
 generated Python bindings are built inside Docker, not committed. See also
 [OAuth/manual posting](youtube-setup.md) and [quota accounting](youtube-live-chat.md).
+
+## Automatic end-of-stint summaries
+
+The running bot also checks PostgreSQL every 15 seconds for newly completed
+folding stints, independently of incoming chat traffic. A recognized sustained
+handover or detected night stop produces one compact final-statistics message
+with the same `!ile` disclaimer. It says `Koniec zmiany. Złożenia: …` and uses
+that completed stint's stored fold count and average pace, even when another
+person has already started. It never reads the successor's current statistics
+for the previous person's summary.
+
+`youtube_stint_notification_settings` stores the per-stream enable switch, first
+activation time and maximum closure age (default one hour). Historical stints
+ending before activation, open stints and manual baseline resets are excluded.
+The system's existing inferred closure is the trigger; night stop confirmation
+can therefore delay the message after the estimated stop time. Invalid/missing
+final measurements produce a retained `unavailable` event, not invented numbers.
+
+`youtube_stint_notifications` stores the final fold count/pace, closure reason and
+confirmation time, exact text, unique session request key, delivery reference and
+outcome. One notification is claimed per session UUID. Restarts, concurrent checks
+and later corrections do not send the same session twice. Expired, rejected and
+uncertain notifications remain visible; ambiguous sends are never automatically
+retried. Network/configuration failures after a claim can leave an unknown outcome
+requiring review rather than risking a duplicate public message.
+
+Automatic finish summaries are independent of the chat-wide `!ile` request
+cooldown: they are not delayed by a recent command and do not count as viewer
+command usage. They still pass through the shared API budget, posting guard and
+persistent delivery ledger, using `source_kind=stint_finished`. The command's
+existing disclaimer is reused. Sending a summary costs the usual estimated
+20 POST units plus identity/chat discovery reads.
+
+`make youtube-bot-stats` also shows notification settings and the latest summaries.
+Disable only automatic finish summaries while retaining command replies:
+
+```sql
+UPDATE youtube_stint_notification_settings SET enabled=false
+WHERE stream_url='https://www.youtube.com/watch?v=vaiHWiExDXg';
+```
+
+The timer runs inside the same bot container; `make youtube-bot-stop` stops both
+command replies and finish summaries. PostgreSQL history is retained. Integration
+coverage sends no real messages:
+
+```sh
+docker compose --profile youtube run --rm --no-deps youtube-chat python youtube_stint_notifications_integration_check.py
+```
+
+Evidence is saved under `data/test-evidence/youtube-stint-notifications/`.
+
+## !pomoc command
+
+`!pomoc` replies with the list of enabled commands whose handlers are available,
+including their descriptions from `youtube_bot_commands.description`. Currently:
+
+> Komendy: !ile — liczba złożeń i tempo; !pomoc — lista komend. zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut
+
+Its own persisted policy uses `handler_key=help` and `cooldown_seconds=600`.
+The cap is global across viewers for this command, independent of the `!ile`
+cooldown. Repeated help requests during that window are recorded as throttled and
+receive no reply. It uses the same deduplication, usage statistics, quota tracking
+and durable delivery path as other commands. Help works without folding data;
+disabled/unimplemented commands are excluded. Very long descriptions fall back
+to the complete command-name list to fit the 200-character limit. Seeding preserves
+operator policy changes and custom nonempty descriptions across restarts.
+
+## !samsung cached historical result
+
+`!samsung` returns a Polish summary of the earlier Samsung Galaxy Z Flip3 test:
+418,500 folds; the phone still worked but could not close fully. The source is
+[the supplied Cyfrowa.rp.pl article](https://cyfrowa.rp.pl/smartfony/art36496851-ile-faktycznie-wytrzyma-smartfon-polski-youtuber-postanowil-sprawdzic),
+checked on 2026-10-26. This is the final result from its update, not the interim
+300,000-fold count or the manufacturer's 200,000 rating.
+
+`youtube_bot_command_cache` stores the Polish summary, canonical source URL
+(without tracking parameters), article title, structured facts, verification date
+and original cache timestamp. Startup seeds the entry once and preserves existing
+cached content. Replies only read PostgreSQL; they never refetch the article or
+require current folding measurements. `make youtube-bot-stats` includes this cache.
+The entire article is not stored or reproduced.
+
+The command uses `handler_key=cached_samsung`, its own shared-chat 600-second
+cooldown, a matching Polish cooldown disclaimer, and the standard command usage,
+deduplication and delivery ledger. `!pomoc` automatically includes it. The full
+source URL remains in the cache; the 165-character public reply cites the source
+domain to leave room for the required facts and cooldown disclaimer.

@@ -23,18 +23,18 @@ rates or measurement minutes remain invalid; they are never clamped or reused
 from an older snapshot. Expected unavailable reports (script exit 2) are handled
 successfully by the Make target; Docker failures and malformed JSON still fail.
 This average is separate from recent pace;
-the recorded start can still differ from the organizer's measurement window.
+the recorded start can still differ from ipduotest-pl’s measurement window.
 
 For the full JSON report, including recent pace and diagnostics:
 
 ```sh
-docker compose run --rm official-data python compare_current_tester.py
+docker compose run --rm ipduotest-pl python compare_current_tester.py
 ```
 
 Use the latest database source attempt without fetching:
 
 ```sh
-docker compose exec -T official-data python compare_current_tester.py --stored
+docker compose exec -T ipduotest-pl python compare_current_tester.py --stored
 ```
 
 `--stream URL` selects another stream's app measurements. The website source is
@@ -42,13 +42,13 @@ still the public iPhone Duo current-tester table; this does not establish that
 another stream shows the same test. Exit code 0 means a numerical comparison
 was made; 2 means insufficient, stale, failed or uncertain evidence.
 
-The `official-data` service also invokes the comparison after every archive run,
+The `ipduotest-pl` service also invokes the comparison after every archive run,
 by default approximately every five minutes. Comparison failure is logged
 separately and does not discard source archives or stop the stream supervisor.
 Repeated calls for the same stream/source run return the stored comparison
 instead of adding another row. Snapshots with unchanged published values are
 flagged in `details.published_values_changed`; a new fetch is not proof the
-organizer updated the score.
+ipduotest-pl updated the score.
 
 ## Stored evidence
 
@@ -65,9 +65,9 @@ app-minus-site gaps in folds/minute. `details` retains:
 - Candidate frame-interval diagnostics described below.
 
 The current source is table 4 / the public current-score sheet documented in
-[official-data.md](official-data.md). The parser looks up columns by their
+[ipduotest-pl.md](ipduotest-pl.md). The parser looks up columns by their
 published headers and supports Polish decimal commas. It does not assume the
-organizer's published rounded rate equals score divided by displayed minutes.
+ipduotest-pl’s published rounded rate equals score divided by displayed minutes.
 Those inputs are retained separately.
 
 To align receipt times, the app counter endpoint is the last eligible accepted
@@ -85,7 +85,7 @@ is older than `max(60, 2.5 * INTERVAL_SECONDS)` relative to the source fetch.
 Diagnostic raw app estimates can still appear in `details.app` on invalid rows;
 only `status='compared'` rows should be used for gap analysis.
 
-Both start times and windows can differ from the organizer's. Source fetch time
+Both start times and windows can differ from ipduotest-pl’s. Source fetch time
 is not its original measurement time. There are no participant names in the
 published table: `identity_verified` remains false, and a current-stint UUID is
 not a proven identity match. A change in source tester is not automatically
@@ -99,7 +99,7 @@ agreement with the website.
 ```sh
 docker compose exec db psql -U folding -d folding -c "
 SELECT compared_at AT TIME ZONE 'Europe/Warsaw' AS compared_warsaw,
-       session_id, status, official_fpm,
+       session_id, status, ipduotest_pl_fpm,
        round(recent_fpm::numeric,2) AS recent_fpm,
        round(stint_fpm::numeric,2) AS stint_fpm,
        round(stint_gap_fpm::numeric,2) AS stint_gap_fpm,
@@ -146,9 +146,9 @@ changing source values and stints before deciding.
 ## Validation
 
 ```sh
-docker compose run --rm official-data python -m unittest discover \
+docker compose run --rm ipduotest-pl python -m unittest discover \
   -s proof-of-concept -p 'test_*.py'
-docker compose run --rm official-data python comparison_integration_check.py
+docker compose run --rm ipduotest-pl python comparison_integration_check.py
 ```
 
 The integration check uses a separate `comparison_test_…` PostgreSQL schema,
@@ -159,7 +159,7 @@ uncertainty and source failure, and preserves its result under
 ## Dense live benchmark down to one second
 
 ```sh
-docker compose run --rm official-data python benchmark_frame_intervals.py --seconds 60 --interval 1
+docker compose run --rm ipduotest-pl python benchmark_frame_intervals.py --seconds 60 --interval 1
 ```
 
 The benchmark first times two captures through the current per-frame yt-dlp/

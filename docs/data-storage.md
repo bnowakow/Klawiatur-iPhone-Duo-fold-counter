@@ -2,7 +2,7 @@
 
 The current scope is collecting and retaining the data needed for an independent
 folding-test application. Presentation, rankings policy, participant naming and
-reconciliation with the organizer's website can be decided later. The source of
+reconciliation with ipduotest-pl’s website can be decided later. The source of
 our measurements is the livestream; the website archive is a separate reference
 history and does not control our counter or presenter attribution.
 
@@ -18,13 +18,14 @@ history and does not control our counter or presenter attribution.
 | Hourly/minute rates and future rankings | The above counts, endpoints and timestamps; rolling accepted samples | `presenter_session_rates`, `presenter_recent_pace` and their underlying tables |
 | Brief appearances without established folding | First/last observation evidence, raw and accepted readings, appearance status, first-increase evidence when present | `presenter_appearances.details`; `observations.details.presenter_appearance_updates` |
 | Attribution uncertainty | Pending candidate IDs, camera selection, unknown views, interrupted changes, attribution-review flag and clothing scores | `observations.details`; latest working state in `monitor_state` |
+| Reviewed missed-handover corrections | Boundary observations, unassigned transition folds, original observation/comparison/state snapshots and old/new stint UUIDs | `presenter_handover_corrections`; correction UUIDs in reassigned observation details; superseded comparisons have null application rates |
 | Capture gaps, pauses, failed OCR and duplicates | Every recorded attempt's status and diagnostics, including accepted unchanged counters | `observations` |
-| Organizer's complete published history and schedule | Every fetched sheet row, future slot, blank field, original localized value, and source configuration | `official_data_resources.parsed` and `.metadata`, plus original HTML in `official_data_blobs.body` |
-| Organizer's current score, estimated final score, measurement minute and Top 5 | Complete published source tables with fetch timestamps | `official_data_resources`; source responses in `official_data_blobs` |
-| Published test-event notes and chart history | Sheet note rows such as day closure and dust test; original chart images, homepage and subsequent snapshots | `official_data_resources` and `official_data_blobs` |
+| ipduotest-pl’s complete published history and schedule | Every fetched sheet row, future slot, blank field, original localized value, and source configuration | `ipduotest_pl_resources.parsed` and `.metadata`, plus original HTML in `ipduotest_pl_blobs.body` |
+| ipduotest-pl’s current score, estimated final score, measurement minute and Top 5 | Complete published source tables with fetch timestamps | `ipduotest_pl_resources`; source responses in `ipduotest_pl_blobs` |
+| Published test-event notes and chart history | Sheet note rows such as day closure and dust test; original chart images, homepage and subsequent snapshots | `ipduotest_pl_resources` and `ipduotest_pl_blobs` |
 | Adaptive scheduling | Per-cycle processing time, previous/next delay, stability streak, outcomes and restart state | `polling_events`; local state/outage queue in `data/polling/` |
 | Pace comparison and frame-cadence evaluation | Source run and stint IDs, rates/gaps, windows, freshness and attribution status, thinning diagnostics; live interval benchmark timings | `tester_comparisons`, `frame_interval_benchmarks` |
-| Provenance, source changes and collection failures | Run UUID, start/end times, URL, fetch status, response headers, SHA-256 and errors | `official_data_runs`, `official_data_resources`, `official_data_blobs` |
+| Provenance, source changes and collection failures | Run UUID, start/end times, URL, fetch status, response headers, SHA-256 and errors | `ipduotest_pl_runs`, `ipduotest_pl_resources`, `ipduotest_pl_blobs` |
 
 `presenter_session_rates` and `presenter_recent_pace` are views. The underlying
 counter values and timestamps are stored, so rates and rankings can be rebuilt
@@ -43,7 +44,7 @@ the `presenter_session_ends` endpoint. The final display reading may include
 small transition increments that are retained as counter history and endpoint
 evidence without increasing the preceding stint's attributed `last_counter`.
 
-The organizer's forecasts and displayed rates are retained exactly as published.
+ipduotest-pl’s forecasts and displayed rates are retained exactly as published.
 Our own forecasts do not yet have an agreed formula; the measurement history
 needed to calculate them later is retained. No future slot or planned duration
 is treated as an observed event. The current system does not independently
@@ -63,7 +64,7 @@ fetch; latest-attempt and last-success views expose both states.
 
 A supervisor observation completed during a database outage is queued in
 `data/outbox/` with its model state for transactional replay. Website snapshots
-queue independently under `data/official/pending/`. Pending files are not yet
+queue independently under `data/ipduotest-pl/pending/`. Pending files are not yet
 in PostgreSQL until recovery; database failures must remain visible in logs.
 
 Stream images remain files referenced by observation paths. Only detected
@@ -83,7 +84,7 @@ restarts; deleting the volume or host without a backup does not.
 ## Source and operating references
 
 - [Presenter timing, counter validation, rates and SQL](../README.md).
-- [Published source inventory, field meanings and archive queries](official-data.md).
+- [Published source inventory, field meanings and archive queries](ipduotest-pl.md).
 - [Preserved regression evidence](../proof-of-concept/test-data/README.md).
 
 The supervisor's configured cadence currently defaults to four seconds, with adaptive backpressure; the
@@ -126,3 +127,14 @@ IDs, times, outcome and delivery reference. Total and Warsaw-day usage views are
 answered, throttled, stale, unavailable and failed/uncertain commands. Other chat
 content is not archived. History has no automatic expiry. See [bot operation and
 queries](youtube-bot.md).
+
+Automatic final-stint messages are tracked separately in
+`youtube_stint_notifications`, with final counts/pace, closure timing/reason,
+exact message, durable session key and delivery status. Their per-stream
+activation, enable switch and maximum age are in
+`youtube_stint_notification_settings`. They do not increment viewer command usage.
+See [automatic final-stint summaries](youtube-bot.md#automatic-end-of-stint-summaries).
+
+`youtube_bot_command_cache` retains the `!samsung` historical summary, canonical
+source URL/title, structured model/fold-count facts, verification date and cache
+timestamp. Runtime replies read this snapshot without refetching the source.

@@ -1,6 +1,9 @@
-# Published test data from ipduotest.pl
+# Published test data from ipduotest-pl
 
-Source: [ipduotest.pl](https://ipduotest.pl/), inspected on 2026-10-25.
+Source: [ipduotest-pl](https://ipduotest.pl/), inspected on 2026-10-25.
+
+ipduotest-pl is unofficial. This archive preserves its published claims and does
+not establish their accuracy or authority.
 The site describes KlawiterMedia's manual iPhone Duo folding test: participants
 usually take hourly turns, and the stated target is device failure or one
 million folds. The organizers say they bought the device and Apple did not
@@ -44,7 +47,7 @@ cells; it remains in the raw HTML.
 
 These tables contain start-time labels, not participant names or identifiers.
 They cannot establish the identity of an anonymous `presenter_sessions` record.
-Keep official values alongside OCR and appearance-based estimates; collection
+Keep ipduotest-pl values alongside OCR and appearance-based estimates; collection
 does not alter accepted counters, presenter boundaries, or learned pace training.
 At the user's request, a preserved 2026-10-25 snapshot of completed positive
 `Złożenia na minutę` entries seeds the initial validator range: 29.5–56.7/min.
@@ -53,7 +56,7 @@ site imports do not automatically change it.
 Any future match to a presenter stint needs explicit timing evidence or manual
 review. An hourly slot in the sheet is not a detected handover.
 
-The organizer's `Data / Start Testera` start is distinct from our `detected_at`
+ipduotest-pl’s `Data / Start Testera` start is distinct from our `detected_at`
 and `folding_started_at`. The site does not label a timezone on these sheet
 cells; the collector retains their original strings without assigning one.
 The `fetched_at` timestamp is our UTC receipt time, not the source's measurement
@@ -77,24 +80,24 @@ and changes between polling instants are outside this archive's coverage.
 
 ## Collection, storage and recovery
 
-The `official-data` Compose service runs `official_data.py` independently of
+The `ipduotest-pl` Compose service runs `ipduotest_pl.py` independently of
 the livestream supervisor, immediately at startup and then waits
-`OFFICIAL_DATA_INTERVAL_SECONDS=300` after each completed run. Minimum interval
+`IPDUOTEST_PL_INTERVAL_SECONDS=300` after each completed run. Minimum interval
 is 60 seconds. It collects during all hours, independent of the stream's active
 window. Requests have a 25-second socket timeout and a 20 MiB response limit;
 up to four discovered resources are fetched in parallel. Failed fetches or
 parses are recorded explicitly. A discovery failure never reports a complete
 successful run.
 
-- `official_data_runs`: UUID, start/completion times, site URL, status
+- `ipduotest_pl_runs`: UUID, start/completion times, site URL, status
   (`ok`, `partial`, `error`) and discovery errors.
-- `official_data_resources`: one row per run and unique resource key, source
+- `ipduotest_pl_resources`: one row per run and unique resource key, source
   URL, fetch timestamp, status/error, SHA-256, response headers and publishing
   configuration in `metadata`, and parsed sheet data in `parsed` JSONB.
-- `official_data_blobs`: original response bodies, including chart bytes,
+- `ipduotest_pl_blobs`: original response bodies, including chart bytes,
   deduplicated by SHA-256 and stored as PostgreSQL `bytea`.
-- `official_data_latest`: latest attempt per resource, including failures.
-- `official_data_latest_success`: last successful fetch per resource. Check its
+- `ipduotest_pl_latest`: latest attempt per resource, including failures.
+- `ipduotest_pl_latest_success`: last successful fetch per resource. Check its
   timestamp and latest attempt before interpreting it as current.
 
 For sheet resources, `parsed.headers` holds the first published data row,
@@ -102,9 +105,9 @@ For sheet resources, `parsed.headers` holds the first published data row,
 and `parsed.cells` preserves the header and data cell metadata. No row limit,
 locale conversion, record aggregation or automatic correction is applied.
 
-Original bodies also live at `data/official/blobs/<sha256>`. A complete manifest
-is written to `data/official/pending/<run-id>.json` before database import. After
-a successful transaction it moves to `data/official/runs/<run-id>.json`. When
+Original bodies also live at `data/ipduotest-pl/blobs/<sha256>`. A complete manifest
+is written to `data/ipduotest-pl/pending/<run-id>.json` before database import. After
+a successful transaction it moves to `data/ipduotest-pl/runs/<run-id>.json`. When
 PostgreSQL is unavailable the collector continues capturing files and retries
 pending imports later. UUID/content-hash keys make replay idempotent. Original
 responses are retained even if HTML parsing fails. A database advisory lock
@@ -115,8 +118,8 @@ Local image blobs under `data/` are still subject to the global 20 GB image cap;
 original bytes already imported into PostgreSQL have no automatic expiry.
 The quota can also evict pending image blobs before import, in which case replay
 needs those missing bytes restored. See [image quota behavior](frame-retention.md#global-image-limit).
-Back up both the database volume and `data/official/`. File growth continues
-while collecting. `proof-of-concept/test-data/2026-10-25-official-site/` preserves
+Back up both the database volume and `data/ipduotest-pl/`. File growth continues
+while collecting. `proof-of-concept/test-data/2026-10-25-ipduotest-pl/` preserves
 the initial homepage, table-loader script, source tables, chart, parsed data,
 checksums and regression evidence. Keep historical fixtures unchanged.
 
@@ -128,20 +131,20 @@ silently treating historical sources as freshly discovered ones.
 ## Operations and queries
 
 ```sh
-docker compose up -d --build official-data
-docker compose logs --tail 10 official-data
+docker compose up -d --build ipduotest-pl
+docker compose logs --tail 10 ipduotest-pl
 ```
 
 A one-shot fetch (avoid running concurrent collectors unnecessarily):
 
 ```sh
-docker compose run --rm official-data python official_data.py --once
+docker compose run --rm ipduotest-pl python ipduotest_pl.py --once
 ```
 
 Import already queued manifests without network requests:
 
 ```sh
-docker compose run --rm official-data python official_data.py --replay-only
+docker compose run --rm ipduotest-pl python ipduotest_pl.py --replay-only
 ```
 
 Inspect freshness and failures:
@@ -150,7 +153,7 @@ Inspect freshness and failures:
 docker compose exec db psql -U folding -d folding -c "
 SELECT resource_key, fetched_at AT TIME ZONE 'Europe/Warsaw' AS fetched_warsaw,
        status, error, parsed->>'row_count' AS published_rows
-FROM official_data_latest ORDER BY resource_key;"
+FROM ipduotest_pl_latest ORDER BY resource_key;"
 ```
 
 Read every row of the latest successfully fetched overall history:
@@ -158,7 +161,7 @@ Read every row of the latest successfully fetched overall history:
 ```sh
 docker compose exec db psql -U folding -d folding -c "
 SELECT r.fetched_at, row_number, cells
-FROM official_data_latest_success r
+FROM ipduotest_pl_latest_success r
 CROSS JOIN LATERAL jsonb_array_elements(r.parsed->'rows')
   WITH ORDINALITY AS source_row(cells, row_number)
 WHERE r.resource_key = 'sheet:1GrqBCt6WzAPBa_mLNPHODPIJkem51wLg5cCatnYw9BM:0'
@@ -168,18 +171,34 @@ ORDER BY row_number;"
 `row_number` here is the ordinal within the data array, not a named presenter
 or a guaranteed stable source record ID. The original header is in
 `parsed.headers`. JSONB can be exported using normal PostgreSQL queries; raw
-bytes are available through `official_data_blobs` joined on `sha256`.
+bytes are available through `ipduotest_pl_blobs` joined on `sha256`.
 
 Offline-fixture database verification (uses archived data, no website fetch):
 
 ```sh
-docker compose run --rm -v "$PWD/proof-of-concept:/fixtures:ro" official-data \
-  python official_data_integration_check.py
+docker compose run --rm -v "$PWD/proof-of-concept:/fixtures:ro" ipduotest-pl \
+  python ipduotest_pl_integration_check.py
 ```
 
 This verifies complete tables, exact raw bytes in PostgreSQL, database-outage
-retention, and duplicate replay. Test runs use a separate UUID-named PostgreSQL schema (`official_test_…`) so
+retention, and duplicate replay. Test runs use a separate UUID-named PostgreSQL schema (`ipduotest_pl_test_…`) so
 fixture data never replaces live latest-source views. Test tables remain as
 isolated history. Test evidence is preserved in
-`data/test-evidence/official-data/<run-id>/`, or `OFFICIAL_TEST_OUTPUT_DIR` when
+`data/test-evidence/ipduotest-pl/<run-id>/`, or `IPDUOTEST_PL_TEST_OUTPUT_DIR` when
 set. The result records the test schema and run ID.
+
+## Upgrading an existing archive
+
+`make docker-upgrade` stops the previous collector before starting `ipduotest-pl`.
+For a manual upgrade, run `bash utilities/stop-legacy-ipduotest-pl.sh` first so
+that only one collector writes the archive. The new collector moves the legacy
+`data/official/` directory to `data/ipduotest-pl/` and renames the legacy database
+tables and views in place on its first import. Comparisons rename their source
+run and pace columns in place as well. Existing snapshots and response bytes
+are preserved. If both archive directories exist, collection stops for manual
+consolidation rather than overwriting either archive.
+
+Use `IPDUOTEST_PL_INTERVAL_SECONDS` in `.env` (replacing the previous
+`OFFICIAL_DATA_INTERVAL_SECONDS` setting). Python and SQL identifiers use
+`ipduotest_pl`; service names, paths and display labels use `ipduotest-pl`.
+Source URLs and preserved response bytes continue to contain the actual domain.

@@ -2,9 +2,10 @@
 
 # Rebuild code, reload .env, and replace application containers.
 docker-upgrade:
-	docker compose --profile youtube build supervisor official-data clothing-descriptions youtube-chat youtube-bot
+	docker compose --profile youtube build supervisor ipduotest-pl clothing-descriptions youtube-chat youtube-bot
+	@bash utilities/stop-legacy-ipduotest-pl.sh
 	docker compose up -d --wait db
-	docker compose up -d --force-recreate --wait supervisor official-data clothing-descriptions
+	docker compose up -d --force-recreate --wait supervisor ipduotest-pl clothing-descriptions
 	@if [ -n "$$(docker compose --profile youtube ps --status running -q youtube-bot)" ]; then docker compose --profile youtube up -d --no-deps --force-recreate --wait youtube-bot; fi
 
 # Compare published folds/minute with the current person's average.

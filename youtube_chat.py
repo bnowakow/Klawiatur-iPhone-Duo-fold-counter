@@ -1,5 +1,6 @@
 """Manual YouTube live-chat delivery; reusable by future command handlers."""
 import argparse
+from datetime import datetime, timedelta, timezone
 import json
 import os
 from pathlib import Path
@@ -25,6 +26,7 @@ def initialize():
     with quota.connect() as conn:
         quota.ensure_schema(conn)
         conn.execute(SCHEMA)
+        conn.execute(quota.rate_limits.DELIVERY_SCHEMA)
 
 
 def video_id(url):
@@ -97,7 +99,7 @@ def existing(request_key, project, video, channel, chat, text, source_kind, sour
 
 
 def send(project, stream, text, request_key, expected_channel, expected_chat,
-         source_kind='manual', source_id=None):
+         source_kind='manual', source_id=None, expires_at=None):
     """Caller holds auth.locked(). Future bots pass source_kind='command', source_id=message ID.
 
     A request key is never resent, including when its previous outcome is unknown.
@@ -112,29 +114,54 @@ def send(project, stream, text, request_key, expected_channel, expected_chat,
         return previous
     if os.getenv('YOUTUBE_CHAT_ENABLED', 'false').lower() != 'true':
         raise ValueError('Sending is disabled; set YOUTUBE_CHAT_ENABLED=true explicitly')
+    now=datetime.now(timezone.utc)
+    deadline=min(expires_at,now+timedelta(seconds=120)) if expires_at is not None else now+timedelta(seconds=120)
+    if deadline.tzinfo is None:raise ValueError('Message expiry must include timezone')
+    def reject_unsent(reason):
+        identifier=str(uuid.uuid4())
+        with quota.connect() as conn:
+            claimed=conn.execute('INSERT INTO youtube_chat_deliveries '
+                '(id,request_key,project_id,channel_id,video_id,chat_id,message_text,source_kind,source_id,status,error_reason,completed_at) '
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'rejected',%s,now()) ON CONFLICT(request_key) DO NOTHING RETURNING id",
+                (identifier,request_key,project,expected_channel,video,expected_chat,text,source_kind,source_id,reason)).fetchone()
+            if claimed:
+                conn.execute('INSERT INTO youtube_delivery_expirations VALUES (%s,%s)',(identifier,deadline))
+        if not claimed:
+            return existing(request_key,project,video,expected_channel,expected_chat,text,source_kind,source_id)
+        return {'id':identifier,'status':'rejected','response_id':None,'error_reason':reason}
+    if now>=deadline:return reject_unsent('message_expired')
+    with quota.connect() as conn:
+        until=quota.rate_limits.paused(conn,expected_channel,now)
+    if until:return reject_unsent('account_backoff')
     target = context(project, stream)
     if target['channel']['id'] != expected_channel or target['chat_id'] != expected_chat:
         raise ValueError('Posting identity or live chat changed; preview again')
     access_token = auth.token(project)
     if os.getenv('YOUTUBE_CHAT_ENABLED', 'false').lower() != 'true':
         raise ValueError('Sending is disabled; set YOUTUBE_CHAT_ENABLED=true explicitly')
+    if datetime.now(timezone.utc)>=deadline:return reject_unsent('message_expired')
     delivery_id = str(uuid.uuid4())
     with quota.connect() as conn:
         inserted = conn.execute('INSERT INTO youtube_chat_deliveries '
             '(id,request_key,project_id,channel_id,video_id,chat_id,message_text,source_kind,source_id,status) '
             "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'sending') ON CONFLICT (request_key) DO NOTHING RETURNING id",
             (delivery_id,request_key,project,expected_channel,video,expected_chat,text,source_kind,source_id)).fetchone()
+        if inserted:conn.execute('INSERT INTO youtube_delivery_expirations VALUES (%s,%s)',(delivery_id,deadline))
     if not inserted:
         return existing(request_key, project, video, expected_channel, expected_chat, text, source_kind, source_id)
     status, response_id, reason = 'unknown', None, None
     try:
         response = quota.tracked_request(project, 'liveChatMessages.insert', access_token,
-            params={'part': 'snippet'}, account_channel_id=expected_channel, delivery_id=delivery_id,
+            params={'part': 'snippet'}, account_channel_id=expected_channel, delivery_id=delivery_id, expires_at=deadline,
             body={'snippet': {'liveChatId': expected_chat, 'type': 'textMessageEvent',
                               'textMessageDetails': {'messageText': text}}})
         response_id = response['id']
         status = 'sent'
-    except (quota.QuotaExceeded, quota.ChatRateLimited, ValueError):
+    except quota.MessageExpired:
+        status,reason='rejected','message_expired'
+    except quota.ChatRateLimited as error:
+        status,reason='rejected',error.reason
+    except (quota.QuotaExceeded, ValueError):
         status, reason = 'rejected', 'local_validation_or_budget'
     except quota.YouTubeRequestFailed as error:
         status = 'rejected' if error.definitive else 'unknown'

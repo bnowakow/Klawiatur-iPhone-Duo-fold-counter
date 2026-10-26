@@ -18,4 +18,4 @@ new source layouts or parsers.
 
 Original response values can be stale or internally inconsistent; preserve
 source strings rather than correcting them in these fixtures. See
-`docs/official-data.md` in the repository for source context and field meanings.
+`docs/ipduotest-pl.md` in the repository for source context and field meanings.

@@ -70,6 +70,29 @@ def main():
     stats = bot.statistics(stream)
     assert all(row['stream_url']==stream for row in stats['usage'])
     assert sum(row['received'] for row in stats['usage'])==10
+    # Help works independently of folding data and has its own chat-wide cap.
+    with patch.object(bot.chat,'send',side_effect=fake_send):
+        help_result=bot.process_message(project,stream,target,enabled,item('help','!pomoc'))
+        assert help_result['status']=='sent',help_result
+        assert bot.process_message(project,stream,target,enabled,item('help-throttled','!pomoc'))['status']=='throttled'
+    with quota.connect() as conn:
+        usage=conn.execute("SELECT received,answered,throttled FROM youtube_bot_command_usage WHERE stream_url=%s AND command='!pomoc'",(stream,)).fetchone()
+        assert usage==(2,1,1),usage
+        policy=conn.execute("SELECT cooldown_seconds,description FROM youtube_bot_commands WHERE command='!pomoc'").fetchone()
+        assert policy[0]==600 and policy[1]
+        cached=conn.execute("SELECT source_url,facts,cached_at FROM youtube_bot_command_cache WHERE command='!samsung'").fetchone()
+        assert cached[0]==bot.SAMSUNG_SOURCE_URL and 'fbclid' not in cached[0]
+        assert cached[1]['model']=='Samsung Galaxy Z Flip3' and cached[1]['final_folds']==418500
+        assert cached[1]['still_working_at_end'] and not cached[1]['could_close_fully_at_end']
+    bot.initialize()
+    with quota.connect() as conn:
+        assert conn.execute("SELECT cached_at FROM youtube_bot_command_cache WHERE command='!samsung'").fetchone()[0]==cached[2]
+    with patch.object(bot.chat,'send',side_effect=fake_send):
+        assert bot.process_message(project,stream,target,enabled,item('samsung','!samsung'))['status']=='sent'
+        assert bot.process_message(project,stream,target,enabled,item('samsung-throttled','!samsung'))['status']=='throttled'
+    with quota.connect() as conn:
+        assert conn.execute("SELECT received,answered,throttled FROM youtube_bot_command_usage WHERE stream_url=%s AND command='!samsung'",(stream,)).fetchone()==(2,1,1)
+    assert '!samsung' in bot.build_help_reply(stream,bot.command_config('!pomoc'))
     result={'passed':True,'run_id':run,'real_google_requests':0,'checks':['command statistics','deduplication','global cooldown across users','exact cooldown boundary','concurrent requests','uncertain sends retain cooldown','stale history ignored','unavailable measurements','persistent cursor and chat rotation']}
     folder=Path(os.getenv('DATA_DIR','data'))/'test-evidence'/'youtube-bot'/run
     folder.mkdir(parents=True,exist_ok=True)
