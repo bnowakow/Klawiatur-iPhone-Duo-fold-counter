@@ -81,11 +81,23 @@ def main():
         with psycopg.connect() as conn:
             stored=conn.execute('SELECT appearance,prompt_version,status FROM presenter_clothing_descriptions').fetchone()
             assert stored==(detail,2,'completed')
+            conn.execute("UPDATE presenter_clothing_descriptions SET description='Ubiór: beżowa koszulka. Okulary: niewidoczne.',"
+                         "appearance=%s,response=%s", (
+                             psycopg.types.json.Jsonb({'glasses': {'state': 'not_visible'}}),
+                             psycopg.types.json.Jsonb({'raw_answers': {'glasses': 'none'}})))
+            before = conn.execute('SELECT count(*) FROM presenter_description_revisions').fetchone()[0]
+            assert clothing.migrate_glasses_wording(conn) == 1
+            assert clothing.migrate_glasses_wording(conn) == 0
+            text, raw = conn.execute('SELECT description,response FROM presenter_clothing_descriptions').fetchone()
+            assert text == 'Ubiór: beżowa koszulka. Okulary: brak widocznych okularów.'
+            assert raw['raw_answers']['glasses'] == 'none'
+            assert conn.execute('SELECT count(*) FROM presenter_description_revisions').fetchone()[0] == before+1
         report = {'integration':'passed','schema':schema,'checks':[
             'one job per session','transactional database crop storage','outage retry',
             'completed description retained on replay','no repeated inference',
             'Polish conversion and language marker','original description preserved','idempotent language migration',
             'portrait upgrade archives original','stale crop replay cannot downgrade',
+            'negative glasses wording migration archives original and preserves model answer',
             'replay does not block on inference row','schema setup skips already-applied ALTERs during inference','structured appearance persisted'], 'result':result}
         root = Path('/data/test-evidence/clothing-descriptions')/schema
         root.mkdir(parents=True,exist_ok=True)

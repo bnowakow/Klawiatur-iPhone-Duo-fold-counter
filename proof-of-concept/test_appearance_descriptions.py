@@ -3,6 +3,14 @@ import appearance_descriptions as appearance
 
 
 class AppearanceTests(unittest.TestCase):
+    def test_negative_glasses_answer_is_explicit_and_distinct_from_uncertainty(self):
+        for answer in ['none', 'No glasses.', 'No eyeglasses are visible.']:
+            text, features = appearance.summarize({'clothing': 'beige t-shirt', 'glasses': answer})
+            self.assertIn('Okulary: brak widocznych okularów.', text)
+            self.assertEqual(features['glasses'], {'state': 'not_visible'})
+        text, _ = appearance.summarize({'clothing': 'beige t-shirt', 'glasses': 'Cannot tell.'})
+        self.assertIn('Okulary: nie można ocenić.', text)
+
     def test_distinguishes_people_with_same_shirt(self):
         base={'clothing':'A black T-shirt.','hair':'Short brown hair.','headwear':'No hat is visible.',
               'glasses':'Yes, black framed glasses.','facial_hair':'A short beard.',

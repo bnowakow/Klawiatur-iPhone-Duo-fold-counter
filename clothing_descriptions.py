@@ -257,6 +257,23 @@ def migrate_polish(conn):
     return len(rows)
 
 
+def migrate_glasses_wording(conn):
+    """Clarify negative glasses wording, preserving the model answer and revision."""
+    from psycopg.types.json import Jsonb
+    rows = conn.execute("SELECT session_id,description FROM presenter_clothing_descriptions "
+                        "WHERE appearance->'glasses'->>'state'='not_visible' "
+                        "AND description LIKE '%Okulary: niewidoczne.%' FOR UPDATE SKIP LOCKED").fetchall()
+    for session, text in rows:
+        conn.execute("INSERT INTO presenter_description_revisions(session_id,snapshot,image) "
+                     "SELECT session_id,to_jsonb(d)-'image',image FROM presenter_clothing_descriptions d "
+                     'WHERE session_id=%s', (session,))
+        conn.execute('UPDATE presenter_clothing_descriptions SET description=%s,response=COALESCE(response,\'{}\'::jsonb) || %s '
+                     'WHERE session_id=%s',
+                     (text.replace('Okulary: niewidoczne.', 'Okulary: brak widocznych okularów.'),
+                      Jsonb({'glasses_wording_version': 1}), session))
+    return len(rows)
+
+
 def generate(body, base_url, model, *, detailed=False):
     if detailed:
         return generate_detailed(body,base_url,model)
@@ -342,6 +359,7 @@ def main():
     with psycopg.connect(os.getenv('DATABASE_URL',''),connect_timeout=10) as conn:
         supervisor.ensure_schema(conn)
         logging.info("Existing descriptions converted to Polish: %s", migrate_polish(conn))
+        logging.info("Negative glasses wording clarified: %s", migrate_glasses_wording(conn))
         logging.info("Historical full-frame inputs refreshed: %s",refresh_existing_inputs(conn,os.getenv("DATA_DIR","/data")))
     while True:
         try:

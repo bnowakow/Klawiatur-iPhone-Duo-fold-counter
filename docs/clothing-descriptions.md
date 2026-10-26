@@ -92,6 +92,10 @@ The Polish sentence is stored in `description`; machine-readable attributes are
 stored in `appearance` JSONB. Each attribute has a `state`: `visible`,
 `not_visible`, or `unknown`. “Not visible” is limited to this image and does not
 prove that an item is absent. Unclear views are recorded as “nie można ocenić”.
+Negative glasses answers are phrased as “Okulary: brak widocznych okularów.”
+Existing ambiguous “Okulary: niewidoczne.” descriptions are migrated on worker
+startup, preserving the original row/image in `presenter_description_revisions`
+and retaining the model's raw answer and structured state.
 There is no inferred sex or gender-identity field. Unsolicited gender labels from
 the model are neutralized in diagnostic answers. The descriptors help compare
 anonymous stints; they do not establish that two stints belong to the same person.

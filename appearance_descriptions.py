@@ -140,6 +140,7 @@ def summarize(answers):
                       ('facial_hair','Zarost'),('accessories','Dodatki')]:
         value=features[key]
         if value['state']=='unknown': detail='nie można ocenić'
+        elif key=='glasses' and value['state']=='not_visible': detail='brak widocznych okularów'
         elif value['state']=='not_visible': detail='niewidoczne' if key in {'hair','glasses','accessories'} else 'niewidoczny w kadrze' if key=='facial_hair' else 'niewidoczne w kadrze'
         elif 'items' in value: detail=', '.join(value['items'])
         elif key in {'headwear','glasses'}: detail=' '.join(value[k] for k in ('color','type') if value.get(k))
