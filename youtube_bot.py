@@ -10,6 +10,7 @@ import threading
 import youtube_auth as auth
 import youtube_chat as chat
 import youtube_quota as quota
+import stream_lifecycle
 from youtube_stream import batches
 
 DISCLAIMER = 'zapytanie !ile może być użyte nie częściej niż raz na 10 minut'
@@ -83,7 +84,7 @@ CREATE OR REPLACE VIEW youtube_bot_command_daily_usage AS
  FROM youtube_bot_command_events GROUP BY stream_url,chat_id,command,usage_day;
 """
 
-SCHEMA += """
+SCHEMA += stream_lifecycle.SCHEMA + """
 ALTER TABLE youtube_bot_command_events ADD COLUMN IF NOT EXISTS reply_not_before timestamptz;
 ALTER TABLE youtube_bot_command_events ADD COLUMN IF NOT EXISTS reply_delay_seconds integer NOT NULL DEFAULT 0;
 ALTER TABLE youtube_bot_command_events ADD COLUMN IF NOT EXISTS delay_claimed_at timestamptz;
@@ -253,6 +254,21 @@ def heartbeat(stream, status, error=None, page_token=None, batch=False):
         conn.execute('UPDATE youtube_bot_state SET connection_status=%s,error_reason=%s,heartbeat_at=now(), '
                      'page_token=COALESCE(%s,page_token),last_batch_at=CASE WHEN %s THEN now() ELSE last_batch_at END '
                      'WHERE stream_url=%s', (status,error,page_token,batch,stream))
+
+
+def video_finished(stream, ended_at, source):
+    with quota.connect() as conn:
+        stream_lifecycle.record_end(conn,stream,{'source':source,'actual_ended_at':ended_at})
+        conn.execute('UPDATE youtube_bot_state SET actual_ended_at=COALESCE(actual_ended_at,%s) WHERE stream_url=%s',
+                     (ended_at,stream))
+
+
+def chat_finished(stream):
+    with quota.connect() as conn:
+        conn.execute("UPDATE youtube_bot_state SET connection_status='chat_closed',heartbeat_at=now(),"
+                     "error_reason=NULL WHERE stream_url=%s",(stream,))
+        conn.execute("UPDATE youtube_bot_command_events SET status='disabled',error_reason='chat_closed',completed_at=now() "
+                     "WHERE stream_url=%s AND status='delayed'",(stream,))
 
 
 def process_message(project, stream, target, enabled_at, item, now=None):
@@ -442,8 +458,15 @@ def run():
         raise ValueError('Bot requires YOUTUBE_PROJECT_ID and YOUTUBE_CHAT_ENABLED=true')
     initialize()
     stop = threading.Event()
-    signal.signal(signal.SIGTERM, lambda *_: stop.set())
-    signal.signal(signal.SIGINT, lambda *_: stop.set())
+    shutdown = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: (stop.set(),shutdown.set()))
+    signal.signal(signal.SIGINT, lambda *_: (stop.set(),shutdown.set()))
+    with quota.connect() as conn:
+        closed=conn.execute('SELECT connection_status FROM youtube_bot_state WHERE stream_url=%s',(stream,)).fetchone()
+    if closed and closed[0]=='chat_closed':
+        print(json.dumps({'event':'chat_completed','reason':'already_closed'}),flush=True)
+        stop.wait()
+        return
     with quota.connect() as leader:
         leader.autocommit = True
         owns = leader.execute('SELECT pg_try_advisory_lock(hashtext(%s))', ('youtube-bot-worker:'+stream,)).fetchone()[0]
@@ -462,6 +485,8 @@ def run():
         notification_thread = start_notifications(project,stream,stop)
         delayed_thread = start_delayed_commands(project,stream,stop)
         backoff = 5
+        chat_closed=False
+        video_ended=False
         while not stop.is_set():
             try:
                 # Session lock connection must remain alive for exclusive worker ownership.
@@ -469,8 +494,11 @@ def run():
                 with auth.locked():
                     target = chat.context(project, stream)
                 enabled_at, cursor = remember_state(stream,project,target)
+                if target.get('actual_ended_at'):
+                    video_finished(stream,target['actual_ended_at'],'youtube.actualEndTime')
+                    video_ended=True
                 reconcile()
-                heartbeat(stream,'streaming')
+                heartbeat(stream,'post_live' if video_ended else 'streaming')
                 print(json.dumps({'event':'listening','chat_id':target['chat_id'],'channel':target['channel']['title']}), flush=True)
                 for batch in batches(project,target['chat_id'],cursor,stop):
                     if stop.is_set():
@@ -482,14 +510,24 @@ def run():
                         result = process_message(project,stream,target,enabled_at,item)
                         if result:
                             print(json.dumps(result), flush=True)
-                    heartbeat(stream,'streaming',page_token=batch['next_page_token'] or None,batch=True)
+                            if result.get('error_reason') in ('liveChatEnded','liveChatDisabled','liveChatNotFound'):
+                                raise stream_lifecycle.ChatClosed('YouTube no longer accepts chat replies')
+                    heartbeat(stream,'post_live' if video_ended else 'streaming',page_token=batch['next_page_token'] or None,batch=True)
                     backoff = 5
                     if batch['offline_at']:
-                        break
+                        video_finished(stream,batch['offline_at'],'youtube.stream.offline_at')
+                        video_ended=True
                 if not stop.is_set():
-                    stop.wait(2)
+                    stop.wait(30 if video_ended else 2)
             except Exception as error:
                 reason = error.reason if isinstance(error,quota.YouTubeRequestFailed) else type(error).__name__
+                if (isinstance(error,stream_lifecycle.ChatClosed) or
+                        reason in ('liveChatEnded','liveChatDisabled','liveChatNotFound') or
+                        (video_ended and reason=='grpc_not_found')):
+                    chat_closed=True
+                    chat_finished(stream)
+                    stop.set()
+                    break
                 try:
                     if reason == 'grpc_invalid_argument':
                         # An expired server cursor must not permanently strand the reader.
@@ -504,9 +542,13 @@ def run():
                     raise RuntimeError('Worker lock connection was lost') from None
                 stop.wait(backoff)
                 backoff = min(300,backoff*2)
-        heartbeat(stream,'stopped')
+        if not chat_closed:
+            heartbeat(stream,'stopped')
         notification_thread.join(timeout=35)
         delayed_thread.join(timeout=35)
+        if chat_closed:
+            print(json.dumps({'event':'chat_completed','reason':'chat_closed'}),flush=True)
+            shutdown.wait()  # Dormant until Docker stops the container.
 
 
 def main():
@@ -519,7 +561,7 @@ def main():
         with quota.connect() as conn:
             row=conn.execute('SELECT connection_status,heartbeat_at>now()-interval \'20 minutes\' '
                              'FROM youtube_bot_state WHERE stream_url=%s', (os.getenv('STREAM_URL','https://www.youtube.com/watch?v=vaiHWiExDXg'),)).fetchone()
-        if not row or not row[1] or row[0] not in ('streaming','starting'):
+        if not row or (row[0]!='chat_closed' and (not row[1] or row[0] not in ('streaming','starting','post_live'))):
             return 1
     else:
         initialize()

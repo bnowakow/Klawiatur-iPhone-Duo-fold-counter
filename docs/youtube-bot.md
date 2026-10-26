@@ -9,6 +9,20 @@ connection, discovery read and reply POST. No short-interval polling is used.
 
 ## Command and reply
 
+Video completion and chat closure are separate. After a positive broadcast-end
+signal, frame capture retires, while the bot keeps processing commands in
+`post_live` mode. If the API stops returning `activeLiveChatId`, it can reuse the
+previously verified chat ID for the same stream/channel. A completed video alone
+does not disable replies. Reconnects after video completion wait at least 30
+seconds; ordinary network failures retain their backoff behavior.
+
+Explicit `liveChatEnded`/`liveChatDisabled`/`liveChatNotFound` errors, a terminal
+gRPC chat-ended message, or a missing gRPC chat after video completion retire the
+reader. The bot records `chat_closed`, disables outstanding delayed commands and
+stops background workers. It remains dormant until signalled, avoiding the
+Compose `unless-stopped` restart loop; this terminal state is healthy and survives
+restarts. No completion message is automatically posted to chat.
+
 The default row in `youtube_bot_commands` is:
 
 | Field | Value |
@@ -380,8 +394,10 @@ deduplication, expiry, account backoff and identity changes with simulated sends
 
 ## One-minute command cooldown trial and automatic fallback
 
-The user's active runtime policy sets each command's shared-chat cooldown to
-**60 seconds**. It remains per `(chat_id, command)`, shared by all viewers; it
+The user's one-minute trial initially set each command's shared-chat cooldown to
+**60 seconds**. It automatically reverted to **600 seconds** after Kacper's
+`!pomoc` reply (event 285) was rejected at 10:30:59 Warsaw on 26 October 2026.
+The persisted ten-minute setting remains until an explicit operator change. It remains per `(chat_id, command)`, shared by all viewers; it
 is not a single global cap across different commands. The independent 60-second
 reply delay for commands from the posting channel remains in effect.
 
@@ -403,3 +419,6 @@ successes. A new one-minute trial requires an explicit operator action. Seed
 values do not overwrite the persisted command rows. Test accounts without an
 explicit monitoring policy cannot change production cooldowns. The integration
 check uses temporary table copies to verify rollback without touching live policy.
+
+The observed live rollback, including request IDs and timestamps, is documented
+in [Kacper’s rejected help reply](youtube-rate-limits.md#observed-rollback-kacpers-pomoc--26-october-2026).

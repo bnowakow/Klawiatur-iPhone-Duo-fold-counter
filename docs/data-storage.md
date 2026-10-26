@@ -55,6 +55,16 @@ unknown event time, participant identity or historical arrival is fabricated.
 
 ## Retention and recovery
 
+`stream_endings` records positive video-completion evidence (`actualEndTime`,
+stream `offline_at`, or yt-dlp `was_live`/`post_live`) independently of chat
+availability. The supervisor flushes queued observations before finalizing an
+active stint, preserves its accepted counter, and marks its stop time as an
+estimate. `monitor_state.state.stream_ended` prevents future capture/retry loops,
+including after restart. Existing confirmed folding pauses are not closed twice.
+No network error, missing OCR or temporary capture failure is treated as a
+confirmed broadcast end. Chat closure is stored separately in
+`youtube_bot_state.connection_status='chat_closed'`.
+
 Database history has no automatic expiry. Session/appearance tables retain the
 latest record for each UUID; their observation update snapshots remain in
 `observations.details` for reconstruction. `monitor_state` is the resumable

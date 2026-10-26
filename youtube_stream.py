@@ -45,7 +45,12 @@ def batches(project, chat_id, page_token, stop, duration=900):
         if stop.is_set() or (received and code == grpc.StatusCode.DEADLINE_EXCEEDED):
             return
         # Provider details may contain private request data; expose only the status code.
-        raise quota.YouTubeRequestFailed('Live chat stream ended: '+code.name, reason='grpc_'+code.name.lower()) from None
+        reason='grpc_'+code.name.lower()
+        if code == grpc.StatusCode.FAILED_PRECONDITION:
+            detail=(error.details() or '').casefold()
+            if any(term in detail for term in ('livechatended','live chat has ended','live chat is no longer live')):
+                reason='liveChatEnded'
+        raise quota.YouTubeRequestFailed('Live chat stream ended: '+code.name, reason=reason) from None
     except GeneratorExit:
         if not received:
             quota.finish(request_id, 'unknown', error_reason='stream_closed')

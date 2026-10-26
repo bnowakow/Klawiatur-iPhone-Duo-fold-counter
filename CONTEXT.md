@@ -963,3 +963,13 @@ to 600s atomically, auditing request ID and emitting stdout ERROR
 command_cooldown_adaptation:<channel>; fallback remains until explicit reenable.
 Account backpressure and same-posting-channel 60s response delay remain separate.
 Configuration changes do not alter presenter/folding measurements or Sheets data.
+
+Observed real rollback, 2026-10-26 10:30:59 Warsaw: Kacper Sieradziński (!pomoc,
+event285; author UCWCkZSPIdq2wnhbmEpHuANQ, different from posting channel) got no
+reply. POST f5eb9645-daef-43c2-a19a-91cf7d3b21bf returned403 rateLimitExceeded;
+delivery2bdb14cc-275c-4ed2-aac0-25676754cd6b rejected, no returned message ID.
+The owner-only minute delay correctly did not apply (0s). Automatic policy
+rollback restored all command caps/disclaimers to600s at10:30:59.941. Account
+pause deadline was10:41:29.938 Warsaw. The failed prepared text keeps its old
+one-minute disclaimer as evidence; no retry. Root cause and safe interval remain
+unknown. See docs/youtube-rate-limits.md observed Kacper rollback section.

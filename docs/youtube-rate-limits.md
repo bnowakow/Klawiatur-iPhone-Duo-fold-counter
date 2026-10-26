@@ -265,3 +265,48 @@ On a new posting `rateLimitExceeded`, command cooldowns and public disclaimers
 revert atomically to ten minutes, persist across restarts and log the trigger.
 This is separate from the account's 10/20/40/60-minute posting backoff. See
 [adaptive command cooldowns](youtube-bot.md#one-minute-command-cooldown-trial-and-automatic-fallback).
+
+## Observed rollback: Kacper's !pomoc — 26 October 2026
+
+The incoming command was from **Kacper Sieradziński**, channel
+`UCWCkZSPIdq2wnhbmEpHuANQ`; the name was verified using a read-only
+`channels.list` lookup. This differs from the posting channel
+`UCUMPSpJmNG3MIpZQLXsHg6Q`. Therefore the same-posting-channel response delay
+correctly did **not** apply (`reply_delay_seconds=0`).
+
+All times below are **Europe/Warsaw**, on 26 October 2026:
+
+| Event | Time / result |
+| --- | --- |
+| One-minute command trial activated | 10:30:48.049 |
+| `!pomoc` published | 10:30:58.120 |
+| Command received (event **285**) | 10:30:59.318 |
+| Reply POST attempted | 10:30:59.669 |
+| YouTube result | HTTP **403**, `rateLimitExceeded`; delivery **rejected** |
+| Command cooldown rollback recorded | 10:30:59.941 |
+| Per-command cooldown after rollback | **600 seconds (ten minutes)**, all commands |
+| Account pause's earliest next attempt | **10:41:29.938** |
+
+The failed delivery is `2bdb14cc-275c-4ed2-aac0-25676754cd6b`, linked to API
+request `f5eb9645-daef-43c2-a19a-91cf7d3b21bf`. There is no returned message ID;
+no reply was posted and no automatic resend was scheduled. The stored prepared
+reply still contains the one-minute disclaimer because it was generated before
+the rejection. It remains unchanged as historical evidence; subsequent replies
+use the restored ten-minute disclaimer.
+
+The automatic policy record references that exact request as `trigger_request_id`,
+with `active_seconds=600` and `automatically_reenable_trial=false`. The corresponding
+`youtube_command_cooldown_changed` incident records `level=ERROR` and
+`cooldown_seconds=600`. The account pause and command cooldown are separate:
+the local pause deadline is not a YouTube guarantee of recovery.
+
+This verifies that automatic rollback worked on a real provider rejection and
+that the rejection is not limited to commands authored by the bot's own channel.
+It does **not** establish the rejection's cause, prove that the one-minute trial
+caused it, or establish a safe posting interval. The request did not create a
+burst simply because the configured cap was reduced. No further public test
+message was sent to document this incident.
+
+A consolidated snapshot is stored in `youtube_operational_incidents` under
+`youtube-kacper-help-rate-limit-2026-10-26-event-285`; supporting request/delivery,
+backoff and policy-change records retain their existing IDs and outcomes.

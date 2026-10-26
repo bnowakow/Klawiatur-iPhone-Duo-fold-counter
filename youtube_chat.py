@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlsplit
 import uuid
 import youtube_auth as auth
 import youtube_quota as quota
+from stream_lifecycle import ChatClosed
 from youtube_public_text import validate_public_message
 
 SCHEMA = """
@@ -72,9 +73,20 @@ def context(project, stream):
                                    params={'part': 'liveStreamingDetails,snippet', 'id': video})
     items = result.get('items', [])
     chat = items[0].get('liveStreamingDetails', {}).get('activeLiveChatId') if len(items) == 1 else None
+    details = items[0].get('liveStreamingDetails', {}) if len(items)==1 else {}
+    if not chat and details.get('actualEndTime'):
+        # The activeLiveChatId can disappear when video ends, before the known
+        # chat stops accepting messages. Reuse only our verified stream/channel.
+        with quota.connect() as conn:
+            ready=conn.execute("SELECT to_regclass('youtube_bot_state')").fetchone()[0]
+            saved=conn.execute('SELECT chat_id FROM youtube_bot_state WHERE stream_url=%s AND channel_id=%s',
+                               (stream,channel['id'])).fetchone() if ready else None
+        if saved:
+            chat=saved[0]
+        else:
+            raise ChatClosed('Finished broadcast has no known chat')
     if not chat:
         raise ValueError('The configured video has no active live chat')
-    details = items[0].get('liveStreamingDetails', {})
     return {'project_id': project, 'channel': channel, 'video_id': video, 'chat_id': chat,
             'actual_started_at': details.get('actualStartTime'),
             'actual_ended_at': details.get('actualEndTime')}

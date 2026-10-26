@@ -26,6 +26,7 @@ import polling
 import frame_retention
 import clothing_descriptions
 import presenter_video_events
+import stream_lifecycle
 from presenter_sessions import SCHEMA as SESSION_SCHEMA, advance_sessions, advance_appearances, save_sessions
 
 
@@ -42,7 +43,7 @@ CREATE TABLE IF NOT EXISTS monitor_state (
  stream_url text PRIMARY KEY, updated_at timestamptz NOT NULL DEFAULT now(),
  state jsonb NOT NULL
 );
-""" + SESSION_SCHEMA + polling.SCHEMA + clothing_descriptions.SCHEMA + presenter_video_events.SCHEMA
+""" + SESSION_SCHEMA + polling.SCHEMA + clothing_descriptions.SCHEMA + presenter_video_events.SCHEMA + stream_lifecycle.SCHEMA
 
 
 def number(name, default, minimum=0):
@@ -176,6 +177,9 @@ def capture(url, destination):
             capture_output=True, text=True, timeout=50, check=True)
         info = json.loads(meta.stdout)
         if not info.get("is_live"):
+            if info.get('live_status') in ('was_live', 'post_live'):
+                raise stream_lifecycle.StreamEnded({'source': 'yt_dlp.live_status',
+                    'live_status': info['live_status'], 'video_id': info.get('id')})
             raise RuntimeError("Stream is not live")
         formats = [f for f in info["formats"] if f.get("height")
                    and f.get("height") <= 1080 and f.get("url")
@@ -340,6 +344,8 @@ def insert(conn, obs):
                  + ",".join(["%s"]*13) + ") ON CONFLICT (id) DO NOTHING",
                  tuple(obs.get(c) for c in columns) + (Jsonb(clothing_descriptions.public_details(obs)),))
     save_sessions(conn, obs)
+    if obs.get('status') == 'stream_ended':
+        stream_lifecycle.record_end(conn, obs['stream_url'], obs['details']['stream_ending'])
     presenter_video_events.save(conn, obs)
     clothing_descriptions.save_job(conn, obs)
 
@@ -384,14 +390,19 @@ def cycle(cfg, fixture=None, reset_clothing=False):
                         and recovered.get("last_observed_at", "") > state.get("last_observed_at", "")):
                     state = recovered
                 flushed.append(pending)
-            if active(datetime.now(timezone.utc), cfg):
+            ended = state.get('stream_ended') or stream_lifecycle.ending(conn, cfg['stream'])
+            if ended:
+                state = stream_lifecycle.finish_state(state, obs, ended)
+            elif active(datetime.now(timezone.utc), cfg):
                 try:
                     state = analyze(cfg, json.loads(json.dumps(state)), obs, fixture, reset_clothing)
+                except stream_lifecycle.StreamEnded as finished:
+                    state = stream_lifecycle.finish_state(state, obs, finished.evidence)
                 except Exception as exc:
                     obs["details"]["error"] = f"{type(exc).__name__}: {exc}"
             else:
                 obs["status"] = "outside_active_hours"
-            if obs["status"] == "analyzed":
+            if obs["status"] in ("analyzed", "stream_ended"):
                 queued_state = state
             frame_retention.register(cfg["data"], obs)
             insert(conn, obs)
@@ -457,6 +468,11 @@ def main():
         prune(cfg)
         if args.once:
             return 1 if result["status"] in ("error", "database_unavailable") else 0
+        if result['status'] == 'stream_ended':
+            polling.flush(cfg)
+            print(json.dumps({'event': 'monitoring_completed', 'reason': 'broadcast_ended'}), flush=True)
+            stopped.wait()  # Remain dormant under Docker's unless-stopped policy.
+            return 0
         elapsed = time.monotonic()-started
         pressure = polling.advance(pressure, elapsed, cfg["interval"], cfg["poll_max"],
                                    int(cfg["poll_stable"]), result["status"],

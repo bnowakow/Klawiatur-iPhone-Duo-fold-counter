@@ -25,6 +25,7 @@ COPY proof-of-concept/test-data/2026-10-25-ipduotest-pl/ proof-of-concept/test-d
 COPY proof-of-concept/test-data/2026-10-25-brief-appearances/ proof-of-concept/test-data/2026-10-25-brief-appearances/
 COPY proof-of-concept/test-data/2026-10-25-rate-range/ proof-of-concept/test-data/2026-10-25-rate-range/
 ENV PYTHONUNBUFFERED=1 DATA_DIR=/data
+COPY stream_lifecycle.py stream_end_integration_check.py ./
 COPY presenter_video_events.py video_events_integration_check.py ./
 COPY repair_presenter_handover.py handover_repair_integration_check.py ./
 COPY repair_presenter_review.py presenter_review_resolution_integration_check.py ./

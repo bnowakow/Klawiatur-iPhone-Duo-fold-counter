@@ -8,6 +8,11 @@ counter, checks its pace, compares clothing colours, and records every attempt i
 PostgreSQL. PostgreSQL, the supervisor, and a public-site data collector run in Docker Compose.
 Monitoring continues while Docker is running and the host machine is awake.
 
+On a confirmed broadcast end, capture stops and the final accepted counts and
+estimated stint endpoint are retained. The chat bot continues replying while
+YouTube still permits chat messages; video completion does not close the bot.
+Confirmed chat closure leaves it dormant without a Docker restart loop.
+
 Configuration lives in the Git-ignored `.env` on the host. On a new checkout,
 copy `.env.sample` to `.env` before starting. Compose loads it into the application
 environment and mounts the same file read-only at `/app/.env` in both application

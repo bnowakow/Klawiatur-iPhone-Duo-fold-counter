@@ -1,0 +1,101 @@
+{
+  "activated": {
+    "event": "youtube_command_cooldown_changed",
+    "level": "INFO",
+    "channel_id": "UCUMPSpJmNG3MIpZQLXsHg6Q",
+    "cooldown_seconds": 60,
+    "reason": "user_requested_one_minute_trial",
+    "request_id": null,
+    "at": "2026-10-26T09:30:48.049696+00:00",
+    "account_backoff_changed": false,
+    "old_messages_retried": false
+  },
+  "before": [
+    [
+      "!ile",
+      600,
+      "zapytanie !ile może być użyte nie częściej niż raz na 10 minut"
+    ],
+    [
+      "!jak-długo",
+      600,
+      "zapytanie !jak-długo może być użyte nie częściej niż raz na 10 minut"
+    ],
+    [
+      "!kod-zródłowy",
+      600,
+      "zapytanie !kod-zródłowy może być użyte nie częściej niż raz na 10 minut"
+    ],
+    [
+      "!link",
+      600,
+      "zapytanie !link może być użyte nie częściej niż raz na 10 minut"
+    ],
+    [
+      "!pomoc",
+      600,
+      "zapytanie !pomoc może być użyte nie częściej niż raz na 10 minut"
+    ],
+    [
+      "!rekord",
+      600,
+      "zapytanie !rekord może być użyte nie częściej niż raz na 10 minut"
+    ],
+    [
+      "!samsung",
+      600,
+      "zapytanie !samsung może być użyte nie częściej niż raz na 10 minut"
+    ]
+  ],
+  "after": [
+    [
+      "!ile",
+      60,
+      "zapytanie !ile może być użyte nie częściej niż raz na minutę"
+    ],
+    [
+      "!jak-długo",
+      60,
+      "zapytanie !jak-długo może być użyte nie częściej niż raz na minutę"
+    ],
+    [
+      "!kod-zródłowy",
+      60,
+      "zapytanie !kod-zródłowy może być użyte nie częściej niż raz na minutę"
+    ],
+    [
+      "!link",
+      60,
+      "zapytanie !link może być użyte nie częściej niż raz na minutę"
+    ],
+    [
+      "!pomoc",
+      60,
+      "zapytanie !pomoc może być użyte nie częściej niż raz na minutę"
+    ],
+    [
+      "!rekord",
+      60,
+      "zapytanie !rekord może być użyte nie częściej niż raz na minutę"
+    ],
+    [
+      "!samsung",
+      60,
+      "zapytanie !samsung może być użyte nie częściej niż raz na minutę"
+    ]
+  ],
+  "policy": {
+    "enabled": true,
+    "revert_on": "liveChatMessages.insert rateLimitExceeded",
+    "activated_at": "2026-10-26T09:30:48.049696+00:00",
+    "active_seconds": 60,
+    "fallback_seconds": 600,
+    "automatically_reenable_trial": false
+  },
+  "record_reply_preview": "Rekord zakończonej zmiany: 3843 złożeń. zapytanie !rekord może być użyte nie częściej niż raz na minutę",
+  "internal_description_rows": 10,
+  "deployed_policy_sha256": "dcad32c042c64d6dfd0a13d415303af0e5df6f2eb3e660c6784681e97182e249",
+  "deployed_bot_sha256": "ceb8f92c15819d571ceecfb7845c403f0ab3bf0c92698807757999f2cfa9aa8b",
+  "real_google_requests": 0,
+  "measurement_data_corrected": false
+}
